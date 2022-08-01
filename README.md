@@ -1,2 +1,2 @@
-# memorizer-api
-Skorpfiles.Memorizer.Api
+# Skorpfiles.Memorizer.Api
+Memorizer is a software for help to memorize things.
