@@ -1,7 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace SkorpFiles.Memorizer.Api
+namespace SkorpFiles.Memorizer.Api.Authorization
 {
     public static class AuthOptions
     {

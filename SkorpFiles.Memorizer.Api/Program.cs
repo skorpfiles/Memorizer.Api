@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SkorpFiles.Memorizer.Api;
+using SkorpFiles.Memorizer.Api.Authorization;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,6 +61,8 @@ builder.Services.ConfigureApplicationCookie(options => {
         return Task.CompletedTask;
     };
 });
+
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationWithCheckTokenMiddlewareResultHandler>();
 
 var app = builder.Build();
 

@@ -1,16 +1,16 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
+using SkorpFiles.Memorizer.Api.Authorization;
 using SkorpFiles.Memorizer.Api.Enums;
 using SkorpFiles.Memorizer.Api.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Requests;
-using SkorpFiles.Memorizer.Api.Models.Responses;
 using StackExchange.Redis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 
 namespace SkorpFiles.Memorizer.Api.Controllers
 {
@@ -105,6 +105,20 @@ namespace SkorpFiles.Memorizer.Api.Controllers
             }
             else
                 return new BadRequestResult();
+        }
+
+        [Route("Logout")]
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> Logout()
+        {
+            var accessToken = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
+            var redisDb = _redis.GetDatabase();
+            var redisResult = await redisDb.StringSetAsync(new RedisKey(accessToken), new RedisValue(Constants.DisabledManuallyName));
+            if (redisResult)
+                return Ok();
+            else
+                throw new InternalAuthenticationErrorException("Unable to logout the token.");
         }
 
         private async Task<ClaimsIdentity?> GetIdentityAsync(string username, string password)
