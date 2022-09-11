@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using StackExchange.Redis;
 
 namespace SkorpFiles.Memorizer.Api.Controllers
@@ -22,6 +23,16 @@ namespace SkorpFiles.Memorizer.Api.Controllers
         public IActionResult AuthorizedTest()
         {
             return Ok("Success");
+        }
+
+        [Route("TryAuthorizeWithAbsentToken")]
+        [HttpPost]
+        public async Task<IActionResult> TryAuthorizeWithAbsentTokenAsync()
+        {
+            var accessToken = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
+            var redisDb = _redis.GetDatabase();
+            var redisResult = await redisDb.StringGetAsync(new RedisKey(accessToken));
+            return Ok(redisResult.ToString() !=null && redisResult.ToString() != Constants.DisabledManuallyName);
         }
 
         [Route("SetRedisKeyValue")]

@@ -22,7 +22,7 @@ namespace SkorpFiles.Memorizer.Api.Authorization
                 var accessToken = context.Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
                 var redisDb = _redis.GetDatabase();
                 var redisResult = await redisDb.StringGetAsync(new RedisKey(accessToken));
-                if (redisResult.ToString() != Constants.DisabledManuallyName)
+                if (redisResult.ToString() != null && redisResult.ToString() != Constants.DisabledManuallyName)
                     await defaultHandler.HandleAsync(next, context, policy, authorizeResult);
                 else
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
