@@ -7,7 +7,8 @@ using Microsoft.Net.Http.Headers;
 using SkorpFiles.Memorizer.Api.Authorization;
 using SkorpFiles.Memorizer.Api.Enums;
 using SkorpFiles.Memorizer.Api.Exceptions;
-using SkorpFiles.Memorizer.Api.Models.Requests;
+using SkorpFiles.Memorizer.Api.Models.Requests.Authorization;
+using SkorpFiles.Memorizer.Api.Models.Responses;
 using StackExchange.Redis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -26,7 +27,8 @@ namespace SkorpFiles.Memorizer.Api.Controllers
 
         private readonly IConnectionMultiplexer _redis;
 
-        public AccountController(IUserStore<IdentityUser> userStore, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IConnectionMultiplexer redis, IConfiguration configuration)
+        public AccountController(IUserStore<IdentityUser> userStore, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, 
+            IConnectionMultiplexer redis, IConfiguration configuration)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -38,7 +40,7 @@ namespace SkorpFiles.Memorizer.Api.Controllers
 
         [Route("Token")]
         [HttpPost]
-        public async Task<IActionResult> Token(AuthenticationRequest request)
+        public async Task<IActionResult> LoginAsync(LoginRequest request)
         {
             if (request.Login == null || request.Password == null)
                 return BadRequest(new { errorText = "Login and password cannot be null." });
@@ -74,20 +76,20 @@ namespace SkorpFiles.Memorizer.Api.Controllers
                     throw new InternalAuthenticationErrorException("Unable to cache authentication information.");
             }
             else
-                throw new InternalAuthenticationErrorException("Unable to generate JWT token.");
+                throw new InternalAuthenticationErrorException("Unable to generate a JWT token.");
         }
 
         [Route("Register")]
         [HttpPost]
-        public async Task<IActionResult> Register(AuthenticationRequest request)
+        public async Task<IActionResult> RegisterAsync(RegisterRequest request)
         {
-            if (request.Login == null || request.Password == null)
-                return BadRequest(new { errorText = "Login and password cannot be null." });
+            if (request.Email == null || request.Password == null)
+                return BadRequest(new { ErrorText = "Login and password cannot be null." });
 
             var user = CreateUser();
 
-            await _userStore.SetUserNameAsync(user, request.Login, CancellationToken.None);
-            await _emailStore.SetEmailAsync(user, request.Login, CancellationToken.None);
+            await _userStore.SetUserNameAsync(user, request.UserName ?? request.Email, CancellationToken.None);
+            await _emailStore.SetEmailAsync(user, request.Email, CancellationToken.None);
 
             var userCreatingResult = await _userManager.CreateAsync(user, request.Password);
 
@@ -95,22 +97,21 @@ namespace SkorpFiles.Memorizer.Api.Controllers
             {
                 var userId = await _userManager.GetUserIdAsync(user);
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                //code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
                 var confirmingResult = await _userManager.ConfirmEmailAsync(user, code);
                 if (confirmingResult.Succeeded)
                     return new JsonResult(new { UserId = userId });
                 else
-                    return new BadRequestResult();
+                    return BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \n" + string.Join('\n', confirmingResult.Errors.Select(er => er.Description))));
             }
             else
-                return new BadRequestResult();
+                return BadRequest(new ErrorMessageResponse("There are errors during creating a user: \n" + string.Join('\n', userCreatingResult.Errors.Select(er => er.Description))));
         }
 
         [Route("Logout")]
         [HttpPost]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> LogoutAsync()
         {
             var accessToken = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
             var redisDb = _redis.GetDatabase();

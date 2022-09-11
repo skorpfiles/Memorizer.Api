@@ -1,6 +1,6 @@
-﻿namespace SkorpFiles.Memorizer.Api.Models.Requests
+﻿namespace SkorpFiles.Memorizer.Api.Models.Requests.Authorization
 {
-    public class AuthenticationRequest
+    public class LoginRequest
     {
         public string? Login { get; set; }
         public string? Password { get; set; }
