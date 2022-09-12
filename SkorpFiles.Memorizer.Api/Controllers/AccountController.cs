@@ -69,7 +69,7 @@ namespace SkorpFiles.Memorizer.Api.Controllers
                     return Json(new
                     {
                         AccessToken = encodedJwt,
-                        Username = identity.Name
+                        Login = identity.Name
                     });
                 }
                 else
