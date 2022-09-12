@@ -80,7 +80,7 @@ namespace SkorpFiles.Memorizer.Api.Controllers
         }
 
         [Route("Register")]
-        [HttpPost]
+        [HttpPut]
         public async Task<IActionResult> RegisterAsync(RegisterRequest request)
         {
             if (request.Email == null || request.Password == null)
@@ -88,7 +88,7 @@ namespace SkorpFiles.Memorizer.Api.Controllers
 
             var user = CreateUser();
 
-            await _userStore.SetUserNameAsync(user, request.UserName ?? request.Email, CancellationToken.None);
+            await _userStore.SetUserNameAsync(user, request.Login ?? request.Email, CancellationToken.None);
             await _emailStore.SetEmailAsync(user, request.Email, CancellationToken.None);
 
             var userCreatingResult = await _userManager.CreateAsync(user, request.Password);
@@ -100,7 +100,7 @@ namespace SkorpFiles.Memorizer.Api.Controllers
 
                 var confirmingResult = await _userManager.ConfirmEmailAsync(user, code);
                 if (confirmingResult.Succeeded)
-                    return new JsonResult(new { UserId = userId });
+                    return CreatedAtAction("Register", new { UserId = userId });
                 else
                     return BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \n" + string.Join('\n', confirmingResult.Errors.Select(er => er.Description))));
             }
