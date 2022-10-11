@@ -1,10 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SkorpFiles.Memorizer.Api.Models.Db
 {
     [Table("jEventLog")]
     public class EventLog
     {
+        [Key]
         public Guid EventId { get; set; }
         [Column("EventTime")]
         public DateTime EventTimeUtc { get; set; }

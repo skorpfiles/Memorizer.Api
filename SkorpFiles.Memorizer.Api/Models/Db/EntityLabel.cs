@@ -1,5 +1,6 @@
 ﻿using SkorpFiles.Memorizer.Api.Enums.Db;
 using SkorpFiles.Memorizer.Api.Models.Db.Abstract;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SkorpFiles.Memorizer.Api.Models.Db
@@ -7,6 +8,7 @@ namespace SkorpFiles.Memorizer.Api.Models.Db
     [Table("nnEntityLabel")]
     public class EntityLabel:ObjectWithCreationTime
     {
+        [Key]
         public Guid EntityLabelId { get; set; }
         public Guid? QuestionnaireId { get; set; }
         public Guid? QuestionId { get; set; }

@@ -1,5 +1,6 @@
 ﻿using SkorpFiles.Memorizer.Api.Enums.Db;
 using SkorpFiles.Memorizer.Api.Models.Db.Abstract;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SkorpFiles.Memorizer.Api.Models.Db
@@ -7,6 +8,7 @@ namespace SkorpFiles.Memorizer.Api.Models.Db
     [Table("rQuestion")]
     public class Question:ObjectWithLifetime
     {
+        [Key]
         public Guid QuestionId { get; set; }
         public QuestionType QuestionType { get; set; }
         public string? QuestionText { get; set; }
