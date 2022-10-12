@@ -19,5 +19,17 @@ namespace SkorpFiles.Memorizer.Api
         public DbSet<EntityLabel>? EntitiesLabels { get; set; }
         public DbSet<TypedAnswer>? TypedAnswers { get; set; }
         public DbSet<EventLog>? EventLog { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            var cascadeFKs = modelBuilder.Model.GetEntityTypes()
+                .SelectMany(t => t.GetForeignKeys())
+                .Where(fk => !fk.IsOwnership && fk.DeleteBehavior == DeleteBehavior.Cascade);
+
+            foreach (var fk in cascadeFKs)
+                fk.DeleteBehavior = DeleteBehavior.Restrict;
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

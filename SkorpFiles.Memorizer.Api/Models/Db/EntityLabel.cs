@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SkorpFiles.Memorizer.Api.Models.Db
 {
-    [Table("nnEntityLabel")]
+    [Table("nnEntityLabel", Schema = Constants.MemorizerSchemaName)]
     public class EntityLabel:ObjectWithCreationTime
     {
         [Key]
@@ -16,6 +16,9 @@ namespace SkorpFiles.Memorizer.Api.Models.Db
         public Guid? ParentLabelId { get; set; }
         public int LabelNumber { get; set; }
         public EntityType EntityType { get; set; }
-        public Guid OwnerId { get; set; }
+
+        public Questionnaire? Questionnaire { get; set; }
+        public Question? Question { get; set; }
+        public Label? Label { get; set; }
     }
 }
