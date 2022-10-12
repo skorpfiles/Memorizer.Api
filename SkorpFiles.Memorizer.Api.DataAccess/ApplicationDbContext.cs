@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using SkorpFiles.Memorizer.Api.Models.Db;
+using SkorpFiles.Memorizer.Api.DataAccess.Models;
 
-namespace SkorpFiles.Memorizer.Api
+namespace SkorpFiles.Memorizer.Api.DataAccess
 {
     public class ApplicationDbContext : IdentityDbContext
     {

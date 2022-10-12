@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace SkorpFiles.Memorizer.Api.Models.Db
+namespace SkorpFiles.Memorizer.Api.DataAccess.Models
 {
     public class ApplicationUser : IdentityUser
     {

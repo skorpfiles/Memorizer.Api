@@ -1,9 +1,9 @@
-﻿using SkorpFiles.Memorizer.Api.Enums.Db;
-using SkorpFiles.Memorizer.Api.Models.Db.Abstract;
+﻿using SkorpFiles.Memorizer.Api.DataAccess.Enums;
+using SkorpFiles.Memorizer.Api.DataAccess.Models.Abstract;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SkorpFiles.Memorizer.Api.Models.Db
+namespace SkorpFiles.Memorizer.Api.DataAccess.Models
 {
     [Table("rQuestionnaire", Schema = Constants.MemorizerSchemaName)]
     public class Questionnaire:ObjectWithLifetime

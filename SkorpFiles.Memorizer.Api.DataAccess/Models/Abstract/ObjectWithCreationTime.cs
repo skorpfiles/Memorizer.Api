@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SkorpFiles.Memorizer.Api.Models.Db.Abstract
+namespace SkorpFiles.Memorizer.Api.DataAccess.Models.Abstract
 {
     public abstract class ObjectWithCreationTime
     {

@@ -1,8 +1,8 @@
-﻿using SkorpFiles.Memorizer.Api.Models.Db.Abstract;
+﻿using SkorpFiles.Memorizer.Api.DataAccess.Models.Abstract;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SkorpFiles.Memorizer.Api.Models.Db
+namespace SkorpFiles.Memorizer.Api.DataAccess.Models
 {
     [Table("sLabel", Schema = Constants.MemorizerSchemaName)]
     public class Label:ObjectWithLifetime

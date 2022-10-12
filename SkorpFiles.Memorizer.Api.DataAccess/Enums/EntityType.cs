@@ -1,4 +1,4 @@
-﻿namespace SkorpFiles.Memorizer.Api.Enums.Db
+﻿namespace SkorpFiles.Memorizer.Api.DataAccess.Enums
 {
     public enum EntityType
     {

@@ -1,13 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using SkorpFiles.Memorizer.Api;
 using SkorpFiles.Memorizer.Api.Authorization;
+using SkorpFiles.Memorizer.Api.DataAccess;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
