@@ -9,6 +9,7 @@ using SkorpFiles.Memorizer.Api.DataAccess;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Enums;
 using SkorpFiles.Memorizer.Api.Exceptions;
+using SkorpFiles.Memorizer.Api.Interfaces.DataAccess;
 using SkorpFiles.Memorizer.Api.Models.Requests.Authorization;
 using SkorpFiles.Memorizer.Api.Models.Responses;
 using StackExchange.Redis;
@@ -27,11 +28,12 @@ namespace SkorpFiles.Memorizer.Api.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _dbContext;
+        private readonly IAccountRepository _accountRepository;
 
         private readonly IConnectionMultiplexer _redis;
 
         public AccountController(IUserStore<IdentityUser> userStore, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, 
-            IConnectionMultiplexer redis, IConfiguration configuration, ApplicationDbContext dbContext)
+            IConnectionMultiplexer redis, IConfiguration configuration, ApplicationDbContext dbContext, IAccountRepository accountRepository)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -40,6 +42,7 @@ namespace SkorpFiles.Memorizer.Api.Controllers
             _redis = redis;
             _configuration = configuration;
             _dbContext = dbContext;
+            _accountRepository = accountRepository;
         }
 
         [Route("Token")]
@@ -107,13 +110,9 @@ namespace SkorpFiles.Memorizer.Api.Controllers
                 {
                     if (_dbContext.UserActivities is not null)
                     {
-                        var userActivity = new UserActivity(request.Login ?? request.Email, userId)
-                        {
-                            UserIsEnabled = true,
-                            ObjectCreationTimeUtc = DateTime.UtcNow
-                        };
-                        _dbContext.UserActivities?.Add(userActivity);
-                        await _dbContext.SaveChangesAsync(); //todo one transaction with creating user in AspNetUsers
+
+                        await _accountRepository.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
+
                         return CreatedAtAction("Register", new { UserId = userId });
                     }
                     else

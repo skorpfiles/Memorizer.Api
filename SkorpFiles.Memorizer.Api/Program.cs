@@ -1,10 +1,15 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SkorpFiles.Memorizer.Api.Authorization;
 using SkorpFiles.Memorizer.Api.DataAccess;
+using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
+using SkorpFiles.Memorizer.Api.DataAccess.Repositories;
+using SkorpFiles.Memorizer.Api.Interfaces.DataAccess;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -60,6 +65,15 @@ builder.Services.ConfigureApplicationCookie(options => {
 });
 
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationWithCheckTokenMiddlewareResultHandler>();
+
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
+    .ConfigureContainer<ContainerBuilder>(containerBuilder =>
+    {
+        var opt = new DbContextOptionsBuilder<ApplicationDbContext>();
+        opt.UseSqlServer(connectionString);
+        containerBuilder.RegisterInstance(new ApplicationDbContext(opt.Options)).Keyed<ApplicationDbContext>("DbContext");
+        containerBuilder.RegisterModule(new DataAccessModule());
+    });
 
 var app = builder.Build();
 
