@@ -6,10 +6,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SkorpFiles.Memorizer.Api.Authorization;
+using SkorpFiles.Memorizer.Api.BusinessLogic.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess;
 using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
-using SkorpFiles.Memorizer.Api.DataAccess.Repositories;
-using SkorpFiles.Memorizer.Api.Interfaces.DataAccess;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -73,6 +72,7 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
         opt.UseSqlServer(connectionString);
         containerBuilder.RegisterInstance(new ApplicationDbContext(opt.Options)).Keyed<ApplicationDbContext>("DbContext");
         containerBuilder.RegisterModule(new DataAccessModule());
+        containerBuilder.RegisterModule(new BusinessLogicModule());
     });
 
 var app = builder.Build();

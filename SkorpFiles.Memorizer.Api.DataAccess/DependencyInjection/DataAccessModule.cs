@@ -1,6 +1,5 @@
 ﻿using Autofac;
 using Autofac.Core;
-using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Repositories;
 using System.Reflection;
 using Module = Autofac.Module;

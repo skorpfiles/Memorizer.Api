@@ -6,10 +6,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using SkorpFiles.Memorizer.Api.Authorization;
 using SkorpFiles.Memorizer.Api.DataAccess;
-using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Enums;
 using SkorpFiles.Memorizer.Api.Exceptions;
-using SkorpFiles.Memorizer.Api.Interfaces.DataAccess;
+using SkorpFiles.Memorizer.Api.Interfaces.BusinessLogic;
 using SkorpFiles.Memorizer.Api.Models.Requests.Authorization;
 using SkorpFiles.Memorizer.Api.Models.Responses;
 using StackExchange.Redis;
@@ -28,12 +27,12 @@ namespace SkorpFiles.Memorizer.Api.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IConfiguration _configuration;
         private readonly ApplicationDbContext _dbContext;
-        private readonly IAccountRepository _accountRepository;
+        private readonly IAccountLogic _accountLogic;
 
         private readonly IConnectionMultiplexer _redis;
 
         public AccountController(IUserStore<IdentityUser> userStore, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, 
-            IConnectionMultiplexer redis, IConfiguration configuration, ApplicationDbContext dbContext, IAccountRepository accountRepository)
+            IConnectionMultiplexer redis, IConfiguration configuration, ApplicationDbContext dbContext, IAccountLogic accountLogic)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -42,7 +41,7 @@ namespace SkorpFiles.Memorizer.Api.Controllers
             _redis = redis;
             _configuration = configuration;
             _dbContext = dbContext;
-            _accountRepository = accountRepository;
+            _accountLogic = accountLogic;
         }
 
         [Route("Token")]
@@ -111,7 +110,7 @@ namespace SkorpFiles.Memorizer.Api.Controllers
                     if (_dbContext.UserActivities is not null)
                     {
 
-                        await _accountRepository.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
+                        await _accountLogic.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
 
                         return CreatedAtAction("Register", new { UserId = userId });
                     }
