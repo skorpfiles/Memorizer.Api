@@ -1,5 +1,5 @@
-﻿using SkorpFiles.Memorizer.Api.Interfaces.BusinessLogic;
-using SkorpFiles.Memorizer.Api.Interfaces.DataAccess;
+﻿using SkorpFiles.Memorizer.Api.Models.BusinessLogic;
+using SkorpFiles.Memorizer.Api.Models.DataAccess;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic
 {

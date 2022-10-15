@@ -5,11 +5,11 @@ VisualStudioVersion = 17.2.32505.173
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkorpFiles.Memorizer.Api", "SkorpFiles.Memorizer.Api\SkorpFiles.Memorizer.Api.csproj", "{3B822FC1-4838-45CC-A51A-5A2E98253AD7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkorpFiles.Memorizer.Api.Interfaces", "SkorpFiles.Memorizer.Api.Interfaces\SkorpFiles.Memorizer.Api.Interfaces.csproj", "{887C39EC-407E-4591-8930-EF2717711492}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkorpFiles.Memorizer.Api.DataAccess", "SkorpFiles.Memorizer.Api.DataAccess\SkorpFiles.Memorizer.Api.DataAccess.csproj", "{B58BA1EA-9FD9-4084-96C0-E6B874B53EB8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkorpFiles.Memorizer.Api.BusinessLogic", "SkorpFiles.Memorizer.Api.BusinessLogic\SkorpFiles.Memorizer.Api.BusinessLogic.csproj", "{5591832D-F2A5-4A98-AFE6-71A3266DA890}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkorpFiles.Memorizer.Api.BusinessLogic", "SkorpFiles.Memorizer.Api.BusinessLogic\SkorpFiles.Memorizer.Api.BusinessLogic.csproj", "{5591832D-F2A5-4A98-AFE6-71A3266DA890}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkorpFiles.Memorizer.Api.Models", "SkorpFiles.Memorizer.Api.Models\SkorpFiles.Memorizer.Api.Models.csproj", "{D2F1237F-A24E-4574-8D83-5BA1E0955A69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +21,6 @@ Global
 		{3B822FC1-4838-45CC-A51A-5A2E98253AD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B822FC1-4838-45CC-A51A-5A2E98253AD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3B822FC1-4838-45CC-A51A-5A2E98253AD7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{887C39EC-407E-4591-8930-EF2717711492}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{887C39EC-407E-4591-8930-EF2717711492}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{887C39EC-407E-4591-8930-EF2717711492}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{887C39EC-407E-4591-8930-EF2717711492}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B58BA1EA-9FD9-4084-96C0-E6B874B53EB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B58BA1EA-9FD9-4084-96C0-E6B874B53EB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B58BA1EA-9FD9-4084-96C0-E6B874B53EB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,6 +29,10 @@ Global
 		{5591832D-F2A5-4A98-AFE6-71A3266DA890}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5591832D-F2A5-4A98-AFE6-71A3266DA890}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5591832D-F2A5-4A98-AFE6-71A3266DA890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2F1237F-A24E-4574-8D83-5BA1E0955A69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2F1237F-A24E-4574-8D83-5BA1E0955A69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2F1237F-A24E-4574-8D83-5BA1E0955A69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2F1237F-A24E-4574-8D83-5BA1E0955A69}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

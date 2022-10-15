@@ -8,7 +8,7 @@ using SkorpFiles.Memorizer.Api.Authorization;
 using SkorpFiles.Memorizer.Api.DataAccess;
 using SkorpFiles.Memorizer.Api.Enums;
 using SkorpFiles.Memorizer.Api.Exceptions;
-using SkorpFiles.Memorizer.Api.Interfaces.BusinessLogic;
+using SkorpFiles.Memorizer.Api.Models.BusinessLogic;
 using SkorpFiles.Memorizer.Api.Models.Requests.Authorization;
 using SkorpFiles.Memorizer.Api.Models.Responses;
 using StackExchange.Redis;
@@ -109,7 +109,6 @@ namespace SkorpFiles.Memorizer.Api.Controllers
                 {
                     if (_dbContext.UserActivities is not null)
                     {
-
                         await _accountLogic.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
 
                         return CreatedAtAction("Register", new { UserId = userId });

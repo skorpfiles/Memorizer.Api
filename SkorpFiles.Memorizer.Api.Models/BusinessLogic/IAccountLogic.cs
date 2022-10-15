@@ -1,4 +1,4 @@
-﻿namespace SkorpFiles.Memorizer.Api.Interfaces.BusinessLogic
+﻿namespace SkorpFiles.Memorizer.Api.Models.BusinessLogic
 {
     public interface IAccountLogic
     {

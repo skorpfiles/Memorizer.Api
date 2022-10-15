@@ -1,5 +1,5 @@
 ﻿using Autofac;
-using SkorpFiles.Memorizer.Api.Interfaces.BusinessLogic;
+using SkorpFiles.Memorizer.Api.Models.BusinessLogic;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.DependencyInjection
 {
@@ -9,8 +9,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.DependencyInjection
 
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<AccountLogic>()
-                .As<IAccountLogic>();
+            builder.RegisterType<AccountLogic>().As<IAccountLogic>();
+            builder.RegisterType<EditingLogic>().As<IEditingLogic>();
 
             base.Load(builder);
         }

@@ -18,11 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SkorpFiles.Memorizer.Api.Interfaces\SkorpFiles.Memorizer.Api.Interfaces.csproj" />
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
+    <ProjectReference Include="..\SkorpFiles.Memorizer.Api.Models\SkorpFiles.Memorizer.Api.Models.csproj" />
   </ItemGroup>
 
 </Project>

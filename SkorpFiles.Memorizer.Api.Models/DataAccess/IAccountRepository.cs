@@ -1,4 +1,4 @@
-﻿namespace SkorpFiles.Memorizer.Api.Interfaces.DataAccess
+﻿namespace SkorpFiles.Memorizer.Api.Models.DataAccess
 {
     public interface IAccountRepository
     {
