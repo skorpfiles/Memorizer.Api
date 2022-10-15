@@ -1,5 +1,5 @@
 ﻿using SkorpFiles.Memorizer.Api.DataAccess.Models;
-using SkorpFiles.Memorizer.Api.Models.DataAccess;
+using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 {

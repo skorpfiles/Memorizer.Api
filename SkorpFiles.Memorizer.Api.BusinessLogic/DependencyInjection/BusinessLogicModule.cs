@@ -1,5 +1,5 @@
 ﻿using Autofac;
-using SkorpFiles.Memorizer.Api.Models.BusinessLogic;
+using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.DependencyInjection
 {

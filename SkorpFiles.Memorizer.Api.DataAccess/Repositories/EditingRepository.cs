@@ -1,4 +1,4 @@
-﻿using SkorpFiles.Memorizer.Api.Models.DataAccess;
+﻿using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;

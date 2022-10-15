@@ -1,4 +1,4 @@
-﻿using SkorpFiles.Memorizer.Api.Models.BusinessLogic;
+﻿using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
