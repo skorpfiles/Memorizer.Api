@@ -1,4 +1,7 @@
-﻿using SkorpFiles.Memorizer.Api.DataAccess.Models;
+﻿using Microsoft.AspNetCore.Identity;
+using SkorpFiles.Memorizer.Api.DataAccess.Exceptions;
+using SkorpFiles.Memorizer.Api.DataAccess.Models;
+using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
@@ -9,6 +12,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task RegisterUserActivityAsync(string userName, string userId)
         {
+            if (!DbContext.Users.Any(u => u.Id == userId))
+                throw new UserNotFoundException();
+
             var userActivity = new UserActivity(userName, userId)
             {
                 UserIsEnabled = true,

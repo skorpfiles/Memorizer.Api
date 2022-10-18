@@ -26,22 +26,21 @@ namespace SkorpFiles.Memorizer.Api.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IConfiguration _configuration;
-        private readonly ApplicationDbContext _dbContext;
         private readonly IAccountLogic _accountLogic;
 
         private readonly IConnectionMultiplexer _redis;
 
-        public AccountController(IUserStore<IdentityUser> userStore, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, 
-            IConnectionMultiplexer redis, IConfiguration configuration, ApplicationDbContext dbContext, IAccountLogic accountLogic)
+        public AccountController( 
+            IConnectionMultiplexer redis, IConfiguration configuration, IAccountLogic accountLogic, IUserStore<IdentityUser> userStore, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
         {
-            _userManager = userManager;
-            _userStore = userStore;
-            _emailStore = GetEmailStore();
-            _signInManager = signInManager;
             _redis = redis;
             _configuration = configuration;
-            _dbContext = dbContext;
             _accountLogic = accountLogic;
+
+            _userStore = userStore;
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _emailStore = GetEmailStore();
         }
 
         [Route("Token")]
@@ -107,14 +106,8 @@ namespace SkorpFiles.Memorizer.Api.Controllers
                 var confirmingResult = await _userManager.ConfirmEmailAsync(user, code);
                 if (confirmingResult.Succeeded)
                 {
-                    if (_dbContext.UserActivities is not null)
-                    {
-                        await _accountLogic.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
-
-                        return CreatedAtAction("Register", new { UserId = userId });
-                    }
-                    else
-                        return BadRequest(new ErrorMessageResponse("There are errors during creating a user: \nUnable to add a User Activity record."));
+                    await _accountLogic.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
+                    return CreatedAtAction("Register", new { UserId = userId });
                 }
                 else
                     return BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \n" + string.Join('\n', confirmingResult.Errors.Select(er => er.Description))));
