@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
+using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 using StackExchange.Redis;
 
 namespace SkorpFiles.Memorizer.Api.Controllers
@@ -11,10 +12,12 @@ namespace SkorpFiles.Memorizer.Api.Controllers
     public class TestController:Controller
     {
         private readonly IConnectionMultiplexer _redis;
+        private readonly IAccountLogic _accountLogic;
 
-        public TestController(IConnectionMultiplexer redis)
+        public TestController(IConnectionMultiplexer redis, IAccountLogic accountLogic)
         {
             _redis = redis;
+            _accountLogic = accountLogic;
         }
 
         [Route("AuthorizedTest")]
@@ -53,6 +56,14 @@ namespace SkorpFiles.Memorizer.Api.Controllers
             var db = _redis.GetDatabase();
             var foo = await db.StringGetAsync(new RedisKey(key));
             return Ok(foo.ToString());
+        }
+
+        [Route("AddUserActivityWithoutUser")]
+        [HttpPost]
+        public async Task<IActionResult> AddUserActivityWithoutUser()
+        {
+            await _accountLogic.RegisterUserActivityAsync("testUserName", Guid.NewGuid().ToString());
+            return Ok();
         }
     }
 }

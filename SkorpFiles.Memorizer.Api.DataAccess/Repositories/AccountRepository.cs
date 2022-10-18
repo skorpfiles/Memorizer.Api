@@ -13,7 +13,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         public async Task RegisterUserActivityAsync(string userName, string userId)
         {
             if (!DbContext.Users.Any(u => u.Id == userId))
-                throw new UserNotFoundException();
+                throw new UserNotFoundException(userId);
 
             var userActivity = new UserActivity(userName, userId)
             {
