@@ -121,18 +121,23 @@ namespace SkorpFiles.Memorizer.Api.Controllers
         public async Task<IActionResult> LogoutAsync()
         {
             var accessToken = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
-            var redisDb = _redis.GetDatabase();
-            var redisKey = new RedisKey(accessToken);
-            if ((await redisDb.StringGetAsync(redisKey)).ToString() == Constants.DefaultName)
+            if (!string.IsNullOrEmpty(accessToken))
             {
-                var redisResult = await redisDb.StringSetAsync(new RedisKey(accessToken), new RedisValue(Constants.DisabledManuallyName));
-                if (redisResult)
-                    return Ok();
+                var redisDb = _redis.GetDatabase();
+                var redisKey = new RedisKey(accessToken);
+                if ((await redisDb.StringGetAsync(redisKey)).ToString() == Constants.DefaultName)
+                {
+                    var redisResult = await redisDb.StringSetAsync(new RedisKey(accessToken), new RedisValue(Constants.DisabledManuallyName));
+                    if (redisResult)
+                        return Ok();
+                    else
+                        throw new InternalAuthenticationErrorException("Unable to logout the token.");
+                }
                 else
-                    throw new InternalAuthenticationErrorException("Unable to logout the token.");
+                    return Ok();
             }
             else
-                return Ok();
+                return BadRequest("No authentication token.");
         }
 
         private async Task<ClaimsIdentity?> GetIdentityAsync(string username, string password)
