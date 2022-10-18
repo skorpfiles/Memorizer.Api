@@ -1,5 +1,5 @@
-﻿using SkorpFiles.Memorizer.Api.DataAccess.Enums;
-using SkorpFiles.Memorizer.Api.DataAccess.Models.Abstract;
+﻿using SkorpFiles.Memorizer.Api.DataAccess.Models.Abstract;
+using SkorpFiles.Memorizer.Api.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 

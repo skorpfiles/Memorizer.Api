@@ -1,4 +1,4 @@
-﻿namespace SkorpFiles.Memorizer.Api.DataAccess.Enums
+﻿namespace SkorpFiles.Memorizer.Api.Models.Enums
 {
     public enum QuestionnaireAvailability
     {
