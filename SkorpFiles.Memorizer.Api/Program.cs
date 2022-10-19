@@ -10,6 +10,7 @@ using SkorpFiles.Memorizer.Api.Authorization;
 using SkorpFiles.Memorizer.Api.BusinessLogic.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess;
 using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
+using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
 using SkorpFiles.Memorizer.Api.Mapping;
 using StackExchange.Redis;
 
@@ -69,7 +70,11 @@ builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, Authorizati
 
 var mapperConfig = new MapperConfiguration(mc =>
 {
-    mc.AddProfile(new ApiMappingProfile());
+    mc.AddProfile(new RequestsMappingProfile());
+    mc.AddProfile(new ResponsesMappingProfile());
+    mc.AddProfile(new ApiEntitiesMappingProfile());
+
+    mc.AddProfile(new DataAccessMappingProfile());
 });
 
 IMapper mapper = mapperConfig.CreateMapper();

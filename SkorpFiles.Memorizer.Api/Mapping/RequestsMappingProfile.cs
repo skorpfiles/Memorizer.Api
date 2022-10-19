@@ -3,9 +3,9 @@ using SkorpFiles.Memorizer.Api.Models.Enums;
 
 namespace SkorpFiles.Memorizer.Api.Mapping
 {
-    public class ApiMappingProfile : Profile
+    public class RequestsMappingProfile : Profile
     {
-        public ApiMappingProfile()
+        public RequestsMappingProfile()
         {
             CreateMap<SkorpFiles.Memorizer.Api.ApiModels.Requests.Repository.GetQuestionnairesRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.GetQuestionnairesRequest>()
                 .ForMember(dest => dest.Origin, opts =>

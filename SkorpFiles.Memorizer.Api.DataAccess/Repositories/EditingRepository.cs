@@ -56,7 +56,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             foundQuestionnaires = foundQuestionnaires.Page(request.PageNumber, request.PageSize);
 
-            return foundQuestionnaires.Select(q => new Questionnaire
+            return await Task.Run(() => foundQuestionnaires.Select(q => new Questionnaire
             {
                 Availability = q.QuestionnaireAvailability,
                 Code = q.QuestionnaireCode,
@@ -66,7 +66,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 Name = q.QuestionnaireName,
                 OwnerId = Guid.Parse(q.OwnerId),
                 RemovalTimeUtc = q.ObjectRemovalTimeUtc
-            });
+            }).ToList());
         }
     }
 }

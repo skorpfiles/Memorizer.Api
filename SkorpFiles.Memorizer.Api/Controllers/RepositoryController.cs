@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SkorpFiles.Memorizer.Api.ApiModels.Requests.Repository;
+using SkorpFiles.Memorizer.Api.ApiModels.Responses;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 
 namespace SkorpFiles.Memorizer.Api.Controllers
@@ -27,8 +28,8 @@ namespace SkorpFiles.Memorizer.Api.Controllers
         public async Task<IActionResult> QuestionnairesAsync(GetQuestionnairesRequest request)
         {
             var userGuid = await GetCurrentUserGuidAsync();
-            await _editingLogic.GetQuestionnairesAsync(userGuid, _mapper.Map<Models.RequestModels.GetQuestionnairesRequest>(request));
-            return Ok();
+            var result = await _editingLogic.GetQuestionnairesAsync(userGuid, _mapper.Map<Models.RequestModels.GetQuestionnairesRequest>(request));
+            return Ok(_mapper.Map<GetQuestionnairesResponse>(result));
         }
     }
 }
