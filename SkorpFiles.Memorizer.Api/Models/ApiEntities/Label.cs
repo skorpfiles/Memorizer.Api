@@ -1,4 +1,4 @@
-﻿namespace SkorpFiles.Memorizer.Api.Models.ApiEntities
+﻿namespace SkorpFiles.Memorizer.Api.ApiModels.ApiEntities
 {
     public class Label
     {

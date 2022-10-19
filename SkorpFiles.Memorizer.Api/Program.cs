@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +10,7 @@ using SkorpFiles.Memorizer.Api.Authorization;
 using SkorpFiles.Memorizer.Api.BusinessLogic.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess;
 using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
+using SkorpFiles.Memorizer.Api.Mapping;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -64,6 +66,14 @@ builder.Services.ConfigureApplicationCookie(options => {
 });
 
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationWithCheckTokenMiddlewareResultHandler>();
+
+var mapperConfig = new MapperConfiguration(mc =>
+{
+    mc.AddProfile(new ApiMappingProfile());
+});
+
+IMapper mapper = mapperConfig.CreateMapper();
+builder.Services.AddSingleton(mapper);
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
     .ConfigureContainer<ContainerBuilder>(containerBuilder =>

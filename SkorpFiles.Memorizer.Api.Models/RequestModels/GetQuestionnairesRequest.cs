@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.Models.RequestModels
 {
-    public class GetQuestionnaireRequest
+    public class GetQuestionnairesRequest
     {
         public QuestionnaireOrigin? Origin { get; set; }
         public Guid? OwnerId { get; set; }

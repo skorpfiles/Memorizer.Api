@@ -1,6 +1,6 @@
-﻿using SkorpFiles.Memorizer.Api.Models.ApiEntities;
+﻿using SkorpFiles.Memorizer.Api.ApiModels.ApiEntities;
 
-namespace SkorpFiles.Memorizer.Api.Models.Responses
+namespace SkorpFiles.Memorizer.Api.ApiModels.Responses
 {
     public class GetQuestionnairesResponse
     {

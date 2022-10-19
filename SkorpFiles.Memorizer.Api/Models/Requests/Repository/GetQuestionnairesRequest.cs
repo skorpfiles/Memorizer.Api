@@ -1,6 +1,6 @@
-﻿namespace SkorpFiles.Memorizer.Api.Models.Requests.Repository
+﻿namespace SkorpFiles.Memorizer.Api.ApiModels.Requests.Repository
 {
-    public class GetQuestionnariesRequest
+    public class GetQuestionnairesRequest
     {
         public string? Origin { get; set; }
         public Guid OwnerId { get; set; }

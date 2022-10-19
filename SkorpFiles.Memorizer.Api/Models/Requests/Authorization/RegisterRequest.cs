@@ -1,4 +1,4 @@
-﻿namespace SkorpFiles.Memorizer.Api.Models.Requests.Authorization
+﻿namespace SkorpFiles.Memorizer.Api.ApiModels.Requests.Authorization
 {
     public class RegisterRequest
     {

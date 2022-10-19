@@ -16,7 +16,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         public EditingRepository(ApplicationDbContext dbContext) : base(dbContext) { }
 
         public async Task<IEnumerable<Questionnaire>> GetQuestionnairesAsync(Guid userId,
-            GetQuestionnaireRequest request)
+            GetQuestionnairesRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));

@@ -11,14 +11,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
         {
         }
 
-        public DbSet<UserActivity>? UserActivities { get; set; }
-        public DbSet<Questionnaire>? Questionnaires { get; set; }
-        public DbSet<Question>? Questions { get; set; }
-        public DbSet<QuestionUser>? QuestionsUsers { get; set; }
-        public DbSet<Label>? Labels { get; set; }
-        public DbSet<EntityLabel>? EntitiesLabels { get; set; }
-        public DbSet<TypedAnswer>? TypedAnswers { get; set; }
-        public DbSet<EventLog>? EventLog { get; set; }
+        public DbSet<UserActivity> UserActivities { get; set; }
+        public DbSet<Questionnaire> Questionnaires { get; set; }
+        public DbSet<Question> Questions { get; set; }
+        public DbSet<QuestionUser> QuestionsUsers { get; set; }
+        public DbSet<Label> Labels { get; set; }
+        public DbSet<EntityLabel> EntitiesLabels { get; set; }
+        public DbSet<TypedAnswer> TypedAnswers { get; set; }
+        public DbSet<EventLog> EventLog { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
