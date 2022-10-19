@@ -38,6 +38,8 @@ namespace SkorpFiles.Memorizer.Api.Authorization
                     await context.Response.WriteAsync("The token has not been recognized.");
                 }
             }
+            else
+                await defaultHandler.HandleAsync(next, context, policy, authorizeResult);
         }
     }
 }
