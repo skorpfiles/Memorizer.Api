@@ -10,7 +10,7 @@ namespace SkorpFiles.Memorizer.Api.Models.Abstract
     {
         public Guid Id { get; set; }
         public int Code { get; set; }
-        public DateTime? CreatedTimeUtc { get; set; }
+        public DateTime? CreationTimeUtc { get; set; }
         public bool IsRemoved { get; set; }
         public DateTime? RemovalTimeUtc { get; set; }
     }

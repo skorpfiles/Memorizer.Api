@@ -9,6 +9,6 @@ namespace SkorpFiles.Memorizer.Api.Models
     public class LabelInQuestionnaire
     {
         public int Number { get; set; }
-        public Guid ParentLabelId { get; set; }
+        public Guid? ParentLabelId { get; set; }
     }
 }
