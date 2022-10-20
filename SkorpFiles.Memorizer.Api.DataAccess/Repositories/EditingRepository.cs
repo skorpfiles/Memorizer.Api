@@ -26,12 +26,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var foundQuestionnaires =
                 from questionnaire in DbContext.Questionnaires
-                join entityLabel in DbContext.EntitiesLabels on questionnaire equals entityLabel.Questionnaire
-                join label in DbContext.Labels on entityLabel.Label equals label
+                    //join entityLabel in DbContext.EntitiesLabels on questionnaire equals entityLabel.Questionnaire
+                    //join label in DbContext.Labels on entityLabel.Label equals label
                 where
-                    ((request.Origin == QuestionnaireOrigin.Own && questionnaire.OwnerId == userIdString) ||
+                    (request.Origin == null ||
+                    (request.Origin == QuestionnaireOrigin.Own && questionnaire.OwnerId == userIdString) ||
                     (request.Origin == QuestionnaireOrigin.Foreign && questionnaire.OwnerId != userIdString)) &&
-                    (ownerIdString == null || questionnaire.OwnerId == ownerIdString) &&
+                    (ownerIdString == null || request.OwnerId.Value == default || questionnaire.OwnerId == ownerIdString) &&
                     (request.Availability == null || request.Availability == questionnaire.QuestionnaireAvailability) &&
                     (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName))
                 select questionnaire;
