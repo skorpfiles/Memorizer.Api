@@ -33,7 +33,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     (request.Origin == QuestionnaireOrigin.Foreign && questionnaire.OwnerId != userIdString)) &&
                     (ownerIdString == null || questionnaire.OwnerId == ownerIdString) &&
                     (request.Availability == null || request.Availability == questionnaire.QuestionnaireAvailability) &&
-                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLowerInvariant().Contains(request.PartOfName))
+                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName))
                 select questionnaire;
 
             switch(request.SortField)
@@ -56,7 +56,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             foundQuestionnaires = foundQuestionnaires.Page(request.PageNumber, request.PageSize);
 
-            return await Task.Run(() => foundQuestionnaires.Select(q => new Questionnaire
+            return await Task.Run(() => foundQuestionnaires.ToList().Select(q => new Questionnaire
             {
                 Availability = q.QuestionnaireAvailability,
                 Code = q.QuestionnaireCode,
