@@ -1,6 +1,6 @@
 ﻿namespace SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic
 {
-    public interface ILearningLogic
+    public interface ITrainingLogic
     {
     }
 }

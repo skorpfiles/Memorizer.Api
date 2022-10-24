@@ -1,6 +1,6 @@
 ﻿namespace SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess
 {
-    public interface ILearningRepository
+    public interface ITrainingRepository
     {
     }
 }
