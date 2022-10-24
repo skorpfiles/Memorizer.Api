@@ -18,6 +18,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
         public DbSet<Label> Labels { get; set; }
         public DbSet<EntityLabel> EntitiesLabels { get; set; }
         public DbSet<TypedAnswer> TypedAnswers { get; set; }
+        public DbSet<TrainingResult> TrainingResults { get; set; }
+        public DbSet<TrainingResultTypedAnswer> TrainingResultTypedAnswers { get; set; }
         public DbSet<EventLog> EventLog { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
