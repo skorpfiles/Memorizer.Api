@@ -30,21 +30,45 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             var userIdString = userId.ToAspNetUserIdString();
             var ownerIdString = request.OwnerId?.ToAspNetUserIdString();
 
-            var foundQuestionnaires =
-                (from questionnaire in DbContext.Questionnaires
-                join entityLabel in DbContext.EntitiesLabels on questionnaire equals entityLabel.Questionnaire into entityLabelGroup
-                from entityLabelObj in entityLabelGroup.DefaultIfEmpty()
-                join label in DbContext.Labels on entityLabelObj.Label equals label into labelGroup
-                from labelObj in labelGroup.DefaultIfEmpty()
+            IQueryable<Models.Questionnaire> foundQuestionnaires;
+
+            if (request.LabelsNames != null && request.LabelsNames.Any())
+            {
+                var labelsIds =
+                    from label in DbContext.Labels
+                    where request.LabelsNames.Contains(label.LabelName)
+                    select label.LabelId;
+
+                var entityLabels =
+                    from entityLabel in DbContext.EntitiesLabels
+                    where labelsIds.Contains(entityLabel.LabelId)
+                    select entityLabel;
+
+                var questionnaireIds =
+                    from entityLabel in entityLabels
+                    group entityLabel by entityLabel.QuestionnaireId into grouped
+                    where grouped.Count() == request.LabelsNames.Count()
+                    select grouped.Key;
+
+                foundQuestionnaires =
+                    from questionnaire in DbContext.Questionnaires
+                    where
+                        questionnaireIds.Contains(questionnaire.QuestionnaireId)
+                    select questionnaire;
+            }
+            else
+                foundQuestionnaires = DbContext.Questionnaires;
+
+            foundQuestionnaires =
+                from questionnaire in foundQuestionnaires
                 where
                     (request.Origin == null ||
                     (request.Origin == QuestionnaireOrigin.Own && questionnaire.OwnerId == userIdString) ||
                     (request.Origin == QuestionnaireOrigin.Foreign && questionnaire.OwnerId != userIdString)) &&
                     (ownerIdString == null || request.OwnerId.Value == default || questionnaire.OwnerId == ownerIdString) &&
                     (request.Availability == null || request.Availability == questionnaire.QuestionnaireAvailability) &&
-                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName)) &&
-                    (request.LabelsNames == null || !request.LabelsNames.Any() || request.LabelsNames.Contains(labelObj.LabelName))
-                select questionnaire).Distinct();
+                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName))
+                select questionnaire;
 
             switch (request.SortField)
             {
@@ -66,45 +90,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             foundQuestionnaires = foundQuestionnaires.Page(request.PageNumber, request.PageSize);
 
-            var result = foundQuestionnaires.ToList();
-
-            if (request.LabelsNames != null && request.LabelsNames.Any())
-            {
-                Dictionary<string, IEnumerable<Questionnaire>> QuestionnairesForLabels = new Dictionary<string, IEnumerable<Questionnaire>>();
-                foreach (var label in request.LabelsNames)
-                {
-
-                }
-            }
-            //return await foundQuestionnaires
-            //    .Select(q => new Questionnaire
-            //{
-            //    Availability = q.Key.QuestionnaireAvailability,
-            //    Code = q.Key.QuestionnaireCode,
-            //    CreationTimeUtc = q.Key.ObjectCreationTimeUtc,
-            //    Id = q.Key.QuestionnaireId,
-            //    IsRemoved = q.Key.ObjectIsRemoved,
-            //    Name = q.Key.QuestionnaireName,
-            //    OwnerId = Guid.Parse(q.Key.OwnerId),
-            //    RemovalTimeUtc = q.Key.ObjectRemovalTimeUtc,
-            //    //Labels = q.Select(o =>
-            //    //    new Label
-            //    //    {
-            //    //        Id = o.labelObj.LabelId,
-            //    //        Name = o.labelObj.LabelName,
-            //    //        OwnerId = o.labelObj.OwnerId!=null ? Guid.Parse(o.labelObj.OwnerId) : null,
-            //    //        StatusInQuestionnaire = new LabelInQuestionnaire
-            //    //        {
-            //    //            Number = o.entityLabelObj.LabelNumber,
-            //    //            ParentLabelId = o.entityLabelObj.ParentLabelId
-            //    //        },
-            //    //        CreationTimeUtc = o.labelObj.ObjectCreationTimeUtc,
-            //    //        IsRemoved = o.labelObj.ObjectIsRemoved,
-            //    //        RemovalTimeUtc = o.labelObj.ObjectRemovalTimeUtc
-            //    //    }).ToList()
-            //}).ToListAsync();
-
-            return _mapper.Map<IEnumerable<Questionnaire>>(result);
+            return _mapper.Map<IEnumerable<Questionnaire>>(await foundQuestionnaires.ToListAsync());
         }
     }
 }
