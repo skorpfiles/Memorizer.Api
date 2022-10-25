@@ -25,6 +25,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public Questionnaire? Questionnaire { get; set; }
         public List<QuestionUser>? UsersForQuestion { get; set; }
         public List<TypedAnswer>? TypedAnswers { get; set; }
+        public List<TrainingResult>? TrainingResults { get; set; }
 
         public Question(string questionText, string questionReference)
         {

@@ -23,6 +23,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public int TrainingResultPenaltyPoints { get; set; }
         public int TrainingResultTimeMilliseconds { get; set; }
 
+        public ApplicationUser? TrainingResultUser { get; set; }
+        public Question? TrainingResultQuestion { get; set; }
+
         public List<TrainingResultTypedAnswer>? TypedAnswers { get; set; }
 
         public TrainingResult(string trainingResultUserId)
