@@ -14,12 +14,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public string QuestionText { get; set; }
         public string? QuestionUntypedAnswer { get; set; }
         public bool QuestionIsEnabled { get; set; }
-        public string QuestionReference { get; set; }
+        public string? QuestionReference { get; set; }
         public bool QuestionIsFixed { get; set; }
         public Guid QuestionnaireId { get; set; }
         public int QuestionQuestionnaireCode { get; set; }
-        [Column("QuestionAddedTime")]
-        public DateTime QuestionAddedTimeUtc { get; set; }
 
         public List<EntityLabel>? LabelsForQuestion { get; set; }
         public Questionnaire? Questionnaire { get; set; }
@@ -27,10 +25,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public List<TypedAnswer>? TypedAnswers { get; set; }
         public List<TrainingResult>? TrainingResults { get; set; }
 
-        public Question(string questionText, string questionReference)
+        public Question(string questionText)
         {
             QuestionText = questionText;
-            QuestionReference = questionReference;
         }
     }
 }
