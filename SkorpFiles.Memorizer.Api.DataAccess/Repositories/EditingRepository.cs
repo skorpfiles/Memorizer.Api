@@ -69,7 +69,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     (request.Origin == QuestionnaireOrigin.Foreign && questionnaire.OwnerId != userIdString)) &&
                     (ownerIdString == null || request.OwnerId!.Value == default || questionnaire.OwnerId == ownerIdString) &&
                     (request.Availability == null || request.Availability == questionnaire.QuestionnaireAvailability) &&
-                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName))
+                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName.ToLower()))
                 select questionnaire;
 
             switch (request.SortField)
