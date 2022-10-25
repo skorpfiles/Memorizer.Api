@@ -30,7 +30,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             var userIdString = userId.ToAspNetUserIdString();
             var ownerIdString = request.OwnerId?.ToAspNetUserIdString();
 
-            IQueryable<Models.Questionnaire> foundQuestionnaires;
+            IQueryable<Models.Questionnaire> foundQuestionnaires = DbContext.Questionnaires
+                .Include(q => q.LabelsForQuestionnaire)
+                .ThenInclude(el => el.Label);
 
             if (request.LabelsNames != null && request.LabelsNames.Any())
             {
@@ -47,17 +49,15 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 var questionnaireIds =
                     from entityLabel in entityLabels
                     group entityLabel by entityLabel.QuestionnaireId into grouped
-                    where grouped.Count() == request.LabelsNames.Count()
+                    where grouped.Count() >= request.LabelsNames.Count()
                     select grouped.Key;
 
                 foundQuestionnaires =
-                    from questionnaire in DbContext.Questionnaires
+                    from questionnaire in foundQuestionnaires
                     where
                         questionnaireIds.Contains(questionnaire.QuestionnaireId)
                     select questionnaire;
             }
-            else
-                foundQuestionnaires = DbContext.Questionnaires;
 
             foundQuestionnaires =
                 from questionnaire in foundQuestionnaires
@@ -90,7 +90,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             foundQuestionnaires = foundQuestionnaires.Page(request.PageNumber, request.PageSize);
 
-            return _mapper.Map<IEnumerable<Questionnaire>>(await foundQuestionnaires.ToListAsync());
+            var foundQuestionnairesResult = await foundQuestionnaires.ToListAsync();
+            foreach (var questionnaire in foundQuestionnairesResult)
+                if (questionnaire?.LabelsForQuestionnaire != null)
+                    questionnaire.LabelsForQuestionnaire = questionnaire.LabelsForQuestionnaire.OrderBy(l => l.LabelNumber).ToList();
+
+            return _mapper.Map<IEnumerable<Questionnaire>>(foundQuestionnairesResult);
         }
     }
 }
