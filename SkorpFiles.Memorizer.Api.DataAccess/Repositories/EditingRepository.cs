@@ -31,7 +31,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             var ownerIdString = request.OwnerId?.ToAspNetUserIdString();
 
             IQueryable<Models.Questionnaire> foundQuestionnaires = DbContext.Questionnaires
-                .Include(q => q.LabelsForQuestionnaire)
+                .Include(q => q.LabelsForQuestionnaire!)
                 .ThenInclude(el => el.Label);
 
             if (request.LabelsNames != null && request.LabelsNames.Any())
@@ -65,7 +65,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     (request.Origin == null ||
                     (request.Origin == QuestionnaireOrigin.Own && questionnaire.OwnerId == userIdString) ||
                     (request.Origin == QuestionnaireOrigin.Foreign && questionnaire.OwnerId != userIdString)) &&
-                    (ownerIdString == null || request.OwnerId.Value == default || questionnaire.OwnerId == ownerIdString) &&
+                    (ownerIdString == null || request.OwnerId!.Value == default || questionnaire.OwnerId == ownerIdString) &&
                     (request.Availability == null || request.Availability == questionnaire.QuestionnaireAvailability) &&
                     (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName))
                 select questionnaire;

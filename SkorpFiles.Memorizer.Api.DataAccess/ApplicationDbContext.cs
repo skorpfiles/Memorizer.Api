@@ -11,16 +11,16 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
         {
         }
 
-        public DbSet<UserActivity> UserActivities { get; set; }
-        public DbSet<Questionnaire> Questionnaires { get; set; }
-        public DbSet<Question> Questions { get; set; }
-        public DbSet<QuestionUser> QuestionsUsers { get; set; }
-        public DbSet<Label> Labels { get; set; }
-        public DbSet<EntityLabel> EntitiesLabels { get; set; }
-        public DbSet<TypedAnswer> TypedAnswers { get; set; }
-        public DbSet<TrainingResult> TrainingResults { get; set; }
-        public DbSet<TrainingResultTypedAnswer> TrainingResultTypedAnswers { get; set; }
-        public DbSet<EventLog> EventLog { get; set; }
+        public DbSet<UserActivity> UserActivities => Set<UserActivity>();
+        public DbSet<Questionnaire> Questionnaires => Set<Questionnaire>();
+        public DbSet<Question> Questions => Set<Question>();
+        public DbSet<QuestionUser> QuestionsUsers => Set<QuestionUser>();
+        public DbSet<Label> Labels => Set<Label>();
+        public DbSet<EntityLabel> EntitiesLabels => Set<EntityLabel>();
+        public DbSet<TypedAnswer> TypedAnswers => Set<TypedAnswer>();
+        public DbSet<TrainingResult> TrainingResults => Set<TrainingResult>();
+        public DbSet<TrainingResultTypedAnswer> TrainingResultTypedAnswers => Set<TrainingResultTypedAnswer>();
+        public DbSet<EventLog> EventLog => Set<EventLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
