@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using SkorpFiles.Memorizer.Api.DataAccess.Exceptions;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
+using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
 using System;
@@ -96,6 +98,32 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     questionnaire.LabelsForQuestionnaire = questionnaire.LabelsForQuestionnaire.OrderBy(l => l.LabelNumber).ToList();
 
             return _mapper.Map<IEnumerable<Questionnaire>>(foundQuestionnairesResult);
+        }
+
+        public async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid questionnaireId) =>
+            await GetQuestionnaireAsync(userId, questionnaireId, null);
+
+        public async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, int questionnaireCode) =>
+            await GetQuestionnaireAsync(userId, null, questionnaireCode);
+
+        private async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
+        {
+            if (questionnaireId == null && questionnaireCode == null)
+                throw new ArgumentException($"Either {questionnaireId} or {questionnaireCode} should not be null.");
+
+            var questionnaireResult =
+                await (from questionnaire in DbContext.Questionnaires
+                       .Include(q=>q.LabelsForQuestionnaire!)
+                       .ThenInclude(el=>el.Label)
+                 where
+                     (questionnaireId == null || questionnaire.QuestionnaireId == questionnaireId) &&
+                     (questionnaireCode == null || questionnaire.QuestionnaireCode == questionnaireCode)
+                 select questionnaire).SingleOrDefaultAsync();
+
+            if (questionnaireResult != null && questionnaireResult.QuestionnaireAvailability == QuestionnaireAvailability.Private && Guid.Parse(questionnaireResult.OwnerId) != userId)
+                throw new AccessDeniedForUserException("Unable to get details about a private questionnaire to a foreign user.");
+
+            return _mapper.Map<Questionnaire>(questionnaireResult);
         }
     }
 }
