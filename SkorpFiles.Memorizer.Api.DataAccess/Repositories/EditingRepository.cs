@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using SkorpFiles.Memorizer.Api.DataAccess.Exceptions;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
@@ -23,7 +22,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Questionnaire>> GetQuestionnairesAsync(Guid userId,
+        public async Task<PaginatedCollection<Questionnaire>> GetQuestionnairesAsync(Guid userId,
             GetQuestionnairesRequest request)
         {
             if (request == null)
@@ -32,15 +31,18 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             var userIdString = userId.ToAspNetUserIdString();
             var ownerIdString = request.OwnerId?.ToAspNetUserIdString();
 
-            IQueryable<Models.Questionnaire> foundQuestionnaires = DbContext.Questionnaires
-                .Include(q => q.LabelsForQuestionnaire!)
-                .ThenInclude(el => el.Label);
+            IQueryable<Models.Questionnaire> foundQuestionnaires =
+                from questionnaire in DbContext.Questionnaires
+                    .Include(q => q.LabelsForQuestionnaire!)
+                    .ThenInclude(el => el.Label)
+                where !questionnaire.ObjectIsRemoved
+                select questionnaire;
 
             if (request.LabelsNames != null && request.LabelsNames.Any())
             {
                 var labelsIds =
                     from label in DbContext.Labels
-                    where request.LabelsNames.Contains(label.LabelName)
+                    where !label.ObjectIsRemoved && request.LabelsNames.Contains(label.LabelName)
                     select label.LabelId;
 
                 var entityLabels =
@@ -90,6 +92,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     break;
             }
 
+            var totalCount = await foundQuestionnaires.CountAsync();
+
             foundQuestionnaires = foundQuestionnaires.Page(request.PageNumber, request.PageSize);
 
             var foundQuestionnairesResult = await foundQuestionnaires.ToListAsync();
@@ -97,7 +101,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 if (questionnaire?.LabelsForQuestionnaire != null)
                     questionnaire.LabelsForQuestionnaire = questionnaire.LabelsForQuestionnaire.OrderBy(l => l.LabelNumber).ToList();
 
-            return _mapper.Map<IEnumerable<Questionnaire>>(foundQuestionnairesResult);
+            return new PaginatedCollection<Questionnaire>(_mapper.Map<IEnumerable<Questionnaire>>(foundQuestionnairesResult), totalCount, request.PageNumber);
         }
 
         public async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid questionnaireId) =>
@@ -106,24 +110,142 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         public async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, int questionnaireCode) =>
             await GetQuestionnaireAsync(userId, null, questionnaireCode);
 
+        public async Task<PaginatedCollection<Question>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.QuestionnaireId == null && request.QuestionnaireCode == null)
+                throw new ArgumentException($"Either QuestionnaireId or QuestionnaireCode should not be null.");
+
+            CheckIdAndCodeDefinitionRule(request.QuestionnaireId, request.QuestionnaireCode,
+                new ArgumentException($"Either ID or code should not be null."),
+                new ArgumentException($"Only one parameter of ID and code should be defined."));
+
+            //Checking user rights
+            var questionnaireResult =
+                await (from questionnaire in DbContext.Questionnaires
+                where
+                    (request.QuestionnaireId == null || questionnaire.QuestionnaireId == request.QuestionnaireId) &&
+                    (request.QuestionnaireCode == null || questionnaire.QuestionnaireCode == request.QuestionnaireCode)
+                select questionnaire).SingleOrDefaultAsync();
+
+            if (questionnaireResult != null)
+                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
+            else
+                throw new ObjectNotFoundException("No questionnaire with such ID or code.");
+
+            //Getting data
+            var userIdString = userId.ToAspNetUserIdString();
+
+            IQueryable<Models.Question> foundQuestions =
+                from question in DbContext.Questions
+                    .Include(q => q.LabelsForQuestion!)
+                    .ThenInclude(el => el.Label)
+                where !question.ObjectIsRemoved
+                select question;
+
+            if (request.LabelsNames != null && request.LabelsNames.Any())
+            {
+                var labelsIds =
+                    from label in DbContext.Labels
+                    where !label.ObjectIsRemoved && request.LabelsNames.Contains(label.LabelName)
+                    select label.LabelId;
+
+                var entityLabels =
+                    from entityLabel in DbContext.EntitiesLabels
+                    where labelsIds.Contains(entityLabel.LabelId)
+                    select entityLabel;
+
+                var questionIds =
+                    from entityLabel in entityLabels
+                    group entityLabel by entityLabel.QuestionId into grouped
+                    where grouped.Count() >= request.LabelsNames.Count()
+                    select grouped.Key;
+
+                foundQuestions =
+                    from question in foundQuestions
+                    where
+                        questionIds.Contains(question.QuestionId)
+                    select question;
+            }
+
+            foundQuestions =
+                from question in foundQuestions
+                where
+                    question.QuestionnaireId == questionnaireResult.QuestionnaireId
+                select question;
+
+            switch(request.SortField)
+            {
+                case QuestionSortField.AddedTime:
+                    switch(request.SortDirection)
+                    {
+                        case SortDirection.Ascending: foundQuestions = foundQuestions.OrderBy(p => p.ObjectCreationTimeUtc);break;
+                        case SortDirection.Descending: foundQuestions = foundQuestions.OrderByDescending(p => p.ObjectCreationTimeUtc);break;
+                    }
+                    break;
+                case QuestionSortField.Text:
+                    switch(request.SortDirection)
+                    {
+                        case SortDirection.Ascending: foundQuestions = foundQuestions.OrderBy(p => p.QuestionText);break;
+                        case SortDirection.Descending: foundQuestions = foundQuestions.OrderByDescending(p=>p.QuestionText);break;
+                    }
+                    break;
+            }
+
+            var totalCount = await foundQuestions.CountAsync();
+
+            foundQuestions = foundQuestions.Page(request.PageNumber, request.PageSize);
+
+            var foundQuestionsResult = await foundQuestions.ToListAsync();
+            foreach (var questionnaire in foundQuestionsResult)
+                if (questionnaire?.LabelsForQuestion != null)
+                    questionnaire.LabelsForQuestion = questionnaire.LabelsForQuestion.OrderBy(l => l.LabelNumber).ToList();
+
+            return new PaginatedCollection<Question>(_mapper.Map<IEnumerable<Question>>(foundQuestionsResult), totalCount, request.PageNumber);
+        }
+
         private async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             if (questionnaireId == null && questionnaireCode == null)
                 throw new ArgumentException($"Either {questionnaireId} or {questionnaireCode} should not be null.");
+
+            CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
+                new ArgumentException($"Either {questionnaireId} or {questionnaireCode} should not be null."),
+                new ArgumentException($"Only one parameter of {questionnaireId} and {questionnaireCode} should be defined."));
 
             var questionnaireResult =
                 await (from questionnaire in DbContext.Questionnaires
                        .Include(q=>q.LabelsForQuestionnaire!)
                        .ThenInclude(el=>el.Label)
                  where
+                     !questionnaire.ObjectIsRemoved &&
                      (questionnaireId == null || questionnaire.QuestionnaireId == questionnaireId) &&
                      (questionnaireCode == null || questionnaire.QuestionnaireCode == questionnaireCode)
                  select questionnaire).SingleOrDefaultAsync();
 
-            if (questionnaireResult != null && questionnaireResult.QuestionnaireAvailability == QuestionnaireAvailability.Private && Guid.Parse(questionnaireResult.OwnerId) != userId)
-                throw new AccessDeniedForUserException("Unable to get details about a private questionnaire to a foreign user.");
+            if (questionnaireResult != null)
+            {
+                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
+                return _mapper.Map<Questionnaire>(questionnaireResult);
+            }
+            else
+                throw new ObjectNotFoundException("Questionnaire with such ID or code is not found.");
+        }
 
-            return _mapper.Map<Questionnaire>(questionnaireResult);
+        private static void CheckQuestionnaireAvailabilityForUser(Guid currentUserId, Guid questionnaireOwnerId, QuestionnaireAvailability questionnaireAvailability)
+        {
+            if (questionnaireAvailability == QuestionnaireAvailability.Private && questionnaireOwnerId != currentUserId)
+                throw new AccessDeniedForUserException("Unable to get details about a private questionnaire to a foreign user.");
+        }
+
+        private static void CheckIdAndCodeDefinitionRule(Guid? id, int? code, Exception exceptionWhenBothNull, Exception exceptionWhenBothNotNull)
+        {
+            if (id == null && code == null)
+                throw exceptionWhenBothNull;
+            else if (id != null && code != null)
+                throw exceptionWhenBothNotNull;
         }
     }
 }

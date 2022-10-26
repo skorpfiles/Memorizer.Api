@@ -38,6 +38,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
                 .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.ObjectIsRemoved))
                 .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc));
+            CreateMap<Question, SkorpFiles.Memorizer.Api.Models.Question>()
+                .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.QuestionId))
+                .ForMember(dest => dest.CodeInQuestionnaire, opts => opts.MapFrom(src => src.QuestionQuestionnaireCode))
+                .ForMember(dest => dest.Reference, opts => opts.MapFrom(src => src.QuestionReference))
+                .ForMember(dest => dest.IsFixed, opts => opts.MapFrom(src => src.QuestionIsFixed))
+                .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
+                .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.ObjectIsRemoved))
+                .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc));
         }
     }
 }

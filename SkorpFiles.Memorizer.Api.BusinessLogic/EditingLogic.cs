@@ -29,9 +29,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             return await _editingRepository.GetQuestionnaireAsync(userId, questionnaireCode);
         }
 
-        public async Task<IEnumerable<Questionnaire>> GetQuestionnairesAsync(Guid userId, GetQuestionnairesRequest request)
+        public async Task<PaginatedCollection<Questionnaire>> GetQuestionnairesAsync(Guid userId, GetQuestionnairesRequest request)
         {
             return await _editingRepository.GetQuestionnairesAsync(userId, request);
+        }
+
+        public async Task<PaginatedCollection<Question>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
+        {
+            return await _editingRepository.GetQuestionsAsync(userId, request);
         }
     }
 }

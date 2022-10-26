@@ -67,16 +67,46 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 }
                 else
                     throw new NotImplementedException("Enum method is not implemented.");
+
+                return Ok(_mapper.Map<Questionnaire>(resultQuestionnaire));
             }
             catch(AccessDeniedForUserException e)
             {
                 return Unauthorized(e.Message);
             }
+            catch(ArgumentException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch(ObjectNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+        }
 
-            if (resultQuestionnaire != null)
-                return Ok(_mapper.Map<Questionnaire>(resultQuestionnaire));
-            else
-                return NotFound("Requested questionnaire is not found.");
+        [Route("Questions")]
+        [HttpGet]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> QuestionsAsync(GetQuestionsRequest request)
+        {
+            var userGuid = await GetCurrentUserGuidAsync();
+            try
+            {
+                var result = await _editingLogic.GetQuestionsAsync(userGuid, _mapper.Map<Api.Models.RequestModels.GetQuestionsRequest>(request));
+                return Ok(_mapper.Map<GetQuestionsResponse>(result));
+            }
+            catch(AccessDeniedForUserException e)
+            {
+                return Unauthorized(e.Message);
+            }
+            catch(ArgumentException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch(ObjectNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         private enum IdOrCode

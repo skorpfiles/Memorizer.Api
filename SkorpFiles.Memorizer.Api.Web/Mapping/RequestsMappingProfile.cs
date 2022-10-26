@@ -29,6 +29,17 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                     opts.Condition(src => src.SortDirection != null && Enum.TryParse<SortDirection>(src.SortDirection, true, out _));
                     opts.MapFrom(src => Enum.Parse<SortDirection>(src.SortDirection!, true));
                 });
+            CreateMap<GetQuestionsRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.GetQuestionsRequest>()
+                .ForMember(dest => dest.SortField, opts =>
+                {
+                    opts.Condition(src => src.SortField != null && Enum.TryParse<QuestionSortField>(src.SortField, true, out _));
+                    opts.MapFrom(src => Enum.Parse<QuestionSortField>(src.SortField!, true));
+                })
+                .ForMember(dest => dest.SortDirection, opts =>
+                {
+                    opts.Condition(src => src.SortDirection != null && Enum.TryParse<SortDirection>(src.SortDirection, true, out _));
+                    opts.MapFrom(src => Enum.Parse<SortDirection>(src.SortDirection!, true));
+                });
         }
     }
 }

@@ -3,8 +3,8 @@ using SkorpFiles.Memorizer.Api.Web.Models.Responses.Abstract;
 
 namespace SkorpFiles.Memorizer.Api.Web.Models.Responses
 {
-    public class GetQuestionnairesResponse:PaginatedCollectionResponse
+    public class GetQuestionsResponse:PaginatedCollectionResponse
     {
-        public List<Questionnaire>? Questionnaires { get; set; }
+        public List<Question>? Questions { get; set; }
     }
 }
