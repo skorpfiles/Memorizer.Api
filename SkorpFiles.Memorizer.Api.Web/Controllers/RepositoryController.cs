@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
+using SkorpFiles.Memorizer.Api.Web.Controllers.Abstract;
 using SkorpFiles.Memorizer.Api.Web.Models.ApiEntities;
 using SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository;
 using SkorpFiles.Memorizer.Api.Web.Models.Responses;

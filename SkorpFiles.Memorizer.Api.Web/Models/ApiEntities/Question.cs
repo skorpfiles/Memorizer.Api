@@ -15,5 +15,6 @@ namespace SkorpFiles.Memorizer.Api.Web.Models.ApiEntities
         public string? Reference { get; set; }
         public bool IsFixed { get; set; }
         public UserQuestionStatus? MyStatus { get; set; }
+        public int EstimatedTrainingTimeSeconds { get; set; }
     }
 }

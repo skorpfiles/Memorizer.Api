@@ -14,6 +14,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                 .ForMember(dest => dest.ParentLabelId, opts => opts.MapFrom(src => src.StatusInQuestionnaire!.ParentLabelId));
             CreateMap<SkorpFiles.Memorizer.Api.Models.Question, Question>()
                 .ForMember(dest => dest.Type, opts => opts.MapFrom(src => src.Type.ToString()));
+            CreateMap<SkorpFiles.Memorizer.Api.Models.UserQuestionStatus, UserQuestionStatus>();
         }
     }
 }

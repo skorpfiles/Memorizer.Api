@@ -138,12 +138,22 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             //Getting data
             var userIdString = userId.ToAspNetUserIdString();
 
-            IQueryable<Models.Question> foundQuestions =
+            var foundQuestionsAndStatuses =
                 from question in DbContext.Questions
+                    .Include(q => q.UsersForQuestion)
                     .Include(q => q.LabelsForQuestion!)
                     .ThenInclude(el => el.Label)
-                where !question.ObjectIsRemoved
-                select question;
+                join questionUser in DbContext.QuestionsUsers on question equals questionUser.Question into questionsUsersGrouped
+                from questionUserResult in questionsUsersGrouped.DefaultIfEmpty()
+                where !question.ObjectIsRemoved &&
+                    (questionUserResult==null || questionUserResult.UserId == userIdString)
+                select new
+                {
+                    Question = question,
+                    QuestionUser = questionUserResult
+                };
+
+            var test = foundQuestionsAndStatuses.ToList();
 
             if (request.LabelsNames != null && request.LabelsNames.Any())
             {
@@ -163,47 +173,54 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     where grouped.Count() >= request.LabelsNames.Count()
                     select grouped.Key;
 
-                foundQuestions =
-                    from question in foundQuestions
+                foundQuestionsAndStatuses =
+                    from questionAndStatus in foundQuestionsAndStatuses
                     where
-                        questionIds.Contains(question.QuestionId)
-                    select question;
+                        questionIds.Contains(questionAndStatus.Question.QuestionId)
+                    select questionAndStatus;
             }
 
-            foundQuestions =
-                from question in foundQuestions
+            foundQuestionsAndStatuses =
+                from questionAndStatus in foundQuestionsAndStatuses
                 where
-                    question.QuestionnaireId == questionnaireResult.QuestionnaireId
-                select question;
+                    questionAndStatus.Question.QuestionnaireId == questionnaireResult.QuestionnaireId
+                select questionAndStatus;
 
             switch(request.SortField)
             {
                 case QuestionSortField.AddedTime:
                     switch(request.SortDirection)
                     {
-                        case SortDirection.Ascending: foundQuestions = foundQuestions.OrderBy(p => p.ObjectCreationTimeUtc);break;
-                        case SortDirection.Descending: foundQuestions = foundQuestions.OrderByDescending(p => p.ObjectCreationTimeUtc);break;
+                        case SortDirection.Ascending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderBy(p => p.Question.ObjectCreationTimeUtc);break;
+                        case SortDirection.Descending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderByDescending(p => p.Question.ObjectCreationTimeUtc);break;
                     }
                     break;
                 case QuestionSortField.Text:
                     switch(request.SortDirection)
                     {
-                        case SortDirection.Ascending: foundQuestions = foundQuestions.OrderBy(p => p.QuestionText);break;
-                        case SortDirection.Descending: foundQuestions = foundQuestions.OrderByDescending(p=>p.QuestionText);break;
+                        case SortDirection.Ascending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderBy(p => p.Question.QuestionText);break;
+                        case SortDirection.Descending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderByDescending(p=>p.Question.QuestionText);break;
                     }
                     break;
             }
 
-            var totalCount = await foundQuestions.CountAsync();
+            var totalCount = await foundQuestionsAndStatuses.CountAsync();
 
-            foundQuestions = foundQuestions.Page(request.PageNumber, request.PageSize);
+            foundQuestionsAndStatuses = foundQuestionsAndStatuses.Page(request.PageNumber, request.PageSize);
 
-            var foundQuestionsResult = await foundQuestions.ToListAsync();
-            foreach (var questionnaire in foundQuestionsResult)
-                if (questionnaire?.LabelsForQuestion != null)
-                    questionnaire.LabelsForQuestion = questionnaire.LabelsForQuestion.OrderBy(l => l.LabelNumber).ToList();
+            var foundQuestionsAndStatusesResult = await foundQuestionsAndStatuses.ToListAsync();
+            foreach (var questionnaire in foundQuestionsAndStatusesResult)
+                if (questionnaire?.Question.LabelsForQuestion != null)
+                    questionnaire.Question.LabelsForQuestion = questionnaire.Question.LabelsForQuestion.OrderBy(l => l.LabelNumber).ToList();
 
-            return new PaginatedCollection<Question>(_mapper.Map<IEnumerable<Question>>(foundQuestionsResult), totalCount, request.PageNumber);
+            var foundQuestions = foundQuestionsAndStatusesResult.Select(questionAndStatus =>
+            {
+                var question = _mapper.Map<Question>(questionAndStatus.Question);
+                question.MyStatus = _mapper.Map<UserQuestionStatus>(questionAndStatus.QuestionUser);
+                return question;
+            });
+
+            return new PaginatedCollection<Question>(foundQuestions, totalCount, request.PageNumber);
         }
 
         private async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)

@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using SkorpFiles.Memorizer.Api.Web.Exceptions;
 
-namespace SkorpFiles.Memorizer.Api.Web.Controllers
+namespace SkorpFiles.Memorizer.Api.Web.Controllers.Abstract
 {
-    public abstract class ControllerWithUserInfo:Controller
+    public abstract class ControllerWithUserInfo : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IUserStore<IdentityUser> _userStore;

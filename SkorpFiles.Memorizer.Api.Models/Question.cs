@@ -19,5 +19,8 @@ namespace SkorpFiles.Memorizer.Api.Models
         public int EstimatedTrainingTimeSeconds { get; set; }
         public Guid QuestionnaireId { get; set; }
         public int CodeInQuestionnaire { get; set; }
+        public IEnumerable<Label>? Labels { get; set; }
+        public IEnumerable<TypedAnswer>? TypedAnswers { get; set; }
+        public UserQuestionStatus? MyStatus { get; set; }
     }
 }
