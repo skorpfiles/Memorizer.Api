@@ -45,11 +45,18 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.IsFixed, opts => opts.MapFrom(src => src.QuestionIsFixed))
                 .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
                 .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.ObjectIsRemoved))
-                .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc));
+                .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc))
+                .ForMember(dest => dest.Labels, opts => opts.MapFrom(src => src.LabelsForQuestion));
             CreateMap<QuestionUser, SkorpFiles.Memorizer.Api.Models.UserQuestionStatus>()
                 .ForMember(dest => dest.IsNew, opts => opts.MapFrom(src => src.QuestionUserIsNew))
                 .ForMember(dest => dest.Rating, opts => opts.MapFrom(src => src.QuestionUserRating))
                 .ForMember(dest => dest.PenaltyPoints, opts => opts.MapFrom(src => src.QuestionUserPenaltyPoints));
+            CreateMap<TypedAnswer, SkorpFiles.Memorizer.Api.Models.TypedAnswer>()
+                .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.TypedAnswerId))
+                .ForMember(dest => dest.Text, opts=>opts.MapFrom(src=>src.TypedAnswerText))
+                .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
+                .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.ObjectIsRemoved))
+                .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc));
         }
     }
 }

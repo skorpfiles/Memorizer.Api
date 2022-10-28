@@ -140,7 +140,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var foundQuestionsAndStatuses =
                 from question in DbContext.Questions
-                    .Include(q => q.UsersForQuestion)
+                    .Include(q => q.TypedAnswers)
                     .Include(q => q.LabelsForQuestion!)
                     .ThenInclude(el => el.Label)
                 join questionUser in DbContext.QuestionsUsers on question equals questionUser.Question into questionsUsersGrouped
@@ -152,8 +152,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     Question = question,
                     QuestionUser = questionUserResult
                 };
-
-            var test = foundQuestionsAndStatuses.ToList();
 
             if (request.LabelsNames != null && request.LabelsNames.Any())
             {

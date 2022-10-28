@@ -10,7 +10,6 @@ namespace SkorpFiles.Memorizer.Api.Models
     public class TypedAnswer:Entity
     {
         public Guid QuestionId { get; set; }
-        public int CodeInQuestion { get; set; }
         public string? Text { get; set; }
     }
 }
