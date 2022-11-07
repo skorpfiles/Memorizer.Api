@@ -221,6 +221,45 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return new PaginatedCollection<Question>(foundQuestions, totalCount, request.PageNumber);
         }
 
+        public async Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, CreateQuestionnaireRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Name))
+                throw new ArgumentException($"{request.Name} cannot be null.");
+
+            var labelsList = request.Labels?.ToList();
+
+            if (labelsList!=null)
+                await CheckLabelsAvailabilityForManagingQuestionnairesAsync(userId, labelsList);
+
+            Models.Questionnaire newQuestionnaire = new Models.Questionnaire(request.Name, userId.ToAspNetUserIdString())
+            {
+                QuestionnaireAvailability = request.Availability,
+                ObjectCreationTimeUtc = DateTime.UtcNow,
+                ObjectIsRemoved = false
+            };
+
+            var questionnaireEntry = DbContext.Questionnaires.Add(newQuestionnaire);
+
+            if (labelsList != null)
+                foreach(var label in labelsList)
+                {
+                    DbContext.EntitiesLabels.Add(new Models.EntityLabel
+                    {
+                        EntityType = Enums.EntityType.Questionnaire,
+                        QuestionnaireId = questionnaireEntry.Entity.QuestionnaireId,
+                        LabelId = label.Id,
+                        LabelNumber = label.Number,
+                        ParentLabelId = label.ParentLabelId,
+                        ObjectCreationTimeUtc = DateTime.UtcNow,
+                    });
+                }
+
+            await DbContext.SaveChangesAsync();
+
+            var result = questionnaireEntry.Entity;
+            return _mapper.Map<Questionnaire>(result);
+        }
+
         private async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             if (questionnaireId == null && questionnaireCode == null)
@@ -261,6 +300,26 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw exceptionWhenBothNull;
             else if (id != null && code != null)
                 throw exceptionWhenBothNotNull;
+        }
+
+        private async Task CheckLabelsAvailabilityForManagingQuestionnairesAsync(Guid userId, List<LabelInQuestionnaire> labelsIds)
+        {
+            if (labelsIds!=null)
+                foreach(var labelFromParameter in labelsIds)
+                {
+                    var labelFromDb =
+                        await (from label in DbContext.Labels
+                         where
+                             label.LabelId == labelFromParameter.Id
+                               select label).SingleOrDefaultAsync();
+                    if (labelFromDb != null)
+                    {
+                        if (!Guid.TryParse(labelFromDb.OwnerId, out Guid ownerGuid) || ownerGuid != userId)
+                            throw new AccessDeniedForUserException($"The user '{userId}' doesn't have a managing access to the label '{labelFromParameter.Id}'.");
+                    }
+                    else
+                        throw new ObjectNotFoundException($"The label '{labelFromParameter.Id}' is not found.");
+                }
         }
     }
 }

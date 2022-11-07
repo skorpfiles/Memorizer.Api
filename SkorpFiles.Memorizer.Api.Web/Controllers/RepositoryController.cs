@@ -85,6 +85,14 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             }
         }
 
+        [Route("Questionnaire")]
+        [HttpPut]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> QuestionnaireAsync(PutQuestionnaireRequest request)
+        {
+
+        }
+
         [Route("Questions")]
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]

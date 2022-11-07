@@ -40,6 +40,12 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                     opts.Condition(src => src.SortDirection != null && Enum.TryParse<SortDirection>(src.SortDirection, true, out _));
                     opts.MapFrom(src => Enum.Parse<SortDirection>(src.SortDirection!, true));
                 });
+            CreateMap<PutQuestionnaireRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.CreateQuestionnaireRequest>()
+                .ForMember(dest => dest.Availability, opts =>
+                {
+                    opts.Condition(src => src.Availability != null && Enum.TryParse<QuestionnaireAvailability>(src.Availability, true, out _));
+                    opts.MapFrom(src => Enum.Parse<QuestionnaireAvailability>(src.Availability!, true));
+                });
         }
     }
 }

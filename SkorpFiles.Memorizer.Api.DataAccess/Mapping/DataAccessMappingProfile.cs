@@ -26,8 +26,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.Name, opts => opts.MapFrom(src => src.Label!.LabelName))
                 .ForMember(dest => dest.StatusInQuestionnaire, opts => opts.MapFrom(src => new SkorpFiles.Memorizer.Api.Models.LabelInQuestionnaire
                 {
-                     Number = src.LabelNumber,
-                     ParentLabelId = src.ParentLabelId
+                    Id = src.LabelId,
+                    Number = src.LabelNumber,
+                    ParentLabelId = src.ParentLabelId
                 }))
                 .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
                 .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.Label!.ObjectIsRemoved))
