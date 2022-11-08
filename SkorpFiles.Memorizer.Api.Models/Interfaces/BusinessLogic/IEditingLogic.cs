@@ -7,6 +7,7 @@ namespace SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic
         Task<PaginatedCollection<Questionnaire>> GetQuestionnairesAsync(Guid userId, GetQuestionnairesRequest request);
         Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid questionnaireId);
         Task<Questionnaire> GetQuestionnaireAsync(Guid userId, int questionnaireCode);
+        Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, CreateQuestionnaireRequest request);
         Task<PaginatedCollection<Question>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request);
     }
 }

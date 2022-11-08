@@ -1,7 +1,7 @@
 ﻿namespace SkorpFiles.Memorizer.Api.Web.Exceptions
 {
     [Serializable]
-    public class InternalAuthenticationErrorException : Exception
+    public class InternalAuthenticationErrorException : InternalErrorException
     {
         public InternalAuthenticationErrorException() { }
         public InternalAuthenticationErrorException(string message) : base(message) { }

@@ -11,6 +11,8 @@ using StackExchange.Redis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using SkorpFiles.Memorizer.Api.Web.Models.Responses;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
@@ -104,7 +106,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 if (confirmingResult.Succeeded)
                 {
                     await _accountLogic.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
-                    return CreatedAtAction("Register", new { UserId = userId });
+                    return CreatedAtRoute("GetAccount", new { id = userId }, new { UserId = userId });
                 }
                 else
                     return BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \n" + string.Join('\n', confirmingResult.Errors.Select(er => er.Description))));
@@ -135,6 +137,14 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             }
             else
                 return BadRequest("No authentication token.");
+        }
+
+        [Route("{id}", Name = "GetAccount")]
+        [HttpGet]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public IActionResult Index(string id)
+        {
+            throw new NotImplementedException();
         }
 
         private async Task<ClaimsIdentity?> GetIdentityAsync(string username, string password)

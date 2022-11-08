@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 using SkorpFiles.Memorizer.Api.Web.Controllers.Abstract;
+using SkorpFiles.Memorizer.Api.Web.Exceptions;
 using SkorpFiles.Memorizer.Api.Web.Models.ApiEntities;
 using SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository;
 using SkorpFiles.Memorizer.Api.Web.Models.Responses;
@@ -35,7 +36,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             return Ok(_mapper.Map<GetQuestionnairesResponse>(result));
         }
 
-        [Route("Questionnaire/{idOrCode}")]
+        [Route("Questionnaire/{idOrCode}", Name = "GetQuestionnaire")]
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> QuestionnaireAsync(string idOrCode)
@@ -90,7 +91,31 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> QuestionnaireAsync(PutQuestionnaireRequest request)
         {
-
+            try
+            {
+                var creatingResult = await _editingLogic.CreateQuestionnaireAsync(await GetCurrentUserGuidAsync(), _mapper.Map<Api.Models.RequestModels.CreateQuestionnaireRequest>(request));
+                if (creatingResult != null)
+                    return CreatedAtRoute("GetQuestionnaire",new {idOrCode=creatingResult.Code.ToString()},
+                    new IdentifiersGroupResponse
+                    {
+                        Code = creatingResult.Code,
+                        Id = creatingResult.Id
+                    });
+                else
+                    throw new InternalErrorException("The database hasn't returned a result.");
+            }
+            catch (AccessDeniedForUserException e)
+            {
+                return Unauthorized(e.Message);
+            }
+            catch (ArgumentException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ObjectNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [Route("Questions")]
