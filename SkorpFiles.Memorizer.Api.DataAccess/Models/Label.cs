@@ -9,6 +9,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
     {
         [Key]
         public Guid LabelId { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int LabelCode { get; set; }
         public string LabelName { get; set; }
         public string OwnerId { get; set; }
 

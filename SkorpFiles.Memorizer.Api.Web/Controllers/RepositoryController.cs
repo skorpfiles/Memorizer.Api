@@ -118,16 +118,13 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             }
         }
 
-        [Route("Questionnaire/{idOrCode}")]
-        [HttpDelete]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> QuestionnaireAsync(string idOrCode)
-        {
-            try
-            {
-
-            }
-        }
+        //[Route("Questionnaire/{idOrCode}")]
+        //[HttpDelete]
+        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        //public async Task<IActionResult> QuestionnaireAsync(string idOrCode)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         [Route("Questions")]
         [HttpGet]

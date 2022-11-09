@@ -63,5 +63,35 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
         {
             throw new NotImplementedException();
         }
+
+        public Task<PaginatedCollection<Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Label> GetLabelAsync(Guid userId, Guid labelId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Label> GetLabelAsync(Guid userId, int labelCode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Label> CreateLabelAsync(Guid userId, string labelName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteLabelAsync(Guid userId, Guid labelId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteLabelAsync(Guid userId, int labelCode)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
