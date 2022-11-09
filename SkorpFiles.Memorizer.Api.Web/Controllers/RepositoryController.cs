@@ -29,7 +29,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [Route("Questionnaires")]
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> QuestionnairesAsync(GetQuestionnairesRequest request)
+        public async Task<IActionResult> GetQuestionnairesAsync(GetQuestionnairesRequest request)
         {
             var userGuid = await GetCurrentUserGuidAsync();
             var result = await _editingLogic.GetQuestionnairesAsync(userGuid, _mapper.Map<SkorpFiles.Memorizer.Api.Models.RequestModels.GetQuestionnairesRequest>(request));
@@ -39,7 +39,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [Route("Questionnaire/{idOrCode}", Name = "GetQuestionnaire")]
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> QuestionnaireAsync(string idOrCode)
+        public async Task<IActionResult> GetQuestionnaireAsync(string idOrCode)
         {
             object idOrCodeObj;
             IdOrCode isIdOrCode;
@@ -89,7 +89,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [Route("Questionnaire")]
         [HttpPut]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> QuestionnaireAsync(PutQuestionnaireRequest request)
+        public async Task<IActionResult> PutQuestionnaireAsync(PutQuestionnaireRequest request)
         {
             try
             {
@@ -118,18 +118,58 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             }
         }
 
-        //[Route("Questionnaire/{idOrCode}")]
-        //[HttpDelete]
-        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        //public async Task<IActionResult> QuestionnaireAsync(string idOrCode)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        [Route("Questionnaire/{idOrCode}")]
+        [HttpDelete]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> DeleteQuestionnaireAsync(string idOrCode)
+        {
+            object idOrCodeObj;
+            IdOrCode isIdOrCode;
+
+            try
+            {
+                isIdOrCode = GetIdType(idOrCode, out idOrCodeObj);
+            }
+            catch (ArgumentException)
+            {
+                return BadRequest("Unsupported ID parameter: only GUID or integer are supported.");
+            }
+
+            try
+            {
+                if (isIdOrCode == IdOrCode.Id)
+                {
+                    await _editingLogic.DeleteQuestionnaireAsync(
+                        await GetCurrentUserGuidAsync(), (Guid)idOrCodeObj);
+                }
+                else if (isIdOrCode == IdOrCode.Code)
+                {
+                    await _editingLogic.DeleteQuestionnaireAsync(
+                        await GetCurrentUserGuidAsync(), (int)idOrCodeObj);
+                }
+                else
+                    throw new NotImplementedException("Enum method is not implemented.");
+
+                return Ok();
+            }
+            catch (AccessDeniedForUserException e)
+            {
+                return Unauthorized(e.Message);
+            }
+            catch (ArgumentException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (ObjectNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+        }
 
         [Route("Questions")]
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> QuestionsAsync(GetQuestionsRequest request)
+        public async Task<IActionResult> GetQuestionsAsync(GetQuestionsRequest request)
         {
             var userGuid = await GetCurrentUserGuidAsync();
             try
