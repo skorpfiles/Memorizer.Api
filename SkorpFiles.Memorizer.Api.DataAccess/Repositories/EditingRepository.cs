@@ -265,15 +265,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             throw new NotImplementedException();
         }
 
-        public Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId)
-        {
-            throw new NotImplementedException();
-        }
+        public Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId)=>
+            DeleteQuestionnaireAsync(userId,questionnaireId);
 
-        public Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)
-        {
-            throw new NotImplementedException();
-        }
+        public Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)=>
+            DeleteQuestionnaireAsync(userId,null,questionnaireCode);
 
         public Task<Question> UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request)
         {
@@ -313,11 +309,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         private async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             if (questionnaireId == null && questionnaireCode == null)
-                throw new ArgumentException($"Either {questionnaireId} or {questionnaireCode} should not be null.");
+                throw new ArgumentException($"Either Questionnaire ID or Questionnaire Code should not be null.");
 
             CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
-                new ArgumentException($"Either {questionnaireId} or {questionnaireCode} should not be null."),
-                new ArgumentException($"Only one parameter of {questionnaireId} and {questionnaireCode} should be defined."));
+                new ArgumentException($"Either Questionnaire ID or Questionnaire Code should not be null."),
+                new ArgumentException($"Only one parameter of Questionnaire ID and Questionnaire Code should be defined."));
 
             var questionnaireResult =
                 await (from questionnaire in DbContext.Questionnaires
@@ -336,6 +332,39 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             }
             else
                 throw new ObjectNotFoundException("Questionnaire with such ID or code is not found.");
+        }
+
+        private async Task<Questionnaire> DeleteQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
+        {
+            if (questionnaireId == null && questionnaireCode == null)
+                throw new ArgumentException($"Either Questionnaire ID or Questionnaire Code should not be null.");
+
+            CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
+                new ArgumentException($"Either Questionnaire ID or Questionnaire Code should not be null."),
+                new ArgumentException($"Only one parameter of Questionnaire ID and Questionnaire Code should be defined."));
+
+            var questionnaireDetails =
+                await (from questionnaire in DbContext.Questionnaires.Include(q=>q.Questions)
+                       where
+                           !questionnaire.ObjectIsRemoved &&
+                           (questionnaireId == null || questionnaire.QuestionnaireId == questionnaireId) &&
+                           (questionnaireCode == null || questionnaire.QuestionnaireCode == questionnaireCode)
+                       select questionnaire).SingleOrDefaultAsync();
+            if (questionnaireDetails != null)
+            {
+                if (Guid.TryParse(questionnaireDetails.OwnerId, out Guid ownerGuid) && ownerGuid == userId)
+                {
+                    questionnaireDetails.ObjectIsRemoved = true;
+                    questionnaireDetails.ObjectRemovalTimeUtc = DateTime.UtcNow;
+                    await DbContext.SaveChangesAsync();
+                }
+                else
+                    throw new AccessDeniedForUserException("The user doesn't have rights to delete the questionnaire.");
+            }
+            else
+                throw new ObjectNotFoundException("Questionnaire with such ID or Code doesn't exist.");
+
+            return _mapper.Map<Questionnaire>(questionnaireDetails);
         }
 
         private static void CheckQuestionnaireAvailabilityForUser(Guid currentUserId, Guid questionnaireOwnerId, Availability questionnaireAvailability)

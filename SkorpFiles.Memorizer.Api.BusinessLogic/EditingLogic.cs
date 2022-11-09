@@ -44,14 +44,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             throw new NotImplementedException();
         }
 
-        public Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId)
+        public async Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId)
         {
-            throw new NotImplementedException();
+            await _editingRepository.DeleteQuestionnaireAsync(userId, questionnaireId);
         }
 
-        public Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)
+        public async Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)
         {
-            throw new NotImplementedException();
+            await _editingRepository.DeleteQuestionnaireAsync(userId, questionnaireCode);
         }
 
         public async Task<PaginatedCollection<Question>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
