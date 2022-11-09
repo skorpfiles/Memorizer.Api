@@ -93,7 +93,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         {
             try
             {
-                var creatingResult = await _editingLogic.CreateQuestionnaireAsync(await GetCurrentUserGuidAsync(), _mapper.Map<Api.Models.RequestModels.CreateQuestionnaireRequest>(request));
+                var creatingResult = await _editingLogic.CreateQuestionnaireAsync(await GetCurrentUserGuidAsync(), _mapper.Map<Api.Models.RequestModels.UpdateQuestionnaireRequest>(request));
                 if (creatingResult != null)
                     return CreatedAtRoute("GetQuestionnaire",new {idOrCode=creatingResult.Code.ToString()},
                     new IdentifiersGroupResponse
@@ -115,6 +115,17 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             catch (ObjectNotFoundException e)
             {
                 return NotFound(e.Message);
+            }
+        }
+
+        [Route("Questionnaire/{idOrCode}")]
+        [HttpDelete]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> QuestionnaireAsync(string idOrCode)
+        {
+            try
+            {
+
             }
         }
 

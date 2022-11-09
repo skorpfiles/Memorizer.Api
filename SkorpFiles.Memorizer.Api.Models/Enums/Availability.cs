@@ -1,6 +1,6 @@
 ﻿namespace SkorpFiles.Memorizer.Api.Models.Enums
 {
-    public enum QuestionnaireAvailability
+    public enum Availability
     {
         Private = 0,
         Public = 1

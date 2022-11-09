@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.Models.Enums
 {
-    public enum QuestionnaireOrigin
+    public enum Origin
     {
         Own = 1,
         Foreign = 2

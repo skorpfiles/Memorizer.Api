@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.Models.RequestModels
 {
-    public class CreateQuestionnaireRequest
+    public class UpdateQuestionnaireRequest
     {
         public string? Name { get; set; }
-        public QuestionnaireAvailability Availability { get; set; }
+        public Availability Availability { get; set; }
         public IEnumerable<LabelInQuestionnaire>? Labels { get; set; }
     }
 }

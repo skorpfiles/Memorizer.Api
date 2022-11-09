@@ -12,7 +12,7 @@ namespace SkorpFiles.Memorizer.Api.Models
     public class Questionnaire:Entity
     {
         public string? Name { get; set; }
-        public QuestionnaireAvailability Availability { get; set; }
+        public Availability Availability { get; set; }
         public Guid OwnerId { get; set; }
         public int QuestionsCount { get; set; }
         public List<Label>? Labels { get; set; }

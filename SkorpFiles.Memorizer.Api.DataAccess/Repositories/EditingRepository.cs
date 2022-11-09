@@ -67,8 +67,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 from questionnaire in foundQuestionnaires
                 where
                     (request.Origin == null ||
-                    (request.Origin == QuestionnaireOrigin.Own && questionnaire.OwnerId == userIdString) ||
-                    (request.Origin == QuestionnaireOrigin.Foreign && questionnaire.OwnerId != userIdString)) &&
+                    (request.Origin == Origin.Own && questionnaire.OwnerId == userIdString) ||
+                    (request.Origin == Origin.Foreign && questionnaire.OwnerId != userIdString)) &&
                     (ownerIdString == null || request.OwnerId!.Value == default || questionnaire.OwnerId == ownerIdString) &&
                     (request.Availability == null || request.Availability == questionnaire.QuestionnaireAvailability) &&
                     (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName.ToLower()))
@@ -221,7 +221,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return new PaginatedCollection<Question>(foundQuestions, totalCount, request.PageNumber);
         }
 
-        public async Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, CreateQuestionnaireRequest request)
+        public async Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
         {
             if (string.IsNullOrEmpty(request.Name))
                 throw new ArgumentException($"{request.Name} cannot be null.");
@@ -260,6 +260,56 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return _mapper.Map<Questionnaire>(result);
         }
 
+        public Task<Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Question> UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PaginatedCollection<Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Label> GetLabelAsync(Guid userId, Guid labelId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Label> GetLabelAsync(Guid userId, int labelCode)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Label> CreateLabelAsync(Guid userId, string labelName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteLabelAsync(Guid userId, Guid labelId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteLabelAsync(Guid userId, int labelCode)
+        {
+            throw new NotImplementedException();
+        }
+
         private async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             if (questionnaireId == null && questionnaireCode == null)
@@ -288,9 +338,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw new ObjectNotFoundException("Questionnaire with such ID or code is not found.");
         }
 
-        private static void CheckQuestionnaireAvailabilityForUser(Guid currentUserId, Guid questionnaireOwnerId, QuestionnaireAvailability questionnaireAvailability)
+        private static void CheckQuestionnaireAvailabilityForUser(Guid currentUserId, Guid questionnaireOwnerId, Availability questionnaireAvailability)
         {
-            if (questionnaireAvailability == QuestionnaireAvailability.Private && questionnaireOwnerId != currentUserId)
+            if (questionnaireAvailability == Availability.Private && questionnaireOwnerId != currentUserId)
                 throw new AccessDeniedForUserException("Unable to get details about a private questionnaire to a foreign user.");
         }
 

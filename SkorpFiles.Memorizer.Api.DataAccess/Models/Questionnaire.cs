@@ -13,7 +13,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int QuestionnaireCode { get; set; }
         public string QuestionnaireName { get; set; }
-        public QuestionnaireAvailability QuestionnaireAvailability { get; set; }
+        public Availability QuestionnaireAvailability { get; set; }
         public string OwnerId { get; set; }
 
         public List<EntityLabel>? LabelsForQuestionnaire { get; set; }

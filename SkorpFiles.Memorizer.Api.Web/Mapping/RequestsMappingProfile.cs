@@ -11,13 +11,13 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
             CreateMap<GetQuestionnairesRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.GetQuestionnairesRequest>()
                 .ForMember(dest => dest.Origin, opts =>
                 {
-                    opts.Condition(src => src.Origin != null && Enum.TryParse<QuestionnaireOrigin>(src.Origin, true, out _));
-                    opts.MapFrom(src => Enum.Parse<QuestionnaireOrigin>(src.Origin!, true));
+                    opts.Condition(src => src.Origin != null && Enum.TryParse<Origin>(src.Origin, true, out _));
+                    opts.MapFrom(src => Enum.Parse<Origin>(src.Origin!, true));
                 })
                 .ForMember(dest => dest.Availability, opts =>
                 {
-                    opts.Condition(src => src.Availability != null && Enum.TryParse<QuestionnaireAvailability>(src.Availability, true, out _));
-                    opts.MapFrom(src => Enum.Parse<QuestionnaireAvailability>(src.Availability!, true));
+                    opts.Condition(src => src.Availability != null && Enum.TryParse<Availability>(src.Availability, true, out _));
+                    opts.MapFrom(src => Enum.Parse<Availability>(src.Availability!, true));
                 })
                 .ForMember(dest => dest.SortField, opts =>
                 {
@@ -40,11 +40,11 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                     opts.Condition(src => src.SortDirection != null && Enum.TryParse<SortDirection>(src.SortDirection, true, out _));
                     opts.MapFrom(src => Enum.Parse<SortDirection>(src.SortDirection!, true));
                 });
-            CreateMap<PutQuestionnaireRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.CreateQuestionnaireRequest>()
+            CreateMap<PutQuestionnaireRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.UpdateQuestionnaireRequest>()
                 .ForMember(dest => dest.Availability, opts =>
                 {
-                    opts.Condition(src => src.Availability != null && Enum.TryParse<QuestionnaireAvailability>(src.Availability, true, out _));
-                    opts.MapFrom(src => Enum.Parse<QuestionnaireAvailability>(src.Availability!, true));
+                    opts.Condition(src => src.Availability != null && Enum.TryParse<Availability>(src.Availability, true, out _));
+                    opts.MapFrom(src => Enum.Parse<Availability>(src.Availability!, true));
                 });
         }
     }

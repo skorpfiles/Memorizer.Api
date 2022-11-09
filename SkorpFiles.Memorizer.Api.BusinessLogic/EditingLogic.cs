@@ -34,14 +34,34 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             return await _editingRepository.GetQuestionnairesAsync(userId, request);
         }
 
-        public async Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, CreateQuestionnaireRequest request)
+        public async Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
         {
             return await _editingRepository.CreateQuestionnaireAsync(userId, request);
+        }
+
+        public Task<Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<PaginatedCollection<Question>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
         {
             return await _editingRepository.GetQuestionsAsync(userId, request);
+        }
+
+        public Task<Question> UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request)
+        {
+            throw new NotImplementedException();
         }
     }
 }
