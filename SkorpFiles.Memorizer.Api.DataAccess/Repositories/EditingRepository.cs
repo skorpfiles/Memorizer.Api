@@ -221,6 +221,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return new PaginatedCollection<Question>(foundQuestions, totalCount, request.PageNumber);
         }
 
+        public Task UpdateQuestionsAsync(Guid userId, UpdateQuestionsRequest request)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
         {
             if (string.IsNullOrEmpty(request.Name))

@@ -12,6 +12,7 @@ namespace SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess
         Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId);
         Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode);
         Task<PaginatedCollection<Question>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request);
+        Task UpdateQuestionsAsync(Guid userId, UpdateQuestionsRequest request);
         Task<Question> UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request);
 
         Task<PaginatedCollection<Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request);
