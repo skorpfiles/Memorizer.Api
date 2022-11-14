@@ -115,12 +115,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            if (request.QuestionnaireId == null && request.QuestionnaireCode == null)
-                throw new ArgumentException($"Either QuestionnaireId or QuestionnaireCode should not be null.");
-
             CheckIdAndCodeDefinitionRule(request.QuestionnaireId, request.QuestionnaireCode,
-                new ArgumentException($"Either ID or code should not be null."),
-                new ArgumentException($"Only one parameter of ID and code should be defined."));
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
 
             //Checking user rights
             var questionnaireResult =
@@ -228,6 +225,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
         {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
             if (string.IsNullOrEmpty(request.Name))
                 throw new ArgumentException($"{request.Name} cannot be null.");
 
@@ -267,6 +267,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public Task<Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
         {
+            if (request==null)
+                throw new ArgumentNullException(nameof(request));
+
+            CheckIdAndCodeDefinitionRule(request.Id, request.Code,
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
+
             throw new NotImplementedException();
         }
 
@@ -313,12 +320,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         private async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
-            if (questionnaireId == null && questionnaireCode == null)
-                throw new ArgumentException($"Either Questionnaire ID or Questionnaire Code should not be null.");
-
             CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
-                new ArgumentException($"Either Questionnaire ID or Questionnaire Code should not be null."),
-                new ArgumentException($"Only one parameter of Questionnaire ID and Questionnaire Code should be defined."));
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
 
             var questionnaireResult =
                 await (from questionnaire in DbContext.Questionnaires
@@ -341,12 +345,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         private async Task<Questionnaire> DeleteQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
-            if (questionnaireId == null && questionnaireCode == null)
-                throw new ArgumentException($"Either Questionnaire ID or Questionnaire Code should not be null.");
-
             CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
-                new ArgumentException($"Either Questionnaire ID or Questionnaire Code should not be null."),
-                new ArgumentException($"Only one parameter of Questionnaire ID and Questionnaire Code should be defined."));
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull), 
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
 
             var questionnaireDetails =
                 await (from questionnaire in DbContext.Questionnaires.Include(q=>q.Questions)
