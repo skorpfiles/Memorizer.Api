@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
-using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
@@ -22,7 +21,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             _mapper = mapper;
         }
 
-        public async Task<PaginatedCollection<Questionnaire>> GetQuestionnairesAsync(Guid userId,
+        public async Task<Api.Models.PaginatedCollection<Api.Models.Questionnaire>> GetQuestionnairesAsync(Guid userId,
             GetQuestionnairesRequest request)
         {
             if (request == null)
@@ -101,16 +100,16 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 if (questionnaire?.LabelsForQuestionnaire != null)
                     questionnaire.LabelsForQuestionnaire = questionnaire.LabelsForQuestionnaire.OrderBy(l => l.LabelNumber).ToList();
 
-            return new PaginatedCollection<Questionnaire>(_mapper.Map<IEnumerable<Questionnaire>>(foundQuestionnairesResult), totalCount, request.PageNumber);
+            return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(_mapper.Map<IEnumerable<Api.Models.Questionnaire>>(foundQuestionnairesResult), totalCount, request.PageNumber);
         }
 
-        public async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid questionnaireId) =>
-            await GetQuestionnaireAsync(userId, questionnaireId, null);
+        public async Task<Api.Models.Questionnaire> GetQuestionnaireAsync(Guid userId, Guid questionnaireId) =>
+            _mapper.Map<Api.Models.Questionnaire>(await GetQuestionnaireAsync(userId, questionnaireId, null));
 
-        public async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, int questionnaireCode) =>
-            await GetQuestionnaireAsync(userId, null, questionnaireCode);
+        public async Task<Api.Models.Questionnaire> GetQuestionnaireAsync(Guid userId, int questionnaireCode) =>
+            _mapper.Map<Api.Models.Questionnaire>(await GetQuestionnaireAsync(userId, null, questionnaireCode));
 
-        public async Task<PaginatedCollection<Question>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
+        public async Task<Api.Models.PaginatedCollection<Api.Models.Question>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -210,12 +209,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var foundQuestions = foundQuestionsAndStatusesResult.Select(questionAndStatus =>
             {
-                var question = _mapper.Map<Question>(questionAndStatus.Question);
-                question.MyStatus = _mapper.Map<UserQuestionStatus>(questionAndStatus.QuestionUser);
+                var question = _mapper.Map<Api.Models.Question>(questionAndStatus.Question);
+                question.MyStatus = _mapper.Map<Api.Models.UserQuestionStatus>(questionAndStatus.QuestionUser);
                 return question;
             });
 
-            return new PaginatedCollection<Question>(foundQuestions, totalCount, request.PageNumber);
+            return new Api.Models.PaginatedCollection<Api.Models.Question>(foundQuestions, totalCount, request.PageNumber);
         }
 
         public Task UpdateQuestionsAsync(Guid userId, UpdateQuestionsRequest request)
@@ -223,7 +222,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             throw new NotImplementedException();
         }
 
-        public async Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
+        public async Task<Api.Models.Questionnaire> CreateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -234,11 +233,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             var labelsList = request.Labels?.ToList();
 
             if (labelsList!=null)
-                await CheckLabelsAvailabilityForManagingQuestionnairesAsync(userId, labelsList);
+                await CheckLabelsAvailabilityForManagingQuestionnairesAsync(userId, labelsList.Select(l=>l.Id).ToList());
 
             Models.Questionnaire newQuestionnaire = new Models.Questionnaire(request.Name, userId.ToAspNetUserIdString())
             {
-                QuestionnaireAvailability = request.Availability,
+                QuestionnaireAvailability = request.Availability!.Value,
                 ObjectCreationTimeUtc = DateTime.UtcNow,
                 ObjectIsRemoved = false
             };
@@ -262,19 +261,66 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             await DbContext.SaveChangesAsync();
 
             var result = questionnaireEntry.Entity;
-            return _mapper.Map<Questionnaire>(result);
+            return _mapper.Map<Api.Models.Questionnaire>(result);
         }
 
-        public Task<Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
+        public async Task<Api.Models.Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
         {
-            if (request==null)
+            if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            CheckIdAndCodeDefinitionRule(request.Id, request.Code,
-                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
-                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
+            var questionnaireResult = await GetQuestionnaireAsync(userId,request.Id,request.Code);
 
-            throw new NotImplementedException();
+            if (questionnaireResult.OwnerId != userId.ToAspNetUserIdString())
+                throw new AccessDeniedForUserException("Current user cannot change this questionnaire.");
+
+            bool changed = false;
+
+            if (!string.IsNullOrEmpty(request.Name))
+            {
+                questionnaireResult.QuestionnaireName = request.Name;
+                changed = true;
+            }
+
+            if (request.Availability != null)
+            {
+                questionnaireResult.QuestionnaireAvailability = request.Availability.Value;
+                changed = true;
+            }
+
+            if (request.Labels != null)
+            {
+                var currentLabelsIds = questionnaireResult.LabelsForQuestionnaire!.Select(l => l.LabelId).ToList();
+                var newLabelsIds = request.Labels!.Select(l=>l.Id).ToList();
+                var labelsToAdd = newLabelsIds.Where(l => !currentLabelsIds.Contains(l)).ToList();
+
+                await CheckLabelsAvailabilityForManagingQuestionnairesAsync(userId, labelsToAdd);
+
+                var labelsToDelete = currentLabelsIds.Where(l => !newLabelsIds.Contains(l)).ToList();
+
+                var entitiesLabelsToDelete =
+                    from entityLabel in DbContext.EntitiesLabels
+                    where labelsToDelete.Contains(entityLabel.LabelId) &&
+                        entityLabel.QuestionnaireId == questionnaireResult.QuestionnaireId
+                    select entityLabel;
+
+                DbContext.EntitiesLabels.RemoveRange(entitiesLabelsToDelete);
+
+                DbContext.EntitiesLabels.AddRange(labelsToAdd.Select(l => new Models.EntityLabel
+                {
+                    EntityType = Enums.EntityType.Questionnaire,
+                    LabelId = l,
+                    QuestionnaireId = questionnaireResult.QuestionnaireId,
+                    ObjectCreationTimeUtc = DateTime.UtcNow
+                }));
+
+                changed = true;
+            }
+
+            if (changed)
+                await DbContext.SaveChangesAsync();
+
+            return _mapper.Map<Api.Models.Questionnaire>(questionnaireResult);
         }
 
         public Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId)=>
@@ -283,27 +329,27 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         public Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)=>
             DeleteQuestionnaireAsync(userId,null,questionnaireCode);
 
-        public Task<Question> UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request)
+        public Task<Api.Models.Question> UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request)
         {
             throw new NotImplementedException();
         }
 
-        public Task<PaginatedCollection<Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
+        public Task<Api.Models.PaginatedCollection<Api.Models.Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Label> GetLabelAsync(Guid userId, Guid labelId)
+        public Task<Api.Models.Label> GetLabelAsync(Guid userId, Guid labelId)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Label> GetLabelAsync(Guid userId, int labelCode)
+        public Task<Api.Models.Label> GetLabelAsync(Guid userId, int labelCode)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Label> CreateLabelAsync(Guid userId, string labelName)
+        public Task<Api.Models.Label> CreateLabelAsync(Guid userId, string labelName)
         {
             throw new NotImplementedException();
         }
@@ -318,13 +364,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             throw new NotImplementedException();
         }
 
-        private async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
+        private async Task<Models.Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
 
-            var questionnaireResult =
+            Models.Questionnaire? questionnaireResult =
                 await (from questionnaire in DbContext.Questionnaires
                        .Include(q=>q.LabelsForQuestionnaire!)
                        .ThenInclude(el=>el.Label)
@@ -337,13 +383,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (questionnaireResult != null)
             {
                 CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
-                return _mapper.Map<Questionnaire>(questionnaireResult);
+                return questionnaireResult;
             }
             else
                 throw new ObjectNotFoundException("Questionnaire with such ID or code is not found.");
         }
 
-        private async Task<Questionnaire> DeleteQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
+        private async Task<Api.Models.Questionnaire> DeleteQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull), 
@@ -370,7 +416,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             else
                 throw new ObjectNotFoundException("Questionnaire with such ID or Code doesn't exist.");
 
-            return _mapper.Map<Questionnaire>(questionnaireDetails);
+            return _mapper.Map<Api.Models.Questionnaire>(questionnaireDetails);
         }
 
         private static void CheckQuestionnaireAvailabilityForUser(Guid currentUserId, Guid questionnaireOwnerId, Availability questionnaireAvailability)
@@ -387,23 +433,23 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw exceptionWhenBothNotNull;
         }
 
-        private async Task CheckLabelsAvailabilityForManagingQuestionnairesAsync(Guid userId, List<LabelInQuestionnaire> labelsIds)
+        private async Task CheckLabelsAvailabilityForManagingQuestionnairesAsync(Guid userId, List<Guid> labelsIds)
         {
             if (labelsIds!=null)
-                foreach(var labelFromParameter in labelsIds)
+                foreach(var labelIdFromParameter in labelsIds)
                 {
                     var labelFromDb =
                         await (from label in DbContext.Labels
                          where
-                             label.LabelId == labelFromParameter.Id
+                             label.LabelId == labelIdFromParameter
                                select label).SingleOrDefaultAsync();
                     if (labelFromDb != null)
                     {
                         if (!Guid.TryParse(labelFromDb.OwnerId, out Guid ownerGuid) || ownerGuid != userId)
-                            throw new AccessDeniedForUserException($"The user '{userId}' doesn't have a managing access to the label '{labelFromParameter.Id}'.");
+                            throw new AccessDeniedForUserException($"The user '{userId}' doesn't have a managing access to the label '{labelIdFromParameter}'.");
                     }
                     else
-                        throw new ObjectNotFoundException($"The label '{labelFromParameter.Id}' is not found.");
+                        throw new ObjectNotFoundException($"The label '{labelIdFromParameter}' is not found.");
                 }
         }
     }

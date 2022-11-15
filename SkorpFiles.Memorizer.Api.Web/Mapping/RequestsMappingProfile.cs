@@ -46,6 +46,18 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                     opts.Condition(src => src.Availability != null && Enum.TryParse<Availability>(src.Availability, true, out _));
                     opts.MapFrom(src => Enum.Parse<Availability>(src.Availability!, true));
                 });
+            CreateMap<PostQuestionnaireRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.UpdateQuestionnaireRequest>()
+                .ForMember(dest => dest.Availability, opts =>
+                {
+                    opts.Condition(src => src.Availability != null && Enum.TryParse<Availability>(src.Availability, true, out _));
+                    opts.MapFrom(src => Enum.Parse<Availability>(src.Availability!, true));
+                })
+                .ForMember(dest => dest.Labels, opts =>
+                {
+                    opts.Condition(src => src.LabelsIds != null);
+                    opts.MapFrom(src => src.LabelsIds!.Select(l => new SkorpFiles.Memorizer.Api.Models.LabelInQuestionnaire { Id = l }).ToList());
+                });
+
         }
     }
 }

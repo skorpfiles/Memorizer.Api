@@ -39,9 +39,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             return await _editingRepository.CreateQuestionnaireAsync(userId, request);
         }
 
-        public Task<Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
+        public async Task<Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
         {
-            throw new NotImplementedException();
+            return await _editingRepository.UpdateQuestionnaireAsync(userId,request);
         }
 
         public async Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId)

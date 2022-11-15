@@ -70,6 +70,18 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             });
         }
 
+        [Route("Questionnaire")]
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> PostQuestionnaireAsync(PostQuestionnaireRequest request)
+        {
+            return await ExecuteActionToBusinessLogicAsync(async () =>
+            {
+                await _editingLogic.UpdateQuestionnaireAsync(await GetCurrentUserGuidAsync(), _mapper.Map<Api.Models.RequestModels.UpdateQuestionnaireRequest>(request));
+                return Ok();
+            });
+        }
+
         [Route("Questionnaire/{idOrCode}")]
         [HttpDelete]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
