@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
+using SkorpFiles.Memorizer.Api.Models.RequestModels;
 using SkorpFiles.Memorizer.Api.Web.Controllers.Abstract;
 using SkorpFiles.Memorizer.Api.Web.Exceptions;
 using SkorpFiles.Memorizer.Api.Web.Models.ApiEntities;
@@ -29,7 +30,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [Route("Questionnaires")]
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> GetQuestionnairesAsync(GetQuestionnairesRequest request)
+        public async Task<IActionResult> GetQuestionnairesAsync(Web.Models.Requests.Repository.GetQuestionnairesRequest request)
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
@@ -62,8 +63,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                     return CreatedAtRoute("GetQuestionnaire", new { idOrCode = creatingResult.Code.ToString() },
                     new IdentifiersGroupResponse
                     {
-                        Code = creatingResult.Code,
-                        Id = creatingResult.Id
+                        Code = creatingResult.Code!.Value,
+                        Id = creatingResult.Id!.Value
                     });
                 else
                     throw new InternalErrorException("The database hasn't returned a result.");
@@ -104,12 +105,24 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [Route("Questions")]
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> GetQuestionsAsync(GetQuestionsRequest request)
+        public async Task<IActionResult> GetQuestionsAsync(Web.Models.Requests.Repository.GetQuestionsRequest request)
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
                 var result = await _editingLogic.GetQuestionsAsync(await GetCurrentUserGuidAsync(), _mapper.Map<Api.Models.RequestModels.GetQuestionsRequest>(request));
                 return Ok(_mapper.Map<GetQuestionsResponse>(result));
+            });
+        }
+
+        [Route("Questions")]
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> UpdateQuestionsAsync(PostQuestionsRequest request)
+        {
+            return await ExecuteActionToBusinessLogicAsync(async () =>
+            {
+                await _editingLogic.UpdateQuestionsAsync(await GetCurrentUserGuidAsync(), _mapper.Map<Api.Models.RequestModels.UpdateQuestionsRequest>(request));
+                return Ok();
             });
         }
 
@@ -148,7 +161,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             {
                 result = Unauthorized(e.Message);
             }
-            catch (ArgumentException e)
+            catch (BadRequestException e)
             {
                 result = BadRequest(e.Message);
             }

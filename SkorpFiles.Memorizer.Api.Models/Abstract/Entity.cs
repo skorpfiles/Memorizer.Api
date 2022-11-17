@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.Models.Abstract
 {
-    public abstract class Entity
+    public abstract class Entity:EntityIdentifier
     {
-        public Guid Id { get; set; }
-        public int Code { get; set; }
         public DateTime? CreationTimeUtc { get; set; }
         public bool IsRemoved { get; set; }
         public DateTime? RemovalTimeUtc { get; set; }

@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SkorpFiles.Memorizer.Api.Web.Models.ApiEntities;
 
-namespace SkorpFiles.Memorizer.Api.Models.RequestModels
+namespace SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository
 {
-    public class UpdateQuestionsRequest
+    public class PostQuestionsRequest
     {
         public Guid? QuestionnaireId { get; set; }
         public int? QuestionnaireCode { get; set; }

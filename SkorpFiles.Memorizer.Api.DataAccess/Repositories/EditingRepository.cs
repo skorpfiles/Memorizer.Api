@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
+using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
@@ -217,9 +218,200 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return new Api.Models.PaginatedCollection<Api.Models.Question>(foundQuestions, totalCount, request.PageNumber);
         }
 
-        public Task UpdateQuestionsAsync(Guid userId, UpdateQuestionsRequest request)
+        public async Task UpdateQuestionsAsync(Guid userId, UpdateQuestionsRequest request)
         {
-            throw new NotImplementedException();
+            if (request==null)
+                throw new ArgumentNullException(nameof(request));
+
+            CheckIdAndCodeDefinitionRule(request.QuestionnaireId, request.QuestionnaireCode,
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
+
+            if (request.CreatedQuestions != null)
+            {
+                foreach (var question in request.CreatedQuestions)
+                {
+                    CheckQuestionRequest(question);
+
+                    if (question.LabelsIds != null)
+                        await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, question.LabelsIds.ToList());
+                }
+            }
+
+            if (request.UpdatedQuestions!=null)
+            {
+                foreach(var question in request.UpdatedQuestions)
+                {
+                    CheckIdAndCodeDefinitionRule(question.Id, question.CodeInQuestionnaire,
+                        new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
+                        new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
+
+                    CheckQuestionRequest(question);
+                }
+            }
+
+            if (request.DeletedQuestions != null)
+            {
+                foreach(var question in request.DeletedQuestions)
+                {
+                    CheckIdAndCodeDefinitionRule(question.Id, question.CodeInQuestionnaire,
+                        new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull), 
+                        new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
+                }
+            }
+
+            var questionnaireResult =
+                await (from questionnaire in DbContext.Questionnaires
+                        where
+                            !questionnaire.ObjectIsRemoved &&
+                            (request.QuestionnaireId == null || questionnaire.QuestionnaireId == request.QuestionnaireId) &&
+                            (request.QuestionnaireCode == null || questionnaire.QuestionnaireCode == request.QuestionnaireCode)
+                        select questionnaire).SingleOrDefaultAsync();
+            if (questionnaireResult!=null)
+            {
+                if (questionnaireResult.OwnerId != userId.ToAspNetUserIdString())
+                    throw new AccessDeniedForUserException(Constants.ExceptionMessages.UserCannotChangeQuestionnaire);
+
+                if (request.CreatedQuestions != null)
+                {
+                    foreach (var question in request.CreatedQuestions)
+                    {
+                        var questionForDb = _mapper.Map<DataAccess.Models.Question>(question);
+                        questionForDb.QuestionnaireId = questionnaireResult.QuestionnaireId;
+                        questionForDb.ObjectCreationTimeUtc = DateTime.UtcNow;
+
+                        var addedQuestion = DbContext.Questions.Add(questionForDb);
+
+                        if (question.LabelsIds!=null)
+                        {
+                            IEnumerable<EntityLabel>? entitiesLabelsToAdd = null;
+                            entitiesLabelsToAdd = question.LabelsIds.Select(id => new EntityLabel
+                            {
+                                QuestionId = addedQuestion.Entity.QuestionId,
+                                LabelId = id,
+                                EntityType = Enums.EntityType.Question,
+                                ObjectCreationTimeUtc = DateTime.UtcNow
+                            });
+                            DbContext.EntitiesLabels.AddRange(entitiesLabelsToAdd);
+                        }
+
+                        if (question.TypedAnswers!=null)
+                        {
+                            IEnumerable<TypedAnswer>? typedAnswersToAdd = null;
+                            typedAnswersToAdd = question.TypedAnswers.Select(a => new TypedAnswer(a)
+                            {
+                                QuestionId = addedQuestion.Entity.QuestionId,
+                                ObjectCreationTimeUtc = DateTime.UtcNow,
+                                ObjectIsRemoved = false
+                            });
+                            DbContext.TypedAnswers.AddRange(typedAnswersToAdd);
+                        }
+                    }
+                }
+
+                if (request.UpdatedQuestions !=null)
+                {
+                    foreach(var question in request.UpdatedQuestions)
+                    {
+
+                        var questionFromDb = await (from questionQuery in DbContext.Questions
+                                                        .Include(q=>q.LabelsForQuestion)
+                                                        .Include(q=>q.TypedAnswers)
+                                                    where !questionQuery.ObjectIsRemoved &&
+                                                    questionQuery.QuestionnaireId == questionnaireResult.QuestionnaireId &&
+                                                    (question.Id == null || questionQuery.QuestionId == question.Id) &&
+                                                    (question.CodeInQuestionnaire == null || questionQuery.QuestionQuestionnaireCode == question.CodeInQuestionnaire)
+                                                    select questionQuery).SingleOrDefaultAsync();
+
+                        if (questionFromDb == null)
+                            throw new ObjectNotFoundException("One of the updated questions doesn't exist.");
+
+                        if (question.LabelsIds != null)
+                        {
+                            var currentLabelsIds = questionFromDb.LabelsForQuestion!.Select(l => l.LabelId).ToList();
+                            var newLabelsIds = question.LabelsIds.ToList();
+                            var labelsToAdd = newLabelsIds.Where(l => !currentLabelsIds.Contains(l)).ToList();
+
+                            await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsToAdd);
+
+                            var labelsToDelete = currentLabelsIds.Where(l => !newLabelsIds.Contains(l)).ToList();
+
+                            var entitiesLabelsToDelete =
+                                from entityLabel in DbContext.EntitiesLabels
+                                where labelsToDelete.Contains(entityLabel.LabelId) &&
+                                    entityLabel.QuestionId == questionFromDb.QuestionId
+                                select entityLabel;
+
+                            DbContext.EntitiesLabels.RemoveRange(entitiesLabelsToDelete);
+
+                            DbContext.EntitiesLabels.AddRange(labelsToAdd.Select(l => new Models.EntityLabel
+                            {
+                                EntityType = Enums.EntityType.Question,
+                                LabelId = l,
+                                QuestionId = questionFromDb.QuestionId,
+                                ObjectCreationTimeUtc = DateTime.UtcNow
+                            }));
+                        }
+
+                        if (question.TypedAnswers!=null)
+                        {
+                            var currentTypedAnswersTexts = questionFromDb.TypedAnswers!.Select(a=>a.TypedAnswerText).ToList();
+                            var newTypedAnswersTexts = question.TypedAnswers.ToList();
+                            var typedAnswersToAdd = newTypedAnswersTexts.Where(a => !currentTypedAnswersTexts.Contains(a)).ToList();
+                            var typedAnswersToDelete = currentTypedAnswersTexts.Where(a => !newTypedAnswersTexts.Contains(a)).ToList();
+                            
+                            var dbTypedAnswersToDelete =
+                                from typedAnswer in DbContext.TypedAnswers
+                                where !typedAnswer.ObjectIsRemoved &&
+                                    typedAnswersToDelete.Contains(typedAnswer.TypedAnswerText) &&
+                                    typedAnswer.QuestionId == questionFromDb.QuestionId
+                                select typedAnswer;
+
+                            await dbTypedAnswersToDelete.ForEachAsync(a =>
+                            {
+                                a.ObjectIsRemoved = true;
+                                a.ObjectRemovalTimeUtc = DateTime.UtcNow;
+                            });
+
+                            DbContext.TypedAnswers.AddRange(typedAnswersToAdd.Select(a => new Models.TypedAnswer(a)
+                            {
+                                QuestionId = questionFromDb.QuestionId,
+                                ObjectCreationTimeUtc = DateTime.UtcNow,
+                                ObjectIsRemoved = false
+                            }));
+                        }
+
+                        questionFromDb.QuestionEstimatedTrainingTimeSeconds = question.EstimatedTrainingTimeSeconds;
+                        questionFromDb.QuestionIsEnabled = question.IsEnabled;
+                        questionFromDb.QuestionReference = question.Reference;
+                        questionFromDb.QuestionText = question.Text!;
+                        questionFromDb.QuestionType = question.Type;
+                        questionFromDb.QuestionUntypedAnswer = question.UntypedAnswer;
+                    }
+                }
+
+                if (request.DeletedQuestions!=null)
+                {
+                    foreach(var question in request.DeletedQuestions)
+                    {
+                        var questionFromDb = await (from questionQuery in DbContext.Questions
+                                where !questionQuery.ObjectIsRemoved &&
+                                questionQuery.QuestionnaireId == questionnaireResult.QuestionnaireId &&
+                                (question.Id == null || questionQuery.QuestionId == question.Id) &&
+                                (question.CodeInQuestionnaire == null || questionQuery.QuestionQuestionnaireCode == question.CodeInQuestionnaire)
+                                select questionQuery).SingleOrDefaultAsync();
+
+                        if (questionFromDb != null)
+                        {
+                            questionFromDb.ObjectIsRemoved = true;
+                            questionFromDb.ObjectRemovalTimeUtc = DateTime.UtcNow;
+                        }
+                        else
+                            throw new ObjectNotFoundException("One of the deleted questions doesn't exist.");
+                    }
+                }
+                await DbContext.SaveChangesAsync();
+            }
         }
 
         public async Task<Api.Models.Questionnaire> CreateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
@@ -233,7 +425,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             var labelsList = request.Labels?.ToList();
 
             if (labelsList!=null)
-                await CheckLabelsAvailabilityForManagingQuestionnairesAsync(userId, labelsList.Select(l=>l.Id).ToList());
+                await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsList.Select(l=>l.Id).ToList());
 
             Models.Questionnaire newQuestionnaire = new Models.Questionnaire(request.Name, userId.ToAspNetUserIdString())
             {
@@ -272,7 +464,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             var questionnaireResult = await GetQuestionnaireAsync(userId,request.Id,request.Code);
 
             if (questionnaireResult.OwnerId != userId.ToAspNetUserIdString())
-                throw new AccessDeniedForUserException("Current user cannot change this questionnaire.");
+                throw new AccessDeniedForUserException(Constants.ExceptionMessages.UserCannotChangeQuestionnaire);
 
             bool changed = false;
 
@@ -294,7 +486,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 var newLabelsIds = request.Labels!.Select(l=>l.Id).ToList();
                 var labelsToAdd = newLabelsIds.Where(l => !currentLabelsIds.Contains(l)).ToList();
 
-                await CheckLabelsAvailabilityForManagingQuestionnairesAsync(userId, labelsToAdd);
+                await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsToAdd);
 
                 var labelsToDelete = currentLabelsIds.Where(l => !newLabelsIds.Contains(l)).ToList();
 
@@ -433,7 +625,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw exceptionWhenBothNotNull;
         }
 
-        private async Task CheckLabelsAvailabilityForManagingQuestionnairesAsync(Guid userId, List<Guid> labelsIds)
+        private async Task CheckLabelsAvailabilityForManagingEntitiesAsync(Guid userId, List<Guid> labelsIds)
         {
             if (labelsIds!=null)
                 foreach(var labelIdFromParameter in labelsIds)
@@ -452,5 +644,41 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                         throw new ObjectNotFoundException($"The label '{labelIdFromParameter}' is not found.");
                 }
         }
+
+        private static void CheckQuestionRequest(Api.Models.QuestionToUpdate question)
+        {
+            if (question.Text == null)
+                throw new ArgumentException("All questions should have text.");
+
+            if ((question.Type == QuestionType.Task || question.Type == QuestionType.TypedAnswers) && question.TypedAnswers != null)
+                throw new ArgumentException("Specified type of a question doesn't allow typed answers.");
+        }
+
+        //private void UpdateLabels(IEnumerable<Guid> labelsIds, Enums.EntityType entityType, Guid? questionnaireId, Guid? questionId)
+        //{
+        //    var currentLabelsIds = questionnaireResult.LabelsForQuestionnaire!.Select(l => l.LabelId).ToList();
+        //    var newLabelsIds = request.Labels!.Select(l => l.Id).ToList();
+        //    var labelsToAdd = newLabelsIds.Where(l => !currentLabelsIds.Contains(l)).ToList();
+
+        //    await CheckLabelsAvailabilityForManagingQuestionnairesAsync(userId, labelsToAdd);
+
+        //    var labelsToDelete = currentLabelsIds.Where(l => !newLabelsIds.Contains(l)).ToList();
+
+        //    var entitiesLabelsToDelete =
+        //        from entityLabel in DbContext.EntitiesLabels
+        //        where labelsToDelete.Contains(entityLabel.LabelId) &&
+        //            entityLabel.QuestionnaireId == questionnaireResult.QuestionnaireId
+        //        select entityLabel;
+
+        //    DbContext.EntitiesLabels.RemoveRange(entitiesLabelsToDelete);
+
+        //    DbContext.EntitiesLabels.AddRange(labelsToAdd.Select(l => new Models.EntityLabel
+        //    {
+        //        EntityType = Enums.EntityType.Questionnaire,
+        //        LabelId = l,
+        //        QuestionnaireId = questionnaireResult.QuestionnaireId,
+        //        ObjectCreationTimeUtc = DateTime.UtcNow
+        //    }));
+        //}
     }
 }

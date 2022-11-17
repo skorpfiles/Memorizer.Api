@@ -59,6 +59,11 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             return await _editingRepository.GetQuestionsAsync(userId, request);
         }
 
+        public async Task UpdateQuestionsAsync(Guid userId, UpdateQuestionsRequest request)
+        {
+            await _editingRepository.UpdateQuestionsAsync(userId, request);
+        }
+
         public Task<Question> UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request)
         {
             throw new NotImplementedException();

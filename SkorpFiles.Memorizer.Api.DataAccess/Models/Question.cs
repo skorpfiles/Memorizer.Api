@@ -12,7 +12,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         [Key]
         public Guid QuestionId { get; set; }
         public QuestionType QuestionType { get; set; }
-        public string QuestionText { get; set; }
+        public string QuestionText { get; set; } = null!;
         public string? QuestionUntypedAnswer { get; set; }
         public bool QuestionIsEnabled { get; set; }
         public string? QuestionReference { get; set; }
@@ -26,10 +26,5 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public List<QuestionUser>? UsersForQuestion { get; set; }
         public List<TypedAnswer>? TypedAnswers { get; set; }
         public List<TrainingResult>? TrainingResults { get; set; }
-
-        public Question(string questionText)
-        {
-            QuestionText = questionText;
-        }
     }
 }

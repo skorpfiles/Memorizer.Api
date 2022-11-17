@@ -5,6 +5,6 @@ namespace SkorpFiles.Memorizer.Api.Web.Models.Responses
 {
     public class GetQuestionsResponse:PaginatedCollectionResponse
     {
-        public List<Question>? Questions { get; set; }
+        public List<ExistingQuestion>? Questions { get; set; }
     }
 }

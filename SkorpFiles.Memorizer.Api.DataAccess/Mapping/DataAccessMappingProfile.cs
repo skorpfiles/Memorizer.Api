@@ -47,8 +47,28 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
                 .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.ObjectIsRemoved))
                 .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc))
-                .ForMember(dest => dest.Labels, opts => opts.MapFrom(src => src.LabelsForQuestion))
                 .ForMember(dest => dest.Type, opts => opts.MapFrom(src => src.QuestionType));
+            CreateMap<Question, SkorpFiles.Memorizer.Api.Models.ExistingQuestion>()
+                .ForMember(dest=>dest.Labels, opts=>opts.MapFrom(src=>src.LabelsForQuestion));
+            CreateMap<Question, SkorpFiles.Memorizer.Api.Models.QuestionToUpdate>()
+                .ForMember(dest => dest.LabelsIds, opts =>
+                {
+                    opts.Condition(src => src.LabelsForQuestion != null);
+                    opts.MapFrom(src => src.LabelsForQuestion!.Select(l => l.LabelId));
+                });
+            CreateMap<SkorpFiles.Memorizer.Api.Models.Question, Question>()
+                .ForMember(dest => dest.QuestionId, opts => opts.MapFrom(src => src.Id))
+                .ForMember(dest => dest.QuestionText, opts =>
+                {
+                    opts.Condition(src => src.Text != null);
+                    opts.MapFrom(src => src.Text);
+                })
+                .ForMember(dest => dest.QuestionUntypedAnswer, opts => opts.MapFrom(src => src.UntypedAnswer))
+                .ForMember(dest => dest.QuestionEstimatedTrainingTimeSeconds, opts => opts.MapFrom(src => src.EstimatedTrainingTimeSeconds))
+                .ForMember(dest => dest.QuestionIsEnabled, opts => opts.MapFrom(src => src.IsEnabled))
+                .ForMember(dest => dest.QuestionReference, opts => opts.MapFrom(src => src.Reference))
+                .ForMember(dest => dest.QuestionType, opts => opts.MapFrom(src => src.Type))
+                .ForMember(dest => dest.QuestionIsFixed, opts => opts.MapFrom(src => src.IsFixed));
             CreateMap<QuestionUser, SkorpFiles.Memorizer.Api.Models.UserQuestionStatus>()
                 .ForMember(dest => dest.IsNew, opts => opts.MapFrom(src => src.QuestionUserIsNew))
                 .ForMember(dest => dest.Rating, opts => opts.MapFrom(src => src.QuestionUserRating))
