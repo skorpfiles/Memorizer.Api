@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
+using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
@@ -297,8 +298,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
                         if (question.TypedAnswers!=null)
                         {
-                            IEnumerable<TypedAnswer>? typedAnswersToAdd = null;
-                            typedAnswersToAdd = question.TypedAnswers.Select(a => new TypedAnswer(a)
+                            IEnumerable<Models.TypedAnswer>? typedAnswersToAdd = null;
+                            typedAnswersToAdd = question.TypedAnswers.Select(a => new Models.TypedAnswer(a)
                             {
                                 QuestionId = addedQuestion.Entity.QuestionId,
                                 ObjectCreationTimeUtc = DateTime.UtcNow,
@@ -515,15 +516,49 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return _mapper.Map<Api.Models.Questionnaire>(questionnaireResult);
         }
 
-        public Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId)=>
-            DeleteQuestionnaireAsync(userId,questionnaireId);
+        public async Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId) =>
+            await DeleteQuestionnaireAsync(userId, questionnaireId, null);
 
-        public Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)=>
-            DeleteQuestionnaireAsync(userId,null,questionnaireCode);
+        public async Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)=>
+            await DeleteQuestionnaireAsync(userId,null,questionnaireCode);
 
-        public Task<Api.Models.Question> UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request)
+        public async Task UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request)
         {
-            throw new NotImplementedException();
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            if (request.Items == null || !request.Items.Any())
+                throw new ArgumentException("Items should not be null or empty.");
+            
+            var requestItems = request.Items.ToList();
+            var requestItemsIds = request.Items.Select(i=>i.QuestionId).ToList();
+
+            var questionsUsersToUpdate = await (from questionUser in DbContext.QuestionsUsers
+                                                .Include(q=>q.Question)
+                                                .ThenInclude(q=>q.Questionnaire)
+                                         where questionUser.UserId == userId.ToAspNetUserIdString() &&
+                                         !questionUser.Question!.ObjectIsRemoved &&
+                                         requestItemsIds.Contains(questionUser.QuestionId)
+                                         select questionUser).ToListAsync();
+
+            foreach(var requestItem in requestItems)
+            {
+                var questionUserToUpdate = questionsUsersToUpdate.SingleOrDefault(q=>q.QuestionId == requestItem.QuestionId);
+                if (questionUserToUpdate==null)
+                {
+                    questionUserToUpdate = _mapper.Map<QuestionUser>(requestItem);
+                    questionUserToUpdate.UserId = userId.ToAspNetUserIdString();
+                    questionUserToUpdate.ObjectCreationTimeUtc = DateTime.UtcNow;
+                    DbContext.Add(questionUserToUpdate);
+                }
+                else
+                {
+                    questionUserToUpdate.QuestionUserRating = requestItem.Rating;
+                    questionUserToUpdate.QuestionUserIsNew = requestItem.IsNew;
+                    questionUserToUpdate.QuestionUserPenaltyPoints = requestItem.PenaltyPoints;
+                }
+            }
+
+            await DbContext.SaveChangesAsync();
         }
 
         public Task<Api.Models.PaginatedCollection<Api.Models.Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
@@ -653,32 +688,5 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if ((question.Type == QuestionType.Task || question.Type == QuestionType.TypedAnswers) && question.TypedAnswers != null)
                 throw new ArgumentException("Specified type of a question doesn't allow typed answers.");
         }
-
-        //private void UpdateLabels(IEnumerable<Guid> labelsIds, Enums.EntityType entityType, Guid? questionnaireId, Guid? questionId)
-        //{
-        //    var currentLabelsIds = questionnaireResult.LabelsForQuestionnaire!.Select(l => l.LabelId).ToList();
-        //    var newLabelsIds = request.Labels!.Select(l => l.Id).ToList();
-        //    var labelsToAdd = newLabelsIds.Where(l => !currentLabelsIds.Contains(l)).ToList();
-
-        //    await CheckLabelsAvailabilityForManagingQuestionnairesAsync(userId, labelsToAdd);
-
-        //    var labelsToDelete = currentLabelsIds.Where(l => !newLabelsIds.Contains(l)).ToList();
-
-        //    var entitiesLabelsToDelete =
-        //        from entityLabel in DbContext.EntitiesLabels
-        //        where labelsToDelete.Contains(entityLabel.LabelId) &&
-        //            entityLabel.QuestionnaireId == questionnaireResult.QuestionnaireId
-        //        select entityLabel;
-
-        //    DbContext.EntitiesLabels.RemoveRange(entitiesLabelsToDelete);
-
-        //    DbContext.EntitiesLabels.AddRange(labelsToAdd.Select(l => new Models.EntityLabel
-        //    {
-        //        EntityType = Enums.EntityType.Questionnaire,
-        //        LabelId = l,
-        //        QuestionnaireId = questionnaireResult.QuestionnaireId,
-        //        ObjectCreationTimeUtc = DateTime.UtcNow
-        //    }));
-        //}
     }
 }

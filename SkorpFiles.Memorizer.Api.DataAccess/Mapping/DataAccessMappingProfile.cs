@@ -73,6 +73,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.IsNew, opts => opts.MapFrom(src => src.QuestionUserIsNew))
                 .ForMember(dest => dest.Rating, opts => opts.MapFrom(src => src.QuestionUserRating))
                 .ForMember(dest => dest.PenaltyPoints, opts => opts.MapFrom(src => src.QuestionUserPenaltyPoints));
+            CreateMap<SkorpFiles.Memorizer.Api.Models.UserQuestionStatus, QuestionUser>()
+                .ForMember(dest => dest.QuestionUserIsNew, opts => opts.MapFrom(src => src.IsNew))
+                .ForMember(dest => dest.QuestionUserRating, opts => opts.MapFrom(src => src.Rating))
+                .ForMember(dest => dest.QuestionUserPenaltyPoints, opts => opts.MapFrom(src => src.PenaltyPoints));
             CreateMap<TypedAnswer, SkorpFiles.Memorizer.Api.Models.TypedAnswer>()
                 .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.TypedAnswerId))
                 .ForMember(dest => dest.Text, opts=>opts.MapFrom(src=>src.TypedAnswerText))

@@ -126,6 +126,19 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             });
         }
 
+        [Route("Questions/MyStatus")]
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> MyStatus(PostMyStatusRequest request)
+        {
+            return await ExecuteActionToBusinessLogicAsync(async () =>
+            {
+                await _editingLogic.UpdateUserQuestionStatusAsync(await GetCurrentUserGuidAsync(),
+                    _mapper.Map<Api.Models.RequestModels.UpdateUserQuestionStatusRequest>(request));
+                return Ok();
+            });
+        }
+
         private enum IdOrCode
         {
             Id,

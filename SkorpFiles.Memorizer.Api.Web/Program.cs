@@ -48,7 +48,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             };
         });
 
-var connectionString = builder.Configuration["DatabaseConnectionString"];
+string connectionString = builder.Configuration["DatabaseConnectionString"]!;
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(connectionString));

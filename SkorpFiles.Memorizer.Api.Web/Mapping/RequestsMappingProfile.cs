@@ -58,7 +58,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                     opts.MapFrom(src => src.LabelsIds!.Select(l => new SkorpFiles.Memorizer.Api.Models.LabelInQuestionnaire { Id = l }).ToList());
                 });
             CreateMap<PostQuestionsRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.UpdateQuestionsRequest>();
-
+            CreateMap<PostMyStatusRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.UpdateUserQuestionStatusRequest>();
         }
     }
 }

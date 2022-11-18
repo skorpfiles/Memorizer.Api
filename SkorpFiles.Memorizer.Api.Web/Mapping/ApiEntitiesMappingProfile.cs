@@ -36,6 +36,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
             CreateMap<QuestionToUpdate, SkorpFiles.Memorizer.Api.Models.QuestionToUpdate>();
             CreateMap<SkorpFiles.Memorizer.Api.Models.ExistingQuestion, ExistingQuestion>();
             CreateMap<ExistingQuestion, SkorpFiles.Memorizer.Api.Models.ExistingQuestion>();
+            CreateMap<UserQuestionStatus, SkorpFiles.Memorizer.Api.Models.UserQuestionStatus>()
+                .ForMember(dest => dest.QuestionId, opts => opts.MapFrom(src => src.Id));
         }
     }
 }

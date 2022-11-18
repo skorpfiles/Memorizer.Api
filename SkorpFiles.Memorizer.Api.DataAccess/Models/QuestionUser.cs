@@ -9,7 +9,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
     {
         [Key]
         public Guid QuestionUserId { get; set; }
-        public string UserId { get; set; }
+        public string UserId { get; set; } = null!;
         public Guid QuestionId { get; set; }
         public bool QuestionUserIsNew { get; set; }
         public int QuestionUserRating { get; set; }
@@ -18,11 +18,5 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         [ForeignKey("UserId")]
         public ApplicationUser? User { get; set; }
         public Question? Question { get; set; }
-
-
-        public QuestionUser(string userId)
-        {
-            UserId = userId;
-        }
     }
 }
