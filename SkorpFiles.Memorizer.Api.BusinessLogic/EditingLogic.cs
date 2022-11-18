@@ -69,34 +69,34 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             await _editingRepository.UpdateUserQuestionStatusAsync(userId, request);
         }
 
-        public Task<PaginatedCollection<Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
+        public async Task<PaginatedCollection<Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
         {
-            throw new NotImplementedException();
+            return await _editingRepository.GetLabelsAsync(userId, request);
         }
 
-        public Task<Label> GetLabelAsync(Guid userId, Guid labelId)
+        public async Task<Label> GetLabelAsync(Guid userId, Guid labelId)
         {
-            throw new NotImplementedException();
+            return await _editingRepository.GetLabelAsync(userId, labelId);
         }
 
-        public Task<Label> GetLabelAsync(Guid userId, int labelCode)
+        public async Task<Label> GetLabelAsync(Guid userId, int labelCode)
         {
-            throw new NotImplementedException();
+            return await _editingRepository.GetLabelAsync(userId, labelCode);
         }
 
-        public Task<Label> CreateLabelAsync(Guid userId, string labelName)
+        public async Task<Label> CreateLabelAsync(Guid userId, string labelName)
         {
-            throw new NotImplementedException();
+            return await _editingRepository.CreateLabelAsync(userId, labelName);
         }
 
-        public Task DeleteLabelAsync(Guid userId, Guid labelId)
+        public async Task DeleteLabelAsync(Guid userId, Guid labelId)
         {
-            throw new NotImplementedException();
+            await _editingRepository.DeleteLabelAsync(userId, labelId);
         }
 
-        public Task DeleteLabelAsync(Guid userId, int labelCode)
+        public async Task DeleteLabelAsync(Guid userId, int labelCode)
         {
-            throw new NotImplementedException();
+            await _editingRepository.DeleteLabelAsync(userId, labelCode);
         }
     }
 }

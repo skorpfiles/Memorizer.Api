@@ -129,7 +129,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 select questionnaire).SingleOrDefaultAsync();
 
             if (questionnaireResult != null)
-                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
+                CheckAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
             else
                 throw new ObjectNotFoundException("No questionnaire with such ID or code.");
 
@@ -561,35 +561,61 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             await DbContext.SaveChangesAsync();
         }
 
-        public Task<Api.Models.PaginatedCollection<Api.Models.Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
+        public async Task<Api.Models.PaginatedCollection<Api.Models.Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
         {
-            throw new NotImplementedException();
+            if (request==null)
+                throw new ArgumentNullException(nameof(request));
+
+            var userIdString = userId.ToAspNetUserIdString();
+
+            var foundLabels = from label in DbContext.Labels
+                              where !label.ObjectIsRemoved &&
+                              (request.Origin == null ||
+                              (request.Origin == Origin.Own && label.OwnerId == userIdString) ||
+                              (request.Origin == Origin.Foreign && label.OwnerId != userIdString)) &&
+                              (request.PartOfName == null || label.LabelName.ToLower().Contains(request.PartOfName.ToLower()))
+                              select label;
+
+            var totalCount = await foundLabels.CountAsync();
+
+            foundLabels = foundLabels.Page(request.PageNumber, request.PageSize);
+
+            var foundLabelsResult = await foundLabels.ToListAsync();
+
+            return new Api.Models.PaginatedCollection<Api.Models.Label>(_mapper.Map<IEnumerable<Api.Models.Label>>(foundLabelsResult), totalCount, request.PageNumber);
         }
 
-        public Task<Api.Models.Label> GetLabelAsync(Guid userId, Guid labelId)
+        public async Task<Api.Models.Label> GetLabelAsync(Guid userId, Guid labelId) =>
+            _mapper.Map<Api.Models.Label>(await GetLabelAsync(userId, labelId, null));
+
+        public async Task<Api.Models.Label> GetLabelAsync(Guid userId, int labelCode) =>
+            _mapper.Map<Api.Models.Label>(await GetLabelAsync(userId, null, labelCode));
+
+        public async Task<Api.Models.Label> CreateLabelAsync(Guid userId, string labelName)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(labelName))
+                throw new ArgumentNullException(nameof(labelName));
+
+            Models.Label newLabel = new Models.Label()
+            {
+                LabelName = labelName,
+                OwnerId = userId.ToAspNetUserIdString(),
+                ObjectCreationTimeUtc = DateTime.UtcNow
+            };
+
+            var labelEntry = DbContext.Labels.Add(newLabel);
+
+            await DbContext.SaveChangesAsync();
+
+            var result = labelEntry.Entity;
+            return _mapper.Map<Api.Models.Label>(result);
         }
 
-        public Task<Api.Models.Label> GetLabelAsync(Guid userId, int labelCode)
-        {
-            throw new NotImplementedException();
-        }
+        public async Task DeleteLabelAsync(Guid userId, Guid labelId) =>
+            await DeleteLabelAsync(userId, labelId, null);
 
-        public Task<Api.Models.Label> CreateLabelAsync(Guid userId, string labelName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task DeleteLabelAsync(Guid userId, Guid labelId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task DeleteLabelAsync(Guid userId, int labelCode)
-        {
-            throw new NotImplementedException();
-        }
+        public async Task DeleteLabelAsync(Guid userId, int labelCode) =>
+            await DeleteLabelAsync(userId, null, labelCode);
 
         private async Task<Models.Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
@@ -609,14 +635,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             if (questionnaireResult != null)
             {
-                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
+                CheckAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
                 return questionnaireResult;
             }
             else
                 throw new ObjectNotFoundException("Questionnaire with such ID or code is not found.");
         }
 
-        private async Task<Api.Models.Questionnaire> DeleteQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
+        private async Task DeleteQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull), 
@@ -642,13 +668,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             }
             else
                 throw new ObjectNotFoundException("Questionnaire with such ID or Code doesn't exist.");
-
-            return _mapper.Map<Api.Models.Questionnaire>(questionnaireDetails);
         }
 
-        private static void CheckQuestionnaireAvailabilityForUser(Guid currentUserId, Guid questionnaireOwnerId, Availability questionnaireAvailability)
+        private static void CheckAvailabilityForUser(Guid currentUserId, Guid ownerId, Availability availability)
         {
-            if (questionnaireAvailability == Availability.Private && questionnaireOwnerId != currentUserId)
+            if (availability == Availability.Private && ownerId != currentUserId)
                 throw new AccessDeniedForUserException("Unable to get details about a private questionnaire to a foreign user.");
         }
 
@@ -687,6 +711,55 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             if ((question.Type == QuestionType.Task || question.Type == QuestionType.TypedAnswers) && question.TypedAnswers != null)
                 throw new ArgumentException("Specified type of a question doesn't allow typed answers.");
+        }
+
+        private async Task<Models.Label> GetLabelAsync(Guid userId, Guid? labelId = null, int? labelCode = null)
+        {
+            CheckIdAndCodeDefinitionRule(labelId, labelCode,
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
+
+            Models.Label? labelResult = await (from label in DbContext.Labels
+                                               where !label.ObjectIsRemoved &&
+                                               (labelId == null || label.LabelId == labelId) &&
+                                               (labelCode == null || label.LabelCode == labelCode)
+                                               select label).SingleOrDefaultAsync();
+
+            if (labelResult!=null)
+            {
+                return labelResult;
+            }
+            else
+                throw new ObjectNotFoundException("Label with such ID or code is not found.");
+        }
+
+        private async Task DeleteLabelAsync(Guid userId, Guid? labelId=null, int? labelCode=null)
+        {
+            CheckIdAndCodeDefinitionRule(labelId, labelCode,
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
+
+            var labelDetails =
+                await (from label in DbContext.Labels
+                       where
+                           !label.ObjectIsRemoved &&
+                           (labelId == null || label.LabelId == labelId) &&
+                           (labelCode == null || label.LabelCode == labelCode)
+                       select label).SingleOrDefaultAsync();
+
+            if (labelDetails != null)
+            {
+                if (Guid.TryParse(labelDetails.OwnerId, out Guid ownerGuid) && ownerGuid == userId)
+                {
+                    labelDetails.ObjectIsRemoved = true;
+                    labelDetails.ObjectRemovalTimeUtc = DateTime.UtcNow;
+                    await DbContext.SaveChangesAsync();
+                }
+                else
+                    throw new AccessDeniedForUserException("The user doesn't have rights to delete the questionnaire.");
+            }
+            else
+                throw new ObjectNotFoundException("Questionnaire with such ID or Code doesn't exist.");
         }
     }
 }

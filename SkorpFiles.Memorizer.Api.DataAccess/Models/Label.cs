@@ -11,18 +11,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public Guid LabelId { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int LabelCode { get; set; }
-        public string LabelName { get; set; }
-        public string OwnerId { get; set; }
+        public string LabelName { get; set; } = null!;
+        public string OwnerId { get; set; } = null!;
 
         public List<EntityLabel>? EntitiesForLabel { get; set; }
 
         [ForeignKey("OwnerId")]
         public ApplicationUser? Owner { get; set; }
-
-        public Label(string labelName, string ownerId)
-        {
-            LabelName = labelName;
-            OwnerId = ownerId;
-        }
     }
 }
