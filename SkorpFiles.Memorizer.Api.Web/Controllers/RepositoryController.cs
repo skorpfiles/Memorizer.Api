@@ -163,14 +163,14 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 (businessLogicResult) => Ok(_mapper.Map<Label>(businessLogicResult)));
         }
 
-        [Route("Label/{labelName}")]
+        [Route("Label")]
         [HttpPut]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> PutLabelAsync(string labelName)
+        public async Task<IActionResult> PutLabelAsync([FromQuery]string name)
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
-                var result = await _editingLogic.CreateLabelAsync(await GetCurrentUserGuidAsync(), labelName);
+                var result = await _editingLogic.CreateLabelAsync(await GetCurrentUserGuidAsync(), name);
                 if (result != null)
                     return CreatedAtRoute("GetLabel", new { idOrCode = result.Code.ToString() },
                     new IdentifiersGroupResponse

@@ -36,12 +36,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
             CreateMap<Label, SkorpFiles.Memorizer.Api.Models.Label>()
                 .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.LabelId))
                 .ForMember(dest => dest.Name, opts => opts.MapFrom(src => src.LabelName))
+                .ForMember(dest => dest.Code, opts => opts.MapFrom(src => src.LabelCode))
                 .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
                 .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.ObjectIsRemoved))
                 .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc));
             CreateMap<SkorpFiles.Memorizer.Api.Models.Label, Label>()
                 .ForMember(dest => dest.LabelId, opts => opts.MapFrom(src => src.Id))
                 .ForMember(dest => dest.LabelName, opts => opts.MapFrom(src => src.Name))
+                .ForMember(dest=>dest.LabelCode, opts=>opts.MapFrom(src=>src.Code))
                 .ForMember(dest => dest.ObjectCreationTimeUtc, opts => opts.MapFrom(src => src.CreationTimeUtc))
                 .ForMember(dest => dest.ObjectIsRemoved, opts => opts.MapFrom(src => src.IsRemoved))
                 .ForMember(dest => dest.ObjectRemovalTimeUtc, opts => opts.MapFrom(src => src.RemovalTimeUtc));
