@@ -428,8 +428,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (labelsList!=null)
                 await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsList.Select(l=>l.Id).ToList());
 
-            Models.Questionnaire newQuestionnaire = new Models.Questionnaire(request.Name, userId.ToAspNetUserIdString())
+            Models.Questionnaire newQuestionnaire = new Models.Questionnaire
             {
+                QuestionnaireName = request.Name,
+                OwnerId = userId.ToAspNetUserIdString(),
                 QuestionnaireAvailability = request.Availability!.Value,
                 ObjectCreationTimeUtc = DateTime.UtcNow,
                 ObjectIsRemoved = false

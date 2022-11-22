@@ -12,20 +12,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public Guid QuestionnaireId { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int QuestionnaireCode { get; set; }
-        public string QuestionnaireName { get; set; }
+        public string QuestionnaireName { get; set; } = null!;
         public Availability QuestionnaireAvailability { get; set; }
-        public string OwnerId { get; set; }
+        public string OwnerId { get; set; } = null!;
 
         public List<EntityLabel>? LabelsForQuestionnaire { get; set; }
         public List<Question>? Questions { get; set; }
 
         [ForeignKey("OwnerId")]
         public ApplicationUser? Owner { get; set; }
-
-        public Questionnaire(string questionnaireName, string ownerId)
-        {
-            QuestionnaireName = questionnaireName;
-            OwnerId = ownerId;
-        }
     }
 }

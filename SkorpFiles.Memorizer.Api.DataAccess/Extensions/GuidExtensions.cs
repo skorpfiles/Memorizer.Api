@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Extensions
 {
-    internal static class GuidExtensions
+    public static class GuidExtensions
     {
         public static string ToAspNetUserIdString(this Guid source)
         {
