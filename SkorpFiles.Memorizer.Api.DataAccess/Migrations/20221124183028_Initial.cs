@@ -53,6 +53,20 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "jEventLog",
+                schema: "memorizer",
+                columns: table => new
+                {
+                    EventId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    EventTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EventMessage = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_jEventLog", x => x.EventId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -216,6 +230,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                 columns: table => new
                 {
                     LabelId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LabelCode = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     LabelName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OwnerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ObjectCreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -243,11 +259,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     QuestionText = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     QuestionUntypedAnswer = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     QuestionIsEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    QuestionReference = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    QuestionReference = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     QuestionIsFixed = table.Column<bool>(type: "bit", nullable: false),
+                    QuestionEstimatedTrainingTimeSeconds = table.Column<int>(type: "int", nullable: false),
                     QuestionnaireId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     QuestionQuestionnaireCode = table.Column<int>(type: "int", nullable: false),
-                    QuestionAddedTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ObjectCreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ObjectIsRemoved = table.Column<bool>(type: "bit", nullable: false),
                     ObjectRemovalTime = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -265,29 +281,37 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "jEventLog",
+                name: "jTrainingResult",
                 schema: "memorizer",
                 columns: table => new
                 {
-                    EventId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    EventTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EventQuestionId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    EventQuestionIsNew = table.Column<bool>(type: "bit", nullable: true),
-                    EventTypedAnswers = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    EventResultRating = table.Column<int>(type: "int", nullable: true),
-                    EventResultPenaltyPoints = table.Column<int>(type: "int", nullable: true),
-                    EventMessage = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    QuestionId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    TrainingResultId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TrainingResultRecordingTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TrainingResultUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TrainingResultQuestionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TrainingResultQuestionHasBeenNew = table.Column<bool>(type: "bit", nullable: false),
+                    TrainingResultUntypedAnswer = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TrainingResultAnswerIsCorrect = table.Column<bool>(type: "bit", nullable: false),
+                    TrainingResultRating = table.Column<int>(type: "int", nullable: false),
+                    TrainingResultPenaltyPoints = table.Column<int>(type: "int", nullable: false),
+                    TrainingResultTimeMilliseconds = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_jEventLog", x => x.EventId);
+                    table.PrimaryKey("PK_jTrainingResult", x => x.TrainingResultId);
                     table.ForeignKey(
-                        name: "FK_jEventLog_rQuestion_QuestionId",
-                        column: x => x.QuestionId,
+                        name: "FK_jTrainingResult_AspNetUsers_TrainingResultUserId",
+                        column: x => x.TrainingResultUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_jTrainingResult_rQuestion_TrainingResultQuestionId",
+                        column: x => x.TrainingResultQuestionId,
                         principalSchema: "memorizer",
                         principalTable: "rQuestion",
-                        principalColumn: "QuestionId");
+                        principalColumn: "QuestionId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -366,7 +390,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                 {
                     TypedAnswerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     QuestionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TypedAnswerQuestionId = table.Column<int>(type: "int", nullable: false),
                     TypedAnswerText = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ObjectCreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ObjectIsRemoved = table.Column<bool>(type: "bit", nullable: false),
@@ -381,6 +404,28 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                         principalSchema: "memorizer",
                         principalTable: "rQuestion",
                         principalColumn: "QuestionId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "jTrainingResultTypedAnswer",
+                schema: "memorizer",
+                columns: table => new
+                {
+                    TrtaId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TrainingResultId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TrtaAnswer = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TrtaIsCorrect = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_jTrainingResultTypedAnswer", x => x.TrtaId);
+                    table.ForeignKey(
+                        name: "FK_jTrainingResultTypedAnswer_jTrainingResult_TrainingResultId",
+                        column: x => x.TrainingResultId,
+                        principalSchema: "memorizer",
+                        principalTable: "jTrainingResult",
+                        principalColumn: "TrainingResultId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -424,10 +469,22 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_jEventLog_QuestionId",
+                name: "IX_jTrainingResult_TrainingResultQuestionId",
                 schema: "memorizer",
-                table: "jEventLog",
-                column: "QuestionId");
+                table: "jTrainingResult",
+                column: "TrainingResultQuestionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_jTrainingResult_TrainingResultUserId",
+                schema: "memorizer",
+                table: "jTrainingResult",
+                column: "TrainingResultUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_jTrainingResultTypedAnswer_TrainingResultId",
+                schema: "memorizer",
+                table: "jTrainingResultTypedAnswer",
+                column: "TrainingResultId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_nnEntityLabel_LabelId",
@@ -513,6 +570,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                 schema: "memorizer");
 
             migrationBuilder.DropTable(
+                name: "jTrainingResultTypedAnswer",
+                schema: "memorizer");
+
+            migrationBuilder.DropTable(
                 name: "nnEntityLabel",
                 schema: "memorizer");
 
@@ -530,6 +591,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "jTrainingResult",
+                schema: "memorizer");
 
             migrationBuilder.DropTable(
                 name: "sLabel",

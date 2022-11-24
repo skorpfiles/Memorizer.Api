@@ -12,8 +12,8 @@ using SkorpFiles.Memorizer.Api.DataAccess;
 namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20221024231420_FixedTrainingResultLog")]
-    partial class FixedTrainingResultLog
+    [Migration("20221124183028_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -295,6 +295,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("LabelCode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LabelCode"), 1L, 1);
+
                     b.Property<string>("LabelName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -338,9 +344,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("ObjectRemovalTime");
 
-                    b.Property<DateTime>("QuestionAddedTimeUtc")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("QuestionAddedTime");
+                    b.Property<int>("QuestionEstimatedTrainingTimeSeconds")
+                        .HasColumnType("int");
 
                     b.Property<bool>("QuestionIsEnabled")
                         .HasColumnType("bit");
@@ -352,7 +357,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("QuestionReference")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("QuestionText")
@@ -451,6 +455,72 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.ToTable("nnQuestionUser", "memorizer");
                 });
 
+            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.TrainingResult", b =>
+                {
+                    b.Property<Guid>("TrainingResultId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("TrainingResultAnswerIsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("TrainingResultPenaltyPoints")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("TrainingResultQuestionHasBeenNew")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("TrainingResultQuestionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TrainingResultRating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("TrainingResultRecordingTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TrainingResultTimeMilliseconds")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TrainingResultUntypedAnswer")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TrainingResultUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("TrainingResultId");
+
+                    b.HasIndex("TrainingResultQuestionId");
+
+                    b.HasIndex("TrainingResultUserId");
+
+                    b.ToTable("jTrainingResult", "memorizer");
+                });
+
+            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.TrainingResultTypedAnswer", b =>
+                {
+                    b.Property<Guid>("TrtaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TrainingResultId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TrtaAnswer")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TrtaIsCorrect")
+                        .HasColumnType("bit");
+
+                    b.HasKey("TrtaId");
+
+                    b.HasIndex("TrainingResultId");
+
+                    b.ToTable("jTrainingResultTypedAnswer", "memorizer");
+                });
+
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.TypedAnswer", b =>
                 {
                     b.Property<Guid>("TypedAnswerId")
@@ -470,9 +540,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
                     b.Property<Guid>("QuestionId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("TypedAnswerQuestionId")
-                        .HasColumnType("int");
 
                     b.Property<string>("TypedAnswerText")
                         .IsRequired()
@@ -660,6 +727,36 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.TrainingResult", b =>
+                {
+                    b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.Question", "TrainingResultQuestion")
+                        .WithMany("TrainingResults")
+                        .HasForeignKey("TrainingResultQuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.ApplicationUser", "TrainingResultUser")
+                        .WithMany("TrainingResultsForUser")
+                        .HasForeignKey("TrainingResultUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("TrainingResultQuestion");
+
+                    b.Navigation("TrainingResultUser");
+                });
+
+            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.TrainingResultTypedAnswer", b =>
+                {
+                    b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.TrainingResult", "TrainingResult")
+                        .WithMany("TypedAnswers")
+                        .HasForeignKey("TrainingResultId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("TrainingResult");
+                });
+
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.TypedAnswer", b =>
                 {
                     b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.Question", "Question")
@@ -691,6 +788,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                 {
                     b.Navigation("LabelsForQuestion");
 
+                    b.Navigation("TrainingResults");
+
                     b.Navigation("TypedAnswers");
 
                     b.Navigation("UsersForQuestion");
@@ -703,6 +802,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Navigation("Questions");
                 });
 
+            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.TrainingResult", b =>
+                {
+                    b.Navigation("TypedAnswers");
+                });
+
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.ApplicationUser", b =>
                 {
                     b.Navigation("LabelsThatUserOwns");
@@ -710,6 +814,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Navigation("QuestionnairesThatUserOwns");
 
                     b.Navigation("QuestionsForUser");
+
+                    b.Navigation("TrainingResultsForUser");
 
                     b.Navigation("UserActivity");
                 });

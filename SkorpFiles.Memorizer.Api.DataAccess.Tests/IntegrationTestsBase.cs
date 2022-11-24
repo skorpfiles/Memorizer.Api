@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,32 +21,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
         protected ApplicationDbContext DbContext { get; private set; }
         protected ILifetimeScope Container { get; private set; }
 
+        protected IMapper Mapper { get; private set; }
+
         public IntegrationTestsBase()
-        {
-            ConfigureDependencies();
-            ConfigureDbContext();
-        }
-
-        public Guid RegisterUser(Guid? nonstandardUserId=null)
-        {
-            Guid userId = nonstandardUserId ?? Guid.Parse("d661ebd5-5520-4739-ada8-390df5b3b696");
-            string registerUserQuery = @$"insert into dbo.AspNetUsers (Id,Discriminator,UserName,Email,EmailConfirmed,PhoneNumberConfirmed,TwoFactorEnabled,LockoutEnabled,AccessFailedCount)
-                                             values('{userId.ToAspNetUserIdString()}', 'IdentityUser','TestName','testname@email.com', 1, 0, 0, 0, 0)";
-            DbContext.Users.FromSqlRaw(registerUserQuery);
-            return userId;
-        }
-
-        public void Dispose()
-        {
-            DisposeDbContext();
-            ResetDependencies();
-        }
-
-        private void ConfigureDependencies()
-        {
-        }
-
-        private void ConfigureDbContext()
         {
             var serviceProvider = new ServiceCollection()
                 .AddEntityFrameworkSqlServer()
@@ -59,6 +37,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             builder.UseSqlServer(configuration["DatabaseConnectionString"])
                     .UseInternalServiceProvider(serviceProvider);
 
+
+
             DbContext = new ApplicationDbContext(builder.Options);
             DbContext.Database.Migrate();
 
@@ -68,16 +48,29 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             opt.UseSqlServer(configuration["DatabaseConnectionString"]);
             containerBuilder.RegisterInstance(new ApplicationDbContext(opt.Options)).Keyed<ApplicationDbContext>("DbContext");
 
+
             var mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new DataAccessMappingProfile());
             });
 
-            IMapper mapper = mapperConfig.CreateMapper();
+            Mapper = mapperConfig.CreateMapper();
 
-            containerBuilder.RegisterInstance(mapper);
+            containerBuilder.RegisterInstance(Mapper);
 
             Container = containerBuilder.Build();
+        }
+
+        public async Task RegisterUserAsync()
+        {
+            await DbContext.Users.AddAsync(new IdentityUser { Id= Constants.DefaultUserId.ToAspNetUserIdString(), UserName = "TestLogin" });
+            await DbContext.SaveChangesAsync();
+        }
+
+        public void Dispose()
+        {
+            DisposeDbContext();
+            ResetDependencies();
         }
 
         private void DisposeDbContext()
