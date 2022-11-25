@@ -7,12 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
-using SkorpFiles.Memorizer.Api.DataAccess.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 {
@@ -37,9 +31,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             builder.UseSqlServer(configuration["DatabaseConnectionString"])
                     .UseInternalServiceProvider(serviceProvider);
 
-
-
             DbContext = new ApplicationDbContext(builder.Options);
+            DbContext.Database.EnsureDeleted();
             DbContext.Database.Migrate();
 
             var containerBuilder = new ContainerBuilder();
@@ -47,7 +40,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             var opt = new DbContextOptionsBuilder<ApplicationDbContext>();
             opt.UseSqlServer(configuration["DatabaseConnectionString"]);
             containerBuilder.RegisterInstance(new ApplicationDbContext(opt.Options)).Keyed<ApplicationDbContext>("DbContext");
-
 
             var mapperConfig = new MapperConfiguration(mc =>
             {

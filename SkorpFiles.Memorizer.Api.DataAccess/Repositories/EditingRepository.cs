@@ -105,11 +105,19 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(_mapper.Map<IEnumerable<Api.Models.Questionnaire>>(foundQuestionnairesResult), totalCount, request.PageNumber);
         }
 
-        public async Task<Api.Models.Questionnaire> GetQuestionnaireAsync(Guid userId, Guid questionnaireId) =>
-            _mapper.Map<Api.Models.Questionnaire>(await GetQuestionnaireAsync(userId, questionnaireId, null));
+        public async Task<Api.Models.Questionnaire> GetQuestionnaireAsync(Guid userId, Guid questionnaireId)
+        {
+            var result = _mapper.Map<Api.Models.Questionnaire>(await GetQuestionnaireAsync(userId, questionnaireId, null));
+            result.QuestionsCount = await GetQuestionsCountInQuestionnaireAsync(result.Id ?? default);
+            return result;
+        }
 
-        public async Task<Api.Models.Questionnaire> GetQuestionnaireAsync(Guid userId, int questionnaireCode) =>
-            _mapper.Map<Api.Models.Questionnaire>(await GetQuestionnaireAsync(userId, null, questionnaireCode));
+        public async Task<Api.Models.Questionnaire> GetQuestionnaireAsync(Guid userId, int questionnaireCode)
+        {
+            var result = _mapper.Map<Api.Models.Questionnaire>(await GetQuestionnaireAsync(userId, null, questionnaireCode));
+            result.QuestionsCount = await GetQuestionsCountInQuestionnaireAsync(result.Id ?? default);
+            return result;
+        }
 
         public async Task<Api.Models.PaginatedCollection<Api.Models.Question>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
         {
@@ -642,6 +650,16 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             }
             else
                 throw new ObjectNotFoundException("Questionnaire with such ID or code is not found.");
+        }
+
+        private async Task<int> GetQuestionsCountInQuestionnaireAsync(Guid questionnaireId)
+        {
+            return await (from question in DbContext.Questions
+                          where
+                              !question.ObjectIsRemoved &&
+                              question.QuestionnaireId == questionnaireId
+                          select question)
+                   .CountAsync();
         }
 
         private async Task DeleteQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)

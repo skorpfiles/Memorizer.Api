@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SkorpFiles.Memorizer.Api.DataAccess\SkorpFiles.Memorizer.Api.DataAccess.csproj" />
+    <ProjectReference Include="..\SkorpFiles.Memorizer.Api.Models\SkorpFiles.Memorizer.Api.Models.csproj" />
   </ItemGroup>
 
 </Project>
