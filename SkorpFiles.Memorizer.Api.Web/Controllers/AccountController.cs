@@ -13,6 +13,7 @@ using System.Security.Claims;
 using SkorpFiles.Memorizer.Api.Web.Models.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Cors;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
@@ -43,6 +44,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         }
 
         [Route("Token")]
+        [EnableCors]
         [HttpPost]
         public async Task<IActionResult> LoginAsync(LoginRequest request)
         {

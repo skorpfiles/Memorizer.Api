@@ -13,6 +13,7 @@ using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
 using SkorpFiles.Memorizer.Api.Web.Mapping;
 using StackExchange.Redis;
+using Autofac.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,20 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 var multiplexer = ConnectionMultiplexer.Connect(builder.Configuration["RedisConnectionString"]);
 builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
 
+const string frontendUrl = "http://localhost:3000"; //todo move to config
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+    builder =>
+    {
+        builder.WithOrigins(frontendUrl)
+        .AllowAnyHeader()
+        .WithMethods("GET", "PUT", "POST", "DELETE", "OPTIONS")
+        .AllowCredentials();
+    });
+});
+
 builder.Services.ConfigureApplicationCookie(options => {
     options.Events.OnRedirectToLogin = context => {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -99,10 +114,31 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.Use(async (context, next) =>
+{
+    var methodvalue = context.Request.Method;
+    if (!string.IsNullOrEmpty(methodvalue))
+    {
+
+        if (methodvalue == HttpMethods.Options || methodvalue == HttpMethods.Head)
+        {
+            context.Response.Headers.Add("Access-Control-Allow-Origin", frontendUrl);
+            context.Response.Headers.Add("Access-Control-Allow-Headers", "Access-Control-Allow-Origin,Access-Control-Allow-Headers,content-type");
+            await next();
+        }
+        else
+        {
+            await next();
+        }
+    }
+});
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseCors();
 
 app.MapControllers();
 
