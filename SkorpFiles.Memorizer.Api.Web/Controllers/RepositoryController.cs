@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
@@ -29,8 +30,9 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 
         [Route("Questionnaires")]
         [HttpGet]
+        [EnableCors]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> GetQuestionnairesAsync(Web.Models.Requests.Repository.GetQuestionnairesRequest request)
+        public async Task<IActionResult> GetQuestionnairesAsync([FromQuery]Web.Models.Requests.Repository.GetQuestionnairesRequest request)
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {

@@ -95,6 +95,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var totalCount = await foundQuestionnaires.CountAsync();
 
+            if (request.PageNumber == 0)
+                request.PageNumber = 1;
+            if (request.PageSize == 0)
+                request.PageSize = 50;
+
             foundQuestionnaires = foundQuestionnaires.Page(request.PageNumber, request.PageSize);
 
             var foundQuestionnairesResult = await foundQuestionnaires.ToListAsync();

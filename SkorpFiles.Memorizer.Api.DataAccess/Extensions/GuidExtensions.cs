@@ -10,7 +10,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Extensions
     {
         public static string ToAspNetUserIdString(this Guid source)
         {
-            return source.ToString().ToLowerInvariant();
+            if (source != Guid.Empty)
+                return source.ToString().ToLowerInvariant();
+            else
+                return null;
         }
     }
 }
