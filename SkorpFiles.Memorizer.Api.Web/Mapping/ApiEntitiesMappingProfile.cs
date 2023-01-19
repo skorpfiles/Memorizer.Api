@@ -21,6 +21,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
             CreateMap<SkorpFiles.Memorizer.Api.Models.Question, Question>()
                 .ForMember(dest => dest.Type, opts => opts.MapFrom(src => src.Type.ToString().PascalCaseToLowerCamelCase()))
                 .IncludeAllDerived();
+            CreateMap<SkorpFiles.Memorizer.Api.Models.Question, ExistingQuestion>()
+                .ForMember(dest => dest.Type, opts => opts.MapFrom(src => src.Type.ToString().PascalCaseToLowerCamelCase()));
             CreateMap<Question, SkorpFiles.Memorizer.Api.Models.Question>()
                 .ForMember(dest => dest.Type, opts =>
                 {

@@ -36,6 +36,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
+                RestoreDefaultPageValues(request);
                 var userGuid = await GetCurrentUserGuidAsync();
                 var result = await _editingLogic.GetQuestionnairesAsync(userGuid, _mapper.Map<SkorpFiles.Memorizer.Api.Models.RequestModels.GetQuestionnairesRequest>(request));
                 return Ok(_mapper.Map<GetQuestionnairesResponse>(result));
@@ -106,11 +107,13 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 
         [Route("Questions")]
         [HttpGet]
+        [EnableCors]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> GetQuestionsAsync(Web.Models.Requests.Repository.GetQuestionsRequest request)
+        public async Task<IActionResult> GetQuestionsAsync([FromQuery]Web.Models.Requests.Repository.GetQuestionsRequest request)
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
+                RestoreDefaultPageValues(request);
                 var result = await _editingLogic.GetQuestionsAsync(await GetCurrentUserGuidAsync(), _mapper.Map<Api.Models.RequestModels.GetQuestionsRequest>(request));
                 return Ok(_mapper.Map<GetQuestionsResponse>(result));
             });
@@ -282,6 +285,14 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             });
 
             return result;
+        }
+
+        private void RestoreDefaultPageValues(Models.Requests.Repository.Abstract.CollectionRequest request, int? defaultPageSize=null)
+        {
+            if (request.PageNumber == 0)
+                request.PageNumber = 1;
+            if (request.PageSize == 0)
+                request.PageSize = defaultPageSize ?? 50;
         }
     }
 }
