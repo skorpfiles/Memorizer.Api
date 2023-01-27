@@ -114,25 +114,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.Use(async (context, next) =>
-{
-    var methodvalue = context.Request.Method;
-    if (!string.IsNullOrEmpty(methodvalue))
-    {
-        context.Response.Headers.Add("Access-Control-Allow-Origin", frontendUrl);
-        context.Response.Headers.Add("Access-Control-Allow-Headers", "Access-Control-Allow-Origin,Access-Control-Allow-Headers,content-type,Authorization");
-
-        if (methodvalue == HttpMethods.Options || methodvalue == HttpMethods.Head)
-        {
-            context.Response.StatusCode = 200;
-        }
-        else
-        {
-            await next();
-        }
-    }
-});
-
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

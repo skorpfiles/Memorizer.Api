@@ -30,7 +30,6 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 
         [Route("Questionnaires")]
         [HttpGet]
-        [EnableCors]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> GetQuestionnairesAsync([FromQuery]Web.Models.Requests.Repository.GetQuestionnairesRequest request)
         {
@@ -107,7 +106,6 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 
         [Route("Questions")]
         [HttpGet]
-        [EnableCors]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> GetQuestionsAsync([FromQuery]Web.Models.Requests.Repository.GetQuestionsRequest request)
         {

@@ -44,7 +44,6 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         }
 
         [Route("Token")]
-        [EnableCors]
         [HttpPost]
         public async Task<IActionResult> LoginAsync(LoginRequest request)
         {
