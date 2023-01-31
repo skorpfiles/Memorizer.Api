@@ -119,7 +119,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return result;
         }
 
-        public async Task<Api.Models.PaginatedCollection<Api.Models.Question>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
+        public async Task<Api.Models.PaginatedCollection<Api.Models.ExistingQuestion>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -219,12 +219,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var foundQuestions = foundQuestionsAndStatusesResult.Select(questionAndStatus =>
             {
-                var question = _mapper.Map<Api.Models.Question>(questionAndStatus.Question);
+                var question = _mapper.Map<Api.Models.ExistingQuestion>(questionAndStatus.Question);
                 question.MyStatus = _mapper.Map<Api.Models.UserQuestionStatus>(questionAndStatus.QuestionUser);
                 return question;
             });
 
-            return new Api.Models.PaginatedCollection<Api.Models.Question>(foundQuestions, totalCount, request.PageNumber);
+            return new Api.Models.PaginatedCollection<Api.Models.ExistingQuestion>(foundQuestions, totalCount, request.PageNumber);
         }
 
         public async Task UpdateQuestionsAsync(Guid userId, UpdateQuestionsRequest request)

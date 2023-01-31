@@ -54,7 +54,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             await _editingRepository.DeleteQuestionnaireAsync(userId, questionnaireCode);
         }
 
-        public async Task<PaginatedCollection<Question>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
+        public async Task<PaginatedCollection<ExistingQuestion>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
         {
             return await _editingRepository.GetQuestionsAsync(userId, request);
         }
