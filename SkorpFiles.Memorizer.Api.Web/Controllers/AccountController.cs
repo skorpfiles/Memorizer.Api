@@ -14,6 +14,9 @@ using SkorpFiles.Memorizer.Api.Web.Models.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Cors;
+using SkorpFiles.Memorizer.Api.DataAccess.Models;
+using static System.Net.Mime.MediaTypeNames;
+using SkorpFiles.Memorizer.Api.DataAccess.Migrations;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
@@ -21,17 +24,17 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
     [Route("[controller]")]
     public class AccountController : Controller
     {
-        private readonly IUserStore<IdentityUser> _userStore;
-        private readonly IUserEmailStore<IdentityUser> _emailStore;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IUserStore<ApplicationUser> _userStore;
+        private readonly IUserEmailStore<ApplicationUser> _emailStore;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _configuration;
         private readonly IAccountLogic _accountLogic;
 
         private readonly IConnectionMultiplexer _redis;
 
         public AccountController( 
-            IConnectionMultiplexer redis, IConfiguration configuration, IAccountLogic accountLogic, IUserStore<IdentityUser> userStore, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+            IConnectionMultiplexer redis, IConfiguration configuration, IAccountLogic accountLogic, IUserStore<ApplicationUser> userStore, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
         {
             _redis = redis;
             _configuration = configuration;
@@ -57,16 +60,18 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             var now = DateTime.UtcNow;
 
             var jwt = new JwtSecurityToken(
-                    issuer: AuthOptions.ISSUER,
-                    audience: AuthOptions.AUDIENCE,
+                    issuer: AuthOptions.Issuer,
+                    audience: AuthOptions.Audience,
                     notBefore: now,
                     claims: identity.Claims,
-                    expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LIFETIME)),
+                    expires: now.Add(TimeSpan.FromMinutes(AuthOptions.AccessTokenLifetime)),
                     signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(_configuration), SecurityAlgorithms.HmacSha256));
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
             if (encodedJwt != null)
             {
+                var refreshToken = AuthUtilities.GenerateRefreshToken();
+
                 var redisDb = _redis.GetDatabase();
                 var redisResult = await redisDb.StringSetAsync(new RedisKey(encodedJwt), new RedisValue(Constants.DefaultName));
                 if (redisResult)
@@ -148,12 +153,16 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             throw new NotImplementedException();
         }
 
-        private async Task<ClaimsIdentity?> GetIdentityAsync(string username, string password)
+        private async Task<ClaimsIdentity?> GetIdentityAsync(string username, string password, )
         {
-            var signInStatus = await CheckUserCredentialsAsync(username, password);
+            var user = await _userManager.FindByNameAsync(username);
+            var signInStatus = await CheckUserCredentialsAsync(user, password);
             
             if (signInStatus == SignInStatus.Success)
             {
+                if (user is null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+                    return BadRequest("Invalid client request");
+
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimsIdentity.DefaultNameClaimType, username),
@@ -166,6 +175,28 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             }
             else
                 return null;
+
+
+        }
+
+        private async Task<SignInStatus> CheckUserCredentialsAsync(ApplicationUser? user, string password)
+        {
+            if (user == null)
+            {
+                return SignInStatus.Failure;
+            }
+            else if (await _userManager.IsLockedOutAsync(user))
+            {
+                return SignInStatus.LockedOut;
+            }
+            else if (await _userManager.CheckPasswordAsync(user, password))
+            {
+                return SignInStatus.Success;
+            }
+            else
+            {
+                return SignInStatus.Failure;
+            }
         }
 
         private async Task<SignInStatus> CheckUserCredentialsAsync(string username, string password)
@@ -196,25 +227,25 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             }
         }
 
-        private IdentityUser CreateUser()
+        private ApplicationUser CreateUser()
         {
             try
             {
-                return Activator.CreateInstance<IdentityUser>();
+                return Activator.CreateInstance<ApplicationUser>();
             }
             catch
             {
-                throw new InvalidOperationException($"Can't create an instance of '{nameof(IdentityUser)}'. ");
+                throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. ");
             }
         }
 
-        private IUserEmailStore<IdentityUser> GetEmailStore()
+        private IUserEmailStore<ApplicationUser> GetEmailStore()
         {
             if (!_userManager.SupportsUserEmail)
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
-            return (IUserEmailStore<IdentityUser>)_userStore;
+            return (IUserEmailStore<ApplicationUser>)_userStore;
         }
     }
 }

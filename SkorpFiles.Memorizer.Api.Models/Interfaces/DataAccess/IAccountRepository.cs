@@ -3,5 +3,6 @@
     public interface IAccountRepository
     {
         Task RegisterUserActivityAsync(string userName, string userId);
+        //Task SetUserRefreshTokenAsync(string userName, string refreshToken);
     }
 }

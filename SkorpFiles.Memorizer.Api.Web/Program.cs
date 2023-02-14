@@ -14,6 +14,7 @@ using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
 using SkorpFiles.Memorizer.Api.Web.Mapping;
 using StackExchange.Redis;
 using Autofac.Core;
+using SkorpFiles.Memorizer.Api.DataAccess.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,12 +34,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 // укзывает, будет ли валидироваться издатель при валидации токена
                 ValidateIssuer = true,
                 // строка, представляющая издателя
-                ValidIssuer = AuthOptions.ISSUER,
+                ValidIssuer = AuthOptions.Issuer,
 
                 // будет ли валидироваться потребитель токена
                 ValidateAudience = true,
                 // установка потребителя токена
-                ValidAudience = AuthOptions.AUDIENCE,
+                ValidAudience = AuthOptions.Audience,
                 // будет ли валидироваться время существования
                 ValidateLifetime = true,
 
@@ -54,7 +55,7 @@ string connectionString = builder.Configuration["DatabaseConnectionString"]!;
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(connectionString));
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 var multiplexer = ConnectionMultiplexer.Connect(builder.Configuration["RedisConnectionString"]);

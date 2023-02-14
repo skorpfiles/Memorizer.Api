@@ -23,5 +23,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             DbContext.UserActivities?.Add(userActivity);
             await DbContext.SaveChangesAsync(); //todo one transaction with creating user in AspNetUsers
         }
+
+        //public Task SetUserRefreshTokenAsync(string userName, string newRefreshToken, int newRefreshTokenExpiryTime)
+        //{
+        //    var user = DbContext.Users.Where(u=>u.UserName == userName).FirstOrDefault();
+        //    if (user != null)
+        //    {
+        //        user.
+        //    }
+        //}
     }
 }
