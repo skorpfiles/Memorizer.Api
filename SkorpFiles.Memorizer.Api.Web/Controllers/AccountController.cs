@@ -84,6 +84,13 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 throw new InternalAuthenticationErrorException("Unable to generate a JWT token.");
         }
 
+        [Route("Check")]
+        [HttpGet]
+        public IActionResult CheckToken()
+        {
+            return Ok();
+        }
+
         [Route("Register")]
         [HttpPut]
         public async Task<IActionResult> RegisterAsync(RegisterRequest request)
