@@ -85,6 +85,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         }
 
         [Route("Check")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet]
         public IActionResult CheckToken()
         {
