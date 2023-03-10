@@ -214,8 +214,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var foundQuestionsAndStatusesResult = await foundQuestionsAndStatuses.ToListAsync();
             foreach (var questionnaire in foundQuestionsAndStatusesResult)
+            {
+                if (questionnaire?.Question.TypedAnswers != null)
+                    questionnaire.Question.TypedAnswers = questionnaire.Question.TypedAnswers.Where(a => !a.ObjectIsRemoved).ToList();
+
                 if (questionnaire?.Question.LabelsForQuestion != null)
                     questionnaire.Question.LabelsForQuestion = questionnaire.Question.LabelsForQuestion.OrderBy(l => l.LabelNumber).ToList();
+            }
 
             var foundQuestions = foundQuestionsAndStatusesResult.Select(questionAndStatus =>
             {
