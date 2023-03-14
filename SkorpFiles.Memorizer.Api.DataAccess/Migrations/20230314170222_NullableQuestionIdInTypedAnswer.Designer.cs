@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SkorpFiles.Memorizer.Api.DataAccess;
 
@@ -11,9 +12,11 @@ using SkorpFiles.Memorizer.Api.DataAccess;
 namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230314170222_NullableQuestionIdInTypedAnswer")]
+    partial class NullableQuestionIdInTypedAnswer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -538,7 +541,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("ObjectRemovalTime");
 
-                    b.Property<Guid?>("QuestionId")
+                    b.Property<Guid>("QuestionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("TypedAnswerText")
@@ -761,7 +764,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                 {
                     b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.Question", "Question")
                         .WithMany("TypedAnswers")
-                        .HasForeignKey("QuestionId");
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Question");
                 });
