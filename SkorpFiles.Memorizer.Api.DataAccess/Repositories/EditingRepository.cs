@@ -733,9 +733,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         {
             if (question.Text == null)
                 throw new ArgumentException("All questions should have text.");
-
-            if ((question.Type == QuestionType.Task || question.Type == QuestionType.TypedAnswers) && question.TypedAnswers != null)
-                throw new ArgumentException("Specified type of a question doesn't allow typed answers.");
         }
 
         private async Task<Models.Label> GetLabelAsync(Guid userId, Guid? labelId = null, int? labelCode = null)
