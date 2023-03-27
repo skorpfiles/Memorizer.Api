@@ -193,6 +193,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             switch(request.SortField)
             {
                 case QuestionSortField.AddedTime:
+                default:
                     switch(request.SortDirection)
                     {
                         case SortDirection.Ascending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderBy(p => p.Question.ObjectCreationTimeUtc);break;
@@ -291,6 +292,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     foreach (var question in request.CreatedQuestions)
                     {
                         var questionForDb = _mapper.Map<DataAccess.Models.Question>(question);
+                        questionForDb.QuestionId = Guid.Empty;
                         questionForDb.QuestionnaireId = questionnaireResult.QuestionnaireId;
                         questionForDb.ObjectCreationTimeUtc = DateTime.UtcNow;
 
