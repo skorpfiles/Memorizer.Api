@@ -57,8 +57,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-//var multiplexer = ConnectionMultiplexer.Connect(builder.Configuration["RedisConnectionString"]);
-//builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+var multiplexer = ConnectionMultiplexer.Connect(builder.Configuration["RedisConnectionString"]);
+builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
 
 const string frontendUrl = "http://localhost:3000"; //todo move to config
 
