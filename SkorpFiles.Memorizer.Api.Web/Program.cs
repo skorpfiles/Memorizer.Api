@@ -60,14 +60,14 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 var multiplexer = ConnectionMultiplexer.Connect(builder.Configuration["RedisConnectionString"]);
 builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
 
-const string frontendUrl = "http://localhost:3000"; //todo move to config
+string frontendOrigins = builder.Configuration["FrontendOrigins"]!;
 
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(
     builder =>
     {
-        builder.WithOrigins(frontendUrl)
+        builder.WithOrigins(frontendOrigins)
         .AllowAnyHeader()
         .WithMethods("GET", "PUT", "POST", "DELETE", "OPTIONS")
         .AllowCredentials();
