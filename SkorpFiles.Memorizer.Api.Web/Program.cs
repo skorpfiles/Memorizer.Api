@@ -49,10 +49,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             };
         });
 
-//string connectionString = builder.Configuration["DatabaseConnectionString"]!;
+string connectionString = builder.Configuration["DatabaseConnectionString"]!;
 
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//        options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlServer(connectionString));
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -98,11 +98,11 @@ builder.Services.AddSingleton(mapper);
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
     .ConfigureContainer<ContainerBuilder>(containerBuilder =>
     {
-        //var opt = new DbContextOptionsBuilder<ApplicationDbContext>();
-        //opt.UseSqlServer(connectionString);
-        //containerBuilder.RegisterInstance(new ApplicationDbContext(opt.Options)).Keyed<ApplicationDbContext>("DbContext");
-        //containerBuilder.RegisterModule(new DataAccessModule());
-        //containerBuilder.RegisterModule(new BusinessLogicModule());
+        var opt = new DbContextOptionsBuilder<ApplicationDbContext>();
+        opt.UseSqlServer(connectionString);
+        containerBuilder.RegisterInstance(new ApplicationDbContext(opt.Options)).Keyed<ApplicationDbContext>("DbContext");
+        containerBuilder.RegisterModule(new DataAccessModule());
+        containerBuilder.RegisterModule(new BusinessLogicModule());
     });
 
 var app = builder.Build();
