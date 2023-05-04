@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Abstractions;
 using Microsoft.Net.Http.Headers;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 using StackExchange.Redis;
@@ -63,6 +66,17 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         public async Task<IActionResult> AddUserActivityWithoutUser()
         {
             await _accountLogic.RegisterUserActivityAsync("testUserName", Guid.NewGuid().ToString());
+            return Ok();
+        }
+
+        [Route("TestAzureInsights")]
+        [HttpGet]
+        public IActionResult TestAzureInsights()
+        {
+            var config = TelemetryConfiguration.CreateDefault();
+            config.ConnectionString = "InstrumentationKey=48f82062-d2fa-469a-a4a6-e873a3dc6db9;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/";
+            var ai = new TelemetryClient(config);
+            ai.TrackException(new NullReferenceException());
             return Ok();
         }
     }
