@@ -20,7 +20,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddApplicationInsightsTelemetry();
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -106,6 +105,8 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
         containerBuilder.RegisterModule(new DataAccessModule());
         containerBuilder.RegisterModule(new BusinessLogicModule());
     });
+
+builder.Logging.ClearProviders().AddApplicationInsights();
 
 var app = builder.Build();
 

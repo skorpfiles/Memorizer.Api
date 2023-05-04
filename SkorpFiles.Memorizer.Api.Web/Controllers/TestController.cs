@@ -75,7 +75,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [HttpGet]
         public IActionResult TestAzureInsights()
         {
-            _logger.LogWarning("My Test Message");
+            _logger.LogError("My Test Message");
             return Ok();
         }
     }
