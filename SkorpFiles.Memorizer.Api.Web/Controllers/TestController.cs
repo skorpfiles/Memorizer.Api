@@ -16,11 +16,13 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
     {
         private readonly IConnectionMultiplexer _redis;
         private readonly IAccountLogic _accountLogic;
+        private readonly ILogger<TestController> _logger;
 
-        public TestController(IConnectionMultiplexer redis, IAccountLogic accountLogic)
+        public TestController(IConnectionMultiplexer redis, IAccountLogic accountLogic, ILogger<TestController> logger)
         {
             _redis = redis;
             _accountLogic = accountLogic;
+            _logger = logger;
         }
 
         [Route("AuthorizedTest")]
@@ -73,7 +75,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [HttpGet]
         public IActionResult TestAzureInsights()
         {
-            throw new Exception("Test exception");
+            _logger.LogInformation("My Test Message");
+            return Ok();
         }
     }
 }
