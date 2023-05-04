@@ -73,11 +73,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [HttpGet]
         public IActionResult TestAzureInsights()
         {
-            var config = TelemetryConfiguration.CreateDefault();
-            config.ConnectionString = "InstrumentationKey=079ad3fb-e793-4c75-bde6-5172cac2a791;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/";
-            var ai = new TelemetryClient(config);
-            ai.TrackException(new NullReferenceException());
-            return Ok();
+            throw new Exception("Test exception");
         }
     }
 }
