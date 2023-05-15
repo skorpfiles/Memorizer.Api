@@ -76,19 +76,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [HttpGet]
         public IActionResult TestAzureInsights()
         {
-            var config = TelemetryConfiguration.CreateDefault();
-            var ai = new TelemetryClient(config);
-            ai.TrackException(new NullReferenceException(),new Dictionary<string, string> 
-            { 
-                { "assembly", Assembly.GetExecutingAssembly().FullName }, 
-                { "method",nameof(TestAzureInsights)  },
-                { "outerAssembly","TestInnerAssembly" },
-                { "outerMethod","TestInnerMethod"},
-                { "innermostAssembly","TestOutermostAssembly"},
-                { "innermostMethod","TestOutermostMethod" }
-            });
-
-            //_logger.LogError("My Test Message");
+            _logger.LogError("My Test Message");
             return Ok();
         }
     }
