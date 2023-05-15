@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Abstractions;
 using Microsoft.Net.Http.Headers;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 using StackExchange.Redis;
+using System.Reflection;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
@@ -75,7 +76,19 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [HttpGet]
         public IActionResult TestAzureInsights()
         {
-            _logger.LogError("My Test Message");
+            var config = TelemetryConfiguration.CreateDefault();
+            var ai = new TelemetryClient(config);
+            ai.TrackException(new NullReferenceException(),new Dictionary<string, string> 
+            { 
+                { "assembly", Assembly.GetExecutingAssembly().FullName }, 
+                { "method",nameof(TestAzureInsights)  },
+                { "outerAssembly","TestInnerAssembly" },
+                { "outerMethod","TestInnerMethod"},
+                { "innermostAssembly","TestOutermostAssembly"},
+                { "innermostMethod","TestOutermostMethod" }
+            });
+
+            //_logger.LogError("My Test Message");
             return Ok();
         }
     }
