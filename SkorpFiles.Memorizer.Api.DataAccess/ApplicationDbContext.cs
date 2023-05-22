@@ -21,6 +21,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
         public DbSet<TrainingResult> TrainingResults => Set<TrainingResult>();
         public DbSet<TrainingResultTypedAnswer> TrainingResultTypedAnswers => Set<TrainingResultTypedAnswer>();
         public DbSet<EventLog> EventLog => Set<EventLog>();
+        public DbSet<AuthenticationCache> AuthenticationCache => Set<AuthenticationCache>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

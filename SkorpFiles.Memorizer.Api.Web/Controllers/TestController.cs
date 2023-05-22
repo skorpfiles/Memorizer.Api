@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Abstractions;
 using Microsoft.Net.Http.Headers;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
+using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
 using StackExchange.Redis;
 using System.Reflection;
 
@@ -15,13 +16,13 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
     [Route("[controller]")]
     public class TestController:Controller
     {
-        private readonly IConnectionMultiplexer _redis;
+        private readonly ITokenCache _tokenCache;
         private readonly IAccountLogic _accountLogic;
         private readonly ILogger<TestController> _logger;
 
-        public TestController(IConnectionMultiplexer redis, IAccountLogic accountLogic, ILogger<TestController> logger)
+        public TestController(ITokenCache tokenCache, IAccountLogic accountLogic, ILogger<TestController> logger)
         {
-            _redis = redis;
+            _tokenCache = tokenCache;
             _accountLogic = accountLogic;
             _logger = logger;
         }
@@ -39,17 +40,15 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         public async Task<IActionResult> TryAuthorizeWithAbsentTokenAsync()
         {
             var accessToken = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
-            var redisDb = _redis.GetDatabase();
-            var redisResult = await redisDb.StringGetAsync(new RedisKey(accessToken));
-            return Ok(redisResult.ToString() !=null && redisResult.ToString() != Constants.DisabledManuallyName);
+            var tokenCacheResult = await _tokenCache.GetAsync(accessToken);
+            return Ok(tokenCacheResult?.ToString() !=null && tokenCacheResult.ToString() != Constants.DisabledManuallyName);
         }
 
         [Route("SetRedisKeyValue")]
         [HttpPost]
         public async Task<IActionResult> SetRedisKeyValue([FromQuery]string key, [FromQuery]string value)
         {
-            var db = _redis.GetDatabase();
-            if (await db.StringSetAsync(new RedisKey(key), new RedisValue(value)))
+            if (await _tokenCache.SetAsync(key, value))
                 return Ok();
             else
                 throw new Exception();
@@ -59,9 +58,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> GetRedisValue([FromQuery] string key)
         {
-            var db = _redis.GetDatabase();
-            var foo = await db.StringGetAsync(new RedisKey(key));
-            return Ok(foo.ToString());
+            var foo = await _tokenCache.GetAsync(key);
+            return Ok(foo?.ToString());
         }
 
         [Route("AddUserActivityWithoutUser")]

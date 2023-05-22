@@ -14,6 +14,7 @@ using SkorpFiles.Memorizer.Api.Web.Models.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Cors;
+using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
@@ -29,11 +30,12 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         private readonly IAccountLogic _accountLogic;
 
         private readonly IConnectionMultiplexer _redis;
+        private readonly ITokenCache _tokenCache;
 
         public AccountController( 
-            IConnectionMultiplexer redis, IConfiguration configuration, IAccountLogic accountLogic, IUserStore<IdentityUser> userStore, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+            ITokenCache tokenCache, IConfiguration configuration, IAccountLogic accountLogic, IUserStore<IdentityUser> userStore, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
         {
-            _redis = redis;
+            _tokenCache = tokenCache;
             _configuration = configuration;
             _accountLogic = accountLogic;
 
@@ -67,9 +69,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 
             if (encodedJwt != null)
             {
-                var redisDb = _redis.GetDatabase();
-                var redisResult = await redisDb.StringSetAsync(new RedisKey(encodedJwt), new RedisValue(Constants.DefaultName));
-                if (redisResult)
+                if (await _tokenCache.SetAsync(encodedJwt, Constants.DefaultName))
                 {
                     return Json(new
                     {
@@ -131,13 +131,12 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             var accessToken = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
             if (!string.IsNullOrEmpty(accessToken))
             {
-                var redisDb = _redis.GetDatabase();
-                var redisKey = new RedisKey(accessToken);
-                if ((await redisDb.StringGetAsync(redisKey)).ToString() == Constants.DefaultName)
+                if (await _tokenCache.GetAsync(accessToken) == Constants.DefaultName)
                 {
-                    var redisResult = await redisDb.StringSetAsync(new RedisKey(accessToken), new RedisValue(Constants.DisabledManuallyName));
-                    if (redisResult)
+                    if (await _tokenCache.SetAsync(accessToken, Constants.DisabledManuallyName))
+                    {
                         return Ok();
+                    }
                     else
                         throw new InternalAuthenticationErrorException("Unable to logout the token.");
                 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Exceptions;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Models;
@@ -23,5 +24,26 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             DbContext.UserActivities?.Add(userActivity);
             await DbContext.SaveChangesAsync(); //todo one transaction with creating user in AspNetUsers
         }
+
+        public async Task SetTokenToCacheAsync(string key, string value)
+        {
+            var existingKeyRecord = DbContext.AuthenticationCache.Where(k => k.Key == key).FirstOrDefault();
+            if (existingKeyRecord == null)
+            {
+                var authenticationCacheRecord = new AuthenticationCache() { Key = key, Value = value };
+                DbContext.AuthenticationCache?.Add(authenticationCacheRecord);
+            }
+            else
+            {
+                existingKeyRecord.Value = value;
+            }    
+            await DbContext.SaveChangesAsync();
+        }
+
+        public async Task<string?> GetTokenInfoFromCacheAsync(string key)
+        {
+            return (await DbContext.AuthenticationCache.Where(ac => ac.Key == key).FirstOrDefaultAsync())?.Value;
+        }
+
     }
 }

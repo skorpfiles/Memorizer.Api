@@ -1,18 +1,19 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.Net.Http.Headers;
+using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
 using StackExchange.Redis;
 
 namespace SkorpFiles.Memorizer.Api.Web.Authorization
 {
     public class AuthorizationWithCheckTokenMiddlewareResultHandler : IAuthorizationMiddlewareResultHandler
     {
-        private readonly IConnectionMultiplexer _redis;
+        private readonly ITokenCache _tokenCache;
         private readonly AuthorizationMiddlewareResultHandler defaultHandler = new();
 
-        public AuthorizationWithCheckTokenMiddlewareResultHandler(IConnectionMultiplexer redis)
+        public AuthorizationWithCheckTokenMiddlewareResultHandler(ITokenCache tokenCache)
         {
-            _redis = redis;
+            _tokenCache = tokenCache;
         }
 
         public async Task HandleAsync(RequestDelegate next, HttpContext context, AuthorizationPolicy policy, PolicyAuthorizationResult authorizeResult)
@@ -20,12 +21,14 @@ namespace SkorpFiles.Memorizer.Api.Web.Authorization
             if (authorizeResult.Succeeded)
             {
                 var accessToken = context.Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
-                var redisDb = _redis.GetDatabase();
-                var redisResult = await redisDb.StringGetAsync(new RedisKey(accessToken));
-                if (redisResult.ToString() != null)
+
+                var cacheData = await _tokenCache.GetAsync(accessToken);
+                if (cacheData != null)
                 {
-                    if (redisResult.ToString() != Constants.DisabledManuallyName)
+                    if (cacheData!=Constants.DisabledManuallyName)
+                    {
                         await defaultHandler.HandleAsync(next, context, policy, authorizeResult);
+                    }
                     else
                     {
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;

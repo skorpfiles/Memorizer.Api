@@ -14,6 +14,7 @@ using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
 using SkorpFiles.Memorizer.Api.Web.Mapping;
 using StackExchange.Redis;
 using Autofac.Core;
+using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,8 +59,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-var multiplexer = ConnectionMultiplexer.Connect(builder.Configuration["RedisConnectionString"]);
-builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+ITokenCache? tokenCache=null;
+var cacheType = builder.Configuration["AuthorizationCacheType"];
+switch (cacheType)
+{
+    case "redis":
+        tokenCache = new RedisTokenCache();
+        tokenCache.Initialize(builder.Configuration["RedisConnectionString"]!);
+        builder.Services.AddSingleton(tokenCache);
+        break;
+    case "db":
+        builder.Services.AddSingleton<ITokenCache, DbTokenCache>();
+        break;
+}
 
 string frontendOrigins = builder.Configuration["FrontendOrigins"]!;
 

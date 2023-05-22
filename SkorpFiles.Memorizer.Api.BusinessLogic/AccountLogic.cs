@@ -16,5 +16,15 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
         {
             await _accountRepository.RegisterUserActivityAsync(userName, userId);
         }
+
+        public async Task SetTokenToCacheAsync(string key, string value)
+        {
+            await _accountRepository.SetTokenToCacheAsync(key, value);
+        }
+
+        public async Task<string?> GetTokenInfoFromCacheAsync(string key)
+        {
+            return await _accountRepository.GetTokenInfoFromCacheAsync(key);
+        }
     }
 }
