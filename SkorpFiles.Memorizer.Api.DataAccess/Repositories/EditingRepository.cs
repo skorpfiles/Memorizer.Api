@@ -67,12 +67,22 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             foundQuestionnaires =
                 from questionnaire in foundQuestionnaires
                 where
-                    (request.Origin == null ||
+                    ((request.Origin == null) ||
                     (request.Origin == Origin.Own && questionnaire.OwnerId == userIdString) ||
                     (request.Origin == Origin.Foreign && questionnaire.OwnerId != userIdString)) &&
-                    (ownerIdString == null || request.OwnerId!.Value == default || questionnaire.OwnerId == ownerIdString) &&
-                    (request.Availability == null || request.Availability == questionnaire.QuestionnaireAvailability) &&
-                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName.ToLower()))
+
+                    ((ownerIdString == null) ||
+                    (request.OwnerId!.Value == default) ||
+                    (questionnaire.OwnerId == ownerIdString)) &&
+
+                    ((request.Availability == null) ||
+                    (request.Availability == questionnaire.QuestionnaireAvailability)) &&
+
+                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName.ToLower())) &&
+
+                    //If the questionnaire is private, return only own questionnaires! Edit carefully!
+                    ((questionnaire.QuestionnaireAvailability == Availability.Private && questionnaire.OwnerId == userIdString) ||
+                    (questionnaire.QuestionnaireAvailability == Availability.Public))
                 select questionnaire;
 
             switch (request.SortField)
