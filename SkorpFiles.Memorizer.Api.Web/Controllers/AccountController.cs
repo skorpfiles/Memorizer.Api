@@ -28,8 +28,6 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IConfiguration _configuration;
         private readonly IAccountLogic _accountLogic;
-
-        private readonly IConnectionMultiplexer _redis;
         private readonly ITokenCache _tokenCache;
 
         public AccountController( 
@@ -98,6 +96,12 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         {
             if (request.Email == null || request.Password == null)
                 return BadRequest(new { ErrorText = "Login and password cannot be null." });
+
+            if (CaptchaUtils.ShouldCheckCaptcha(_configuration))
+            {
+                if (request.CaptchaToken == null || !await CaptchaUtils.IsCaptchaValidAsync(_configuration, request.CaptchaToken))
+                    return Unauthorized("CAPTCHA isn't passed.");
+            }
 
             var user = CreateUser();
 
