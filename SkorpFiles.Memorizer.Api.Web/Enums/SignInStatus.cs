@@ -20,6 +20,10 @@
         //
         // Summary:
         //     Sign in failed
-        Failure
+        Failure,
+        //
+        // Summary:
+        //     Email is not confirmed
+        EmailNotConfirmed
     }
 }

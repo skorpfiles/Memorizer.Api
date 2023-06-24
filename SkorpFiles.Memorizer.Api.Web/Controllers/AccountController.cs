@@ -15,6 +15,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Cors;
 using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
+using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
@@ -50,9 +52,11 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             if (request.Login == null || request.Password == null)
                 return BadRequest(new { errorText = "Login and password cannot be null." });
 
-            var identity = await GetIdentityAsync(request.Login, request.Password);
-            if (identity == null)
-                return BadRequest(new { errorText = "Invalid login or password." });
+            var (status, identity) = await GetIdentityAsync(request.Login, request.Password);
+            if (status == SignInStatus.Failure)
+                return Unauthorized(new { errorCode="InvalidLoginPassword", errorText = "Invalid login or password." });
+            else if (status == SignInStatus.EmailNotConfirmed)
+                return Unauthorized(new { errorCode = "EmailNotConfirmed", errorText = "Email is not confirmed." });
 
             var now = DateTime.UtcNow;
 
@@ -115,17 +119,56 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 var userId = await _userManager.GetUserIdAsync(user);
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-                var confirmingResult = await _userManager.ConfirmEmailAsync(user, code);
-                if (confirmingResult.Succeeded)
+                if (_configuration.GetValue<bool>("CheckEmailConfirmation"))
                 {
-                    await _accountLogic.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
-                    return CreatedAtRoute("GetAccount", new { id = userId }, new { UserId = userId });
+                    if (await SendGridUtils.SendEmailAsync(
+                        _configuration["EmailConfirmation_ApiKey"]!,
+                        _configuration["EmailConfirmation_EmailFrom"]!,
+                        _configuration["EmailConfirmation_EmailFromName"]!,
+                        request.Email,
+                        request.Login ?? "New User",
+                        _configuration["AuthenticationConfirmation:Subject"]!,
+                        string.Format(_configuration["AuthenticationConfirmation:BodyTemplate"]!, string.Format(_configuration["EmailConfirmation_FrontendLinkTemplate"]!, userId, code))
+                        ))
+                        return CreatedAtRoute("GetAccount", new { id = userId }, new RegisterResponse { UserId = Guid.Parse(userId), IsConfirmationRequired = true });
+                    else
+                        return BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \nUnsuccessful email provider request."));
                 }
                 else
-                    return BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \n" + string.Join('\n', confirmingResult.Errors.Select(er => er.Description))));
+                {
+                    var confirmingResult = await _userManager.ConfirmEmailAsync(user, code);
+                    if (confirmingResult.Succeeded)
+                    {
+                        await _accountLogic.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
+                        return CreatedAtRoute("GetAccount", new { id = userId }, new RegisterResponse { UserId = Guid.Parse(userId), IsConfirmationRequired = false });
+                    }
+                    else
+                        return BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \n" + string.Join('\n', confirmingResult.Errors.Select(er => er.Description))));
+                }
             }
             else
                 return BadRequest(new ErrorMessageResponse("There are errors during creating a user: \n" + string.Join('\n', userCreatingResult.Errors.Select(er => er.Description))));
+        }
+
+        [Route("ConfirmRegistration")]
+        [HttpPost]
+        public async Task<IActionResult> ConfirmRegistrationAsync(ConfirmRegistrationRequest request)
+        {
+            if (request.UserId == Guid.Empty || request.ConfirmationCode == null)
+                return BadRequest(new { ErrorText = "UserId and ConfirmationCode cannot be empty." });
+
+            const string unauthorizedErrorCode = "Unable to confirm the user by the code.";
+
+            var user = await _userManager.FindByIdAsync(request.UserId.ToAspNetUserIdString());
+
+            if (user == null)
+                return Unauthorized(new { errorCode = "NoConfirmation", errorText = unauthorizedErrorCode });
+
+            var confirmingResult = await _userManager.ConfirmEmailAsync(user, request.ConfirmationCode);
+            if (confirmingResult.Succeeded)
+                return Ok();
+            else
+                return Unauthorized(new { errorCode = "NoConfirmation", errorText = unauthorizedErrorCode });
         }
 
         [Route("Logout")]
@@ -159,10 +202,10 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             throw new NotImplementedException();
         }
 
-        private async Task<ClaimsIdentity?> GetIdentityAsync(string username, string password)
+        private async Task<(SignInStatus status, ClaimsIdentity? claims)> GetIdentityAsync(string username, string password)
         {
             var signInStatus = await CheckUserCredentialsAsync(username, password);
-            
+
             if (signInStatus == SignInStatus.Success)
             {
                 var claims = new List<Claim>
@@ -173,10 +216,10 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 ClaimsIdentity claimsIdentity =
                 new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
                     ClaimsIdentity.DefaultRoleClaimType);
-                return claimsIdentity;
+                return (signInStatus, claimsIdentity);
             }
             else
-                return null;
+                return (signInStatus, null);
         }
 
         private async Task<SignInStatus> CheckUserCredentialsAsync(string username, string password)
@@ -198,7 +241,14 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 }
                 else if (await _userManager.CheckPasswordAsync(user, password))
                 {
-                    return SignInStatus.Success;
+                    if (user.EmailConfirmed)
+                    {
+                        return SignInStatus.Success;
+                    }
+                    else
+                    {
+                        return SignInStatus.EmailNotConfirmed;
+                    }    
                 }
                 else
                 {

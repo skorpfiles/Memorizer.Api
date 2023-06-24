@@ -11,7 +11,8 @@ namespace SkorpFiles.Memorizer.Api.Web
         private static readonly string[] _responseErrorCodesForInvalidCaptcha =
         {
             "missing-input-response",
-            "invalid-input-response"
+            "invalid-input-response",
+            "timeout-or-duplicate"
         };
 
         public static bool ShouldCheckCaptcha(IConfiguration configuration)
