@@ -98,6 +98,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [HttpPut]
         public async Task<IActionResult> RegisterAsync(RegisterRequest request)
         {
+
             if (request.Email == null || request.Password == null)
                 return BadRequest(new { ErrorText = "Login and password cannot be null." });
 
@@ -106,6 +107,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 if (request.CaptchaToken == null || !await CaptchaUtils.IsCaptchaValidAsync(_configuration, request.CaptchaToken))
                     return Unauthorized("CAPTCHA isn't passed.");
             }
+
+            IActionResult result;
 
             var user = CreateUser();
 
@@ -121,18 +124,10 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 
                 if (_configuration.GetValue<bool>("CheckEmailConfirmation"))
                 {
-                    if (await SendGridUtils.SendEmailAsync(
-                        _configuration["EmailConfirmation_ApiKey"]!,
-                        _configuration["EmailConfirmation_EmailFrom"]!,
-                        _configuration["EmailConfirmation_EmailFromName"]!,
-                        request.Email,
-                        request.Login ?? "New User",
-                        _configuration["AuthenticationConfirmation:Subject"]!,
-                        string.Format(_configuration["AuthenticationConfirmation:BodyTemplate"]!, string.Format(_configuration["EmailConfirmation_FrontendLinkTemplate"]!, userId, code))
-                        ))
-                        return CreatedAtRoute("GetAccount", new { id = userId }, new RegisterResponse { UserId = Guid.Parse(userId), IsConfirmationRequired = true });
+                    if (await SendUserConfirmationEmailAsync(userId,request.Email,request.Login,code))
+                        result = CreatedAtRoute("GetAccount", new { id = userId }, new RegisterResponse { UserId = Guid.Parse(userId), IsConfirmationRequired = true });
                     else
-                        return BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \nUnsuccessful email provider request."));
+                        result = BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \nUnsuccessful email provider request."));
                 }
                 else
                 {
@@ -140,14 +135,57 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                     if (confirmingResult.Succeeded)
                     {
                         await _accountLogic.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
-                        return CreatedAtRoute("GetAccount", new { id = userId }, new RegisterResponse { UserId = Guid.Parse(userId), IsConfirmationRequired = false });
+                        result = CreatedAtRoute("GetAccount", new { id = userId }, new RegisterResponse { UserId = Guid.Parse(userId), IsConfirmationRequired = false });
                     }
                     else
-                        return BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \n" + string.Join('\n', confirmingResult.Errors.Select(er => er.Description))));
+                        result = BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \n" + string.Join('\n', confirmingResult.Errors.Select(er => er.Description))));
                 }
             }
             else
-                return BadRequest(new ErrorMessageResponse("There are errors during creating a user: \n" + string.Join('\n', userCreatingResult.Errors.Select(er => er.Description))));
+                result = BadRequest(new ErrorMessageResponse("There are errors during creating a user: \n" + string.Join('\n', userCreatingResult.Errors.Select(er => er.Description))));
+
+            return result;
+        }
+
+        private async Task<bool> SendUserConfirmationEmailAsync(string userId, string email, string? login, string confirmationCode)
+        {
+            return await SendGridUtils.SendEmailAsync(
+                    _configuration["EmailConfirmation_ApiKey"]!,
+                    _configuration["EmailConfirmation_EmailFrom"]!,
+                    _configuration["EmailConfirmation_EmailFromName"]!,
+                    email,
+                    login ?? "New User",
+                    _configuration["AuthenticationConfirmation:Subject"]!,
+                    string.Format(_configuration["AuthenticationConfirmation:BodyTemplate"]!, string.Format(_configuration["EmailConfirmation_FrontendLinkTemplate"]!, userId, confirmationCode))
+                    );
+        }
+
+        [Route("RepeatEmailConfirmation")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost]
+        public async Task<IActionResult> RepeatEmailConfirmationAsync()
+        {
+            IActionResult result;
+            var user = await _userStore.FindByNameAsync(User.Identity!.Name!, new CancellationToken());
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user!);
+
+            if (_configuration.GetValue<bool>("CheckEmailConfirmation"))
+            {
+                if (await SendUserConfirmationEmailAsync(user!.Id, user!.Email!, user.UserName, code))
+                    result = Ok("Check the email to continue.");
+                else
+                    result = BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \nUnsuccessful email provider request."));
+            }
+            else
+            {
+                var confirmingResult = await _userManager.ConfirmEmailAsync(user!, code);
+                if (confirmingResult.Succeeded)
+                    result = Ok();
+                else
+                    result = BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \n" + string.Join('\n', confirmingResult.Errors.Select(er => er.Description))));
+            }
+
+            return result;
         }
 
         [Route("ConfirmRegistration")]
