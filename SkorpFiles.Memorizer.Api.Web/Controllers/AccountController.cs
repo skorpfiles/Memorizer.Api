@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Cors;
 using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
+using System.Web;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
@@ -156,7 +157,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                     email,
                     login ?? "New User",
                     _configuration["AuthenticationConfirmation:Subject"]!,
-                    string.Format(_configuration["AuthenticationConfirmation:BodyTemplate"]!, string.Format(_configuration["EmailConfirmation_FrontendLinkTemplate"]!, userId, confirmationCode))
+                    string.Format(_configuration["AuthenticationConfirmation:BodyTemplate"]!, string.Format(_configuration["EmailConfirmation_FrontendLinkTemplate"]!, userId, HttpUtility.UrlEncode(confirmationCode)))
                     );
         }
 
