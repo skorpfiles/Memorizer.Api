@@ -55,36 +55,40 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 
             var (status, identity) = await GetIdentityAsync(request.Login, request.Password);
             if (status == SignInStatus.Failure)
-                return Unauthorized(new { errorCode="InvalidLoginPassword", errorText = "Invalid login or password." });
-            else if (status == SignInStatus.EmailNotConfirmed)
-                return Unauthorized(new { errorCode = "EmailNotConfirmed", errorText = "Email is not confirmed." });
-
-            var now = DateTime.UtcNow;
-
-            var jwt = new JwtSecurityToken(
-                    issuer: AuthOptions.ISSUER,
-                    audience: AuthOptions.AUDIENCE,
-                    notBefore: now,
-                    claims: identity.Claims,
-                    expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LIFETIME)),
-                    signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(_configuration), SecurityAlgorithms.HmacSha256));
-            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-
-            if (encodedJwt != null)
+                return Unauthorized(new { errorCode = "InvalidLoginPassword", errorText = "Invalid login or password." });
+            else if (status == SignInStatus.Success || status == SignInStatus.EmailNotConfirmed)
             {
-                if (await _tokenCache.SetAsync(encodedJwt, Constants.DefaultName))
+
+                var now = DateTime.UtcNow;
+
+                var jwt = new JwtSecurityToken(
+                        issuer: AuthOptions.ISSUER,
+                        audience: AuthOptions.AUDIENCE,
+                        notBefore: now,
+                        claims: identity.Claims,
+                        expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LIFETIME)),
+                        signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(_configuration), SecurityAlgorithms.HmacSha256));
+                var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+
+                if (encodedJwt != null)
                 {
-                    return Json(new
+                    if (await _tokenCache.SetAsync(encodedJwt, Constants.DefaultName))
                     {
-                        AccessToken = encodedJwt,
-                        Login = identity.Name
-                    });
+                        return Json(new
+                        {
+                            AccessToken = encodedJwt,
+                            Login = identity.Name,
+                            IsEmailConfirmed = status != SignInStatus.EmailNotConfirmed
+                        });
+                    }
+                    else
+                        throw new InternalAuthenticationErrorException("Unable to cache authentication information.");
                 }
                 else
-                    throw new InternalAuthenticationErrorException("Unable to cache authentication information.");
+                    throw new InternalAuthenticationErrorException("Unable to generate a JWT token.");
             }
             else
-                throw new InternalAuthenticationErrorException("Unable to generate a JWT token.");
+                throw new InternalAuthenticationErrorException("Unknow sign-in status identifier.");
         }
 
         [Route("Check")]
@@ -245,7 +249,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         {
             var signInStatus = await CheckUserCredentialsAsync(username, password);
 
-            if (signInStatus == SignInStatus.Success)
+            if (signInStatus == SignInStatus.Success || signInStatus == SignInStatus.EmailNotConfirmed)
             {
                 var claims = new List<Claim>
                 {
