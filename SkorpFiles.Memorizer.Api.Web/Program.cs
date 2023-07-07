@@ -73,7 +73,7 @@ switch (cacheType)
         break;
 }
 
-string frontendOrigins = builder.Configuration["FrontendOrigins"]!;
+string[] frontendOrigins = builder.Configuration["FrontendOrigins"]!.Split(';', StringSplitOptions.TrimEntries);
 
 builder.Services.AddCors(options =>
 {
