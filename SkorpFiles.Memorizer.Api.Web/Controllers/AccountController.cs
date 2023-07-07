@@ -110,7 +110,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             if (CaptchaUtils.ShouldCheckCaptcha(_configuration))
             {
                 if (request.CaptchaToken == null || !await CaptchaUtils.IsCaptchaValidAsync(_configuration, request.CaptchaToken))
-                    return Unauthorized("CAPTCHA isn't passed.");
+                    return Unauthorized(new { errorText = "CAPTCHA isn't passed." });
             }
 
             IActionResult result;
