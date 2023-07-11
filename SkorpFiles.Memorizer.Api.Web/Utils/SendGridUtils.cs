@@ -1,7 +1,7 @@
 ﻿using SendGrid.Helpers.Mail;
 using SendGrid;
 
-namespace SkorpFiles.Memorizer.Api.Web
+namespace SkorpFiles.Memorizer.Api.Web.Utils
 {
     public static class SendGridUtils
     {
