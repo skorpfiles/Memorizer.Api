@@ -68,7 +68,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Utils
         // recaptchaSiteKey: Site key obtained by registering a domain/app to use recaptcha.
         // token: The token obtained from the client on passing the recaptchaSiteKey.
         // recaptchaAction: Action name corresponding to the token.
-        public static void CreateAssessment(string projectID = "project-id", string recaptchaSiteKey = "recaptcha-site-key",
+        public static void CreateAssessment(string projectID = "prime-granite-249019", string recaptchaSiteKey = "recaptcha-site-key",
             string token = "action-token", string recaptchaAction = "login")
         {
 

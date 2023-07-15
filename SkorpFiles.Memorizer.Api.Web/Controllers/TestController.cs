@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Abstractions;
 using Microsoft.Net.Http.Headers;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
+using SkorpFiles.Memorizer.Api.Web.Utils;
 using StackExchange.Redis;
 using System.Reflection;
 
@@ -75,6 +76,13 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         public IActionResult TestAzureInsights()
         {
             throw new Exception("Test exception");
+            return Ok();
+        }
+
+        [Route("TestCaptcha")]
+        public IActionResult TestCaptcha(string token)
+        {
+            CaptchaUtils.CreateAssessment(token);
             return Ok();
         }
     }
