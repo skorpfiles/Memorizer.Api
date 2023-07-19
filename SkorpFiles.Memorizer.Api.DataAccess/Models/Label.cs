@@ -16,7 +16,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
 
         public List<EntityLabel>? EntitiesForLabel { get; set; }
 
-        [ForeignKey("OwnerId")]
+        [ForeignKey(nameof(OwnerId))]
         public ApplicationUser? Owner { get; set; }
     }
 }

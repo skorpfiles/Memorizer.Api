@@ -15,7 +15,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public bool UserIsEnabled { get; set; }
         public string UserId { get; set; }
 
-        [ForeignKey("UserId")]
+        [ForeignKey(nameof(UserId))]
         public ApplicationUser? ApplicationUser { get; set; }
 
         public UserActivity(string userName, string userId)

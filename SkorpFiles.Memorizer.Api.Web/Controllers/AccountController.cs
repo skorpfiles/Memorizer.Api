@@ -103,53 +103,59 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [HttpPut]
         public async Task<IActionResult> RegisterAsync(RegisterRequest request)
         {
-
-            if (request.Email == null || request.Password == null)
-                return BadRequest(new { ErrorText = "Login and password cannot be null." });
-
-            if (CaptchaUtils.ShouldCheckCaptcha(_configuration))
+            try
             {
-                if (request.CaptchaToken == null || !await CaptchaUtils.IsCaptchaValidAsync(_configuration, request.CaptchaToken))
-                    return Unauthorized(new { errorText = "CAPTCHA isn't passed." });
-            }
+                if (request.Email == null || request.Password == null)
+                    return BadRequest(new { ErrorText = "Login and password cannot be null." });
 
-            IActionResult result;
-
-            var user = CreateUser();
-
-            await _userStore.SetUserNameAsync(user, request.Login ?? request.Email, CancellationToken.None);
-            await _emailStore.SetEmailAsync(user, request.Email, CancellationToken.None);
-
-            var userCreatingResult = await _userManager.CreateAsync(user, request.Password);
-
-            if (userCreatingResult.Succeeded)
-            {
-                var userId = await _userManager.GetUserIdAsync(user);
-                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-                if (_configuration.GetValue<bool>("CheckEmailConfirmation"))
+                if (CaptchaUtils.ShouldCheckCaptcha(_configuration))
                 {
-                    if (await SendUserConfirmationEmailAsync(userId,request.Email,request.Login,code))
-                        result = CreatedAtRoute("GetAccount", new { id = userId }, new RegisterResponse { UserId = Guid.Parse(userId), IsConfirmationRequired = true });
-                    else
-                        result = BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \nUnsuccessful email provider request."));
+                    if (request.CaptchaToken == null || !await CaptchaUtils.IsCaptchaValidAsync(_configuration, request.CaptchaToken))
+                        return Unauthorized(new { errorText = "CAPTCHA isn't passed." });
                 }
-                else
+
+                IActionResult result;
+
+                var user = CreateUser();
+
+                await _userStore.SetUserNameAsync(user, request.Login ?? request.Email, CancellationToken.None);
+                await _emailStore.SetEmailAsync(user, request.Email, CancellationToken.None);
+
+                var userCreatingResult = await _userManager.CreateAsync(user, request.Password);
+
+                if (userCreatingResult.Succeeded)
                 {
-                    var confirmingResult = await _userManager.ConfirmEmailAsync(user, code);
-                    if (confirmingResult.Succeeded)
+                    var userId = await _userManager.GetUserIdAsync(user);
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                    if (_configuration.GetValue<bool>("CheckEmailConfirmation"))
                     {
-                        await _accountLogic.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
-                        result = CreatedAtRoute("GetAccount", new { id = userId }, new RegisterResponse { UserId = Guid.Parse(userId), IsConfirmationRequired = false });
+                        if (await SendUserConfirmationEmailAsync(userId, request.Email, request.Login, code))
+                            result = CreatedAtRoute("GetAccount", new { id = userId }, new RegisterResponse { UserId = Guid.Parse(userId), IsConfirmationRequired = true });
+                        else
+                            result = BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \nUnsuccessful email provider request."));
                     }
                     else
-                        result = BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \n" + string.Join('\n', confirmingResult.Errors.Select(er => er.Description))));
+                    {
+                        var confirmingResult = await _userManager.ConfirmEmailAsync(user, code);
+                        if (confirmingResult.Succeeded)
+                        {
+                            await _accountLogic.RegisterUserActivityAsync(request.Login ?? request.Email, userId);
+                            result = CreatedAtRoute("GetAccount", new { id = userId }, new RegisterResponse { UserId = Guid.Parse(userId), IsConfirmationRequired = false });
+                        }
+                        else
+                            result = BadRequest(new ErrorMessageResponse("There are errors during email confirmation: \n" + string.Join('\n', confirmingResult.Errors.Select(er => er.Description))));
+                    }
                 }
-            }
-            else
-                result = BadRequest(new ErrorMessageResponse("There are errors during creating a user: \n" + string.Join('\n', userCreatingResult.Errors.Select(er => er.Description))));
+                else
+                    result = BadRequest(new ErrorMessageResponse("There are errors during creating a user: \n" + string.Join('\n', userCreatingResult.Errors.Select(er => er.Description))));
 
-            return result;
+                return result;
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
         }
 
         private async Task<bool> SendUserConfirmationEmailAsync(string userId, string email, string? login, string confirmationCode)

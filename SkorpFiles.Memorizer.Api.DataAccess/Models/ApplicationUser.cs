@@ -9,5 +9,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public virtual List<Questionnaire>? QuestionnairesThatUserOwns { get; set; }
         public virtual List<QuestionUser>? QuestionsForUser { get; set; }
         public virtual List<TrainingResult>? TrainingResultsForUser { get; set; }
+        public virtual List<Training>? TrainingsForUser { get; set; }
     }
 }

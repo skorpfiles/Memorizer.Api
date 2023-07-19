@@ -15,7 +15,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public int QuestionUserRating { get; set; }
         public int QuestionUserPenaltyPoints { get; set; }
 
-        [ForeignKey("UserId")]
+        [ForeignKey(nameof(UserId))]
         public ApplicationUser? User { get; set; }
         public Question? Question { get; set; }
     }
