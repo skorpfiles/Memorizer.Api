@@ -15,7 +15,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
     {
         [Key]
         public Guid TrainingId { get; set; }
-        public Guid OwnerId { get; set; }
+        public string OwnerId { get; set; }
         public string TrainingName { get; set; } = null!;
 
         [Column("TrainingLastTime")]
