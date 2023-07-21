@@ -98,5 +98,30 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
         {
             await _editingRepository.DeleteLabelAsync(userId, labelCode);
         }
+
+        public async Task<PaginatedCollection<Training>> GetTrainingsForUserAsync(Guid userId, GetCollectionRequest request)
+        {
+            return await _editingRepository.GetTrainingsForUserAsync(userId, request);
+        }
+
+        public async Task<Training> GetTrainingAsync(Guid userId, Guid trainingId)
+        {
+            return await _editingRepository.GetTrainingAsync(userId, trainingId);
+        }
+
+        public async Task<Training> CreateTrainingAsync(Guid userId, UpdateTrainingRequest request)
+        {
+            return await _editingRepository.CreateTrainingAsync(userId, request);
+        }
+
+        public async Task<Training> UpdateTrainingAsync(Guid userId, UpdateTrainingRequest request)
+        {
+            return await _editingRepository.UpdateTrainingAsync(userId, request);
+        }
+
+        public async Task DeleteTrainingAsync(Guid userId, Guid trainingId)
+        {
+            await _editingRepository.DeleteTrainingAsync(userId, trainingId);
+        }
     }
 }

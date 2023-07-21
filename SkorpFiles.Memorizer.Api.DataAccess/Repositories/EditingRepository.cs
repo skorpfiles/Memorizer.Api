@@ -10,7 +10,9 @@ using SkorpFiles.Memorizer.Api.Models.RequestModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
@@ -147,7 +149,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 select questionnaire).SingleOrDefaultAsync();
 
             if (questionnaireResult != null)
-                CheckAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
+                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
             else
                 throw new ObjectNotFoundException("No questionnaire with such ID or code.");
 
@@ -644,6 +646,189 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         public async Task DeleteLabelAsync(Guid userId, int labelCode) =>
             await DeleteLabelAsync(userId, null, labelCode);
 
+        public async Task<PaginatedCollection<Api.Models.Training>> GetTrainingsForUserAsync(Guid userId, GetCollectionRequest request)
+        {
+            if (request==null)
+                throw new ArgumentNullException(nameof(request));
+
+            var userIdString = userId.ToAspNetUserIdString();
+
+            IQueryable<Models.Training> foundTrainings = from training in DbContext.Trainings
+                                                         where !training.ObjectIsRemoved &&
+                                                         training.OwnerId == userIdString
+                                                         orderby training.TrainingLastTimeUtc descending
+                                                         select training;
+
+            var totalCount = await foundTrainings.CountAsync();
+
+            foundTrainings = foundTrainings.Page(request.PageNumber, request.PageSize);
+
+            var foundTrainingsResult = await foundTrainings.ToListAsync();
+
+            return new PaginatedCollection<Api.Models.Training>(_mapper.Map<IEnumerable<Api.Models.Training>>(foundTrainingsResult), totalCount, request.PageNumber);
+        }
+
+        public async Task<Api.Models.Training> GetTrainingAsync(Guid userId, Guid trainingId)
+        {
+            Models.Training? trainingResult = await (from training in DbContext.Trainings
+                                                     .Include(t=>t.QuestionnairesForTraining!)
+                                                     .ThenInclude(qt=>qt.Questionnaire)
+                                                     where !training.ObjectIsRemoved &&
+                                                     training.TrainingId == trainingId
+                                                     select training
+                                                     ).SingleOrDefaultAsync();
+            if (trainingResult!=null)
+            {
+                CheckAvailabilityForUser(userId, Guid.Parse(trainingResult.OwnerId), "The user doesn't own the training.");
+                return _mapper.Map<Api.Models.Training>(trainingResult);
+            }
+            else
+                throw new ObjectNotFoundException("Training with such ID is not found.");
+        }
+
+        public async Task<Api.Models.Training> CreateTrainingAsync(Guid userId, UpdateTrainingRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            const string errorMessageTemplate = "{0} cannot be null.";
+
+            if (string.IsNullOrEmpty(request.Name))
+                throw new ArgumentException(string.Format(errorMessageTemplate, nameof(request.Name)));
+            if (request.LengthType == null)
+                throw new ArgumentException(string.Format(errorMessageTemplate, nameof(request.LengthType)));
+            if (request.QuestionsCount == null)
+                throw new ArgumentException(string.Format(errorMessageTemplate, nameof(request.QuestionsCount)));
+            if (request.TimeMinutes == null)
+                throw new ArgumentException(string.Format(errorMessageTemplate, nameof(request.TimeMinutes)));
+
+            var questionnairesIdsList = request?.QuestionnairesIds?.ToList();
+
+            if (questionnairesIdsList != null)
+                await CheckQuestionnairesAvailabilityForManagingTrainingsAsync(userId, questionnairesIdsList);
+
+            Models.Training newTraining = new Models.Training
+            {
+                TrainingName = request!.Name,
+                TrainingLastTimeUtc = DateTime.UtcNow,
+                TrainingLengthType = request.LengthType.Value,
+                TrainingQuestionsCount = request.QuestionsCount.Value,
+                TrainingTimeMinutes = request.TimeMinutes.Value,
+                OwnerId = userId.ToAspNetUserIdString(),
+                ObjectCreationTimeUtc = DateTime.UtcNow,
+            };
+
+            var trainingEntry = await DbContext.Trainings.AddAsync(newTraining);
+
+            if (questionnairesIdsList != null)
+                foreach(var questionnaireId in questionnairesIdsList)
+                {
+                    await DbContext.TrainingsQuestionnaires.AddAsync(new Models.TrainingQuestionnaire
+                    {
+                        QuestionnaireId = questionnaireId,
+                        TrainingId = trainingEntry.Entity.TrainingId,
+                        ObjectCreationTimeUtc = DateTime.UtcNow
+                    });
+                }
+
+            await DbContext.SaveChangesAsync();
+
+            var result = trainingEntry.Entity;
+            return _mapper.Map<Api.Models.Training>(result);
+        }
+
+        public async Task<Api.Models.Training> UpdateTrainingAsync(Guid userId, UpdateTrainingRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            var trainingResult = await (from training in DbContext.Trainings
+                                        .Include(t => t.QuestionnairesForTraining)
+                                        where !training.ObjectIsRemoved && training.TrainingId == request.Id
+                                        select training).SingleOrDefaultAsync();
+
+            if (trainingResult == null)
+                throw new ObjectNotFoundException("Training with such ID is not found.");
+
+            if (trainingResult.OwnerId != userId.ToAspNetUserIdString())
+                    throw new AccessDeniedForUserException(Constants.ExceptionMessages.UserCannotChangeQuestionnaire);
+
+            bool changed = false;
+
+            if (!string.IsNullOrEmpty(request.Name))
+            {
+                trainingResult.TrainingName = request.Name;
+                changed = true;
+            }
+
+            if (request.LastTimeUtc != null)
+            {
+                trainingResult.TrainingLastTimeUtc = request.LastTimeUtc.Value;
+                changed = true;
+            }
+
+            if (request.QuestionsCount != null)
+            {
+                trainingResult.TrainingQuestionsCount = request.QuestionsCount.Value;
+                changed = true;
+            }
+
+            if (request.TimeMinutes != null)
+            {
+                trainingResult.TrainingTimeMinutes = request.TimeMinutes.Value;
+                changed = true;
+            }
+
+            if (request.QuestionnairesIds != null)
+            {
+                var currentQuestionnairesIds = trainingResult.QuestionnairesForTraining!.Select(qt=>qt.QuestionnaireId).ToList();
+                var questionnairesIdsToAdd = currentQuestionnairesIds.Where(q => !request.QuestionnairesIds.Contains(q)).ToList();
+
+                await CheckQuestionnairesAvailabilityForManagingTrainingsAsync(userId, questionnairesIdsToAdd);
+
+                var questionnairesToDelete = currentQuestionnairesIds.Where(q => !request.QuestionnairesIds.Contains(q)).ToList();
+
+                var trainingsQuestionnairesToDelete = 
+                    from trainingQuestionnaire in DbContext.TrainingsQuestionnaires
+                    where questionnairesToDelete.Contains(trainingQuestionnaire.QuestionnaireId) &&
+                    trainingQuestionnaire.TrainingId == trainingResult.TrainingId
+                    select trainingQuestionnaire;
+
+                DbContext.TrainingsQuestionnaires.RemoveRange(trainingsQuestionnairesToDelete);
+
+                DbContext.TrainingsQuestionnaires.AddRange(questionnairesIdsToAdd.Select(q => new Models.TrainingQuestionnaire
+                {
+                    QuestionnaireId = q,
+                    TrainingId = trainingResult.TrainingId,
+                    ObjectCreationTimeUtc = DateTime.UtcNow
+                }));
+
+                changed = true;
+            }
+
+            if (changed)
+                await DbContext.SaveChangesAsync();
+
+            return _mapper.Map<Api.Models.Training>(trainingResult);
+        }
+
+        public async Task DeleteTrainingAsync(Guid userId, Guid trainingId)
+        {
+            var trainingDetails =
+                await (from training in DbContext.Trainings.Include(t => t.QuestionnairesForTraining)
+                       where !training.ObjectIsRemoved &&
+                       training.TrainingId == trainingId
+                       select training).SingleOrDefaultAsync();
+            if (trainingDetails != null)
+            {
+                CheckAvailabilityForUser(userId, Guid.Parse(trainingDetails.OwnerId), "The user doesn't have rights to delete the training.");
+                trainingDetails.ObjectIsRemoved = true;
+                trainingDetails.ObjectRemovalTimeUtc = DateTime.UtcNow;
+            }
+            else
+                throw new ObjectNotFoundException("Training with such ID doesn't exist.");
+        }
+
         private async Task<Models.Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
@@ -662,7 +847,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             if (questionnaireResult != null)
             {
-                CheckAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
+                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
                 return questionnaireResult;
             }
             else
@@ -707,10 +892,23 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw new ObjectNotFoundException("Questionnaire with such ID or Code doesn't exist.");
         }
 
-        private static void CheckAvailabilityForUser(Guid currentUserId, Guid ownerId, Availability availability)
+        private static void CheckQuestionnaireAvailabilityForUser(Guid currentUserId, Guid ownerId, Availability availability)
         {
-            if (availability == Availability.Private && ownerId != currentUserId)
-                throw new AccessDeniedForUserException("Unable to get details about a private questionnaire to a foreign user.");
+            CheckAvailabilityForUser(currentUserId, ownerId, "Unable to get details about a private questionnaire to a foreign user.", availability);
+        }
+
+        private static void CheckAvailabilityForUser(Guid currentUserId, Guid ownerId, string errorMessage, Availability? availability = null)
+        {
+            if (availability != null)
+            {
+                if (availability == Availability.Private && ownerId != currentUserId)
+                    throw new AccessDeniedForUserException(errorMessage);
+            }
+            else
+            {
+                if (ownerId != currentUserId)
+                    throw new AccessDeniedForUserException(errorMessage);
+            }
         }
 
         private static void CheckIdAndCodeDefinitionRule(Guid? id, int? code, Exception exceptionWhenBothNull, Exception exceptionWhenBothNotNull)
@@ -724,21 +922,49 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         private async Task CheckLabelsAvailabilityForManagingEntitiesAsync(Guid userId, List<Guid> labelsIds)
         {
             if (labelsIds!=null)
-                foreach(var labelIdFromParameter in labelsIds)
+            {
+                var labelsFromDb = await (
+                    from label in DbContext.Labels
+                    where labelsIds.Contains(label.LabelId)
+                    select label).ToListAsync();
+
+                foreach(var labelIdFromRequest in labelsIds)
                 {
-                    var labelFromDb =
-                        await (from label in DbContext.Labels
-                         where
-                             label.LabelId == labelIdFromParameter
-                               select label).SingleOrDefaultAsync();
+                    var labelFromDb = labelsFromDb.SingleOrDefault(l => l.LabelId == labelIdFromRequest);
                     if (labelFromDb != null)
                     {
-                        if (!Guid.TryParse(labelFromDb.OwnerId, out Guid ownerGuid) || ownerGuid != userId)
-                            throw new AccessDeniedForUserException($"The user '{userId}' doesn't have a managing access to the label '{labelIdFromParameter}'.");
+                        CheckAvailabilityForUser(userId, Guid.Parse(labelFromDb.OwnerId), $"The user '{userId}' doesn't have a managing access to the label '{labelIdFromRequest}'.");
                     }
                     else
-                        throw new ObjectNotFoundException($"The label '{labelIdFromParameter}' is not found.");
+                    {
+                        throw new ObjectNotFoundException($"The label '{labelIdFromRequest}' is not found.");
+                    }
                 }
+            }
+        }
+
+        private async Task CheckQuestionnairesAvailabilityForManagingTrainingsAsync(Guid userId, List<Guid> questionnairesIds)
+        {
+            if (questionnairesIds != null)
+            {
+                var questionnairesFromDb = await (
+                    from questionnaire in DbContext.Questionnaires
+                    where questionnairesIds.Contains(questionnaire.QuestionnaireId)
+                    select questionnaire).ToListAsync();
+                
+                foreach(var questionnaireIdFromRequest in questionnairesIds)
+                {
+                    var questionnaireFromDb = questionnairesFromDb.SingleOrDefault(q => q.QuestionnaireId == questionnaireIdFromRequest);
+                    if (questionnaireFromDb != null)
+                    {
+                        CheckAvailabilityForUser(userId, Guid.Parse(questionnaireFromDb.OwnerId), $"The user '{userId}' doesn't have a managing access to the questionnaire '{questionnaireIdFromRequest}'.");
+                    }
+                    else
+                    {
+                        throw new ObjectNotFoundException($"The questionnaire '{questionnaireIdFromRequest}' is not found.");
+                    }
+                }
+            }
         }
 
         private static void CheckQuestionRequest(Api.Models.QuestionToUpdate question)

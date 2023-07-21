@@ -11,6 +11,7 @@ using SkorpFiles.Memorizer.Api.Web.Controllers.Abstract;
 using SkorpFiles.Memorizer.Api.Web.Exceptions;
 using SkorpFiles.Memorizer.Api.Web.Models.ApiEntities;
 using SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository;
+using SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository.Abstract;
 using SkorpFiles.Memorizer.Api.Web.Models.Responses;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
@@ -203,6 +204,65 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                     return true;
                 },
                 (_) => Ok());
+        }
+
+        [Route("Trainings")]
+        [HttpGet]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetTrainingsForUserAsync([FromQuery]CollectionRequest request)
+        {
+            return await ExecuteActionToBusinessLogicAsync(async () =>
+            {
+                RestoreDefaultPageValues(request);
+                var userGuid = await GetCurrentUserGuidAsync();
+                var result = await _editingLogic.GetTrainingsForUserAsync(userGuid, _mapper.Map<SkorpFiles.Memorizer.Api.Models.RequestModels.GetCollectionRequest>(request));
+                return Ok(_mapper.Map<GetTrainingsResponse>(result));
+            });
+        }
+
+        [Route("Training/{id}", Name = "GetTraining")]
+        [HttpGet]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetTrainingAsync([FromQuery]Guid id)
+        {
+            return await ExecuteActionToBusinessLogicAsync(async () =>
+            {
+                var userGuid = await GetCurrentUserGuidAsync();
+                var result = await _editingLogic.GetTrainingAsync(userGuid, id);
+                return Ok(_mapper.Map<Training>(result));
+            });
+        }
+
+        [Route("Training")]
+        [HttpPut]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> PutTrainingAsync(PostTrainingRequest request)
+        {
+            return await ExecuteActionToBusinessLogicAsync(async () =>
+            {
+                var userGuid = await GetCurrentUserGuidAsync();
+                var result = await _editingLogic.CreateTrainingAsync(userGuid, _mapper.Map<UpdateTrainingRequest>(request));
+                if (result != null)
+                    return CreatedAtRoute("GetTraining", new { id = result.Id.ToString() });
+                else
+                    throw new InternalErrorException("The database hasn't returned a result.");
+            });
+        }
+
+        [Route("Training")]
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> PostTrainingAsync(PostTrainingRequest request)
+        {
+            return await ExecuteActionToBusinessLogicAsync(async () =>
+            {
+                var userGuid = await GetCurrentUserGuidAsync();
+                var result = await _editingLogic.UpdateTrainingAsync(userGuid, _mapper.Map<UpdateTrainingRequest>(request));
+                if (result != null)
+                    return Ok();
+                else
+                    throw new InternalErrorException("The database hasn't returned a result.");
+            });
         }
 
         private enum IdOrCode

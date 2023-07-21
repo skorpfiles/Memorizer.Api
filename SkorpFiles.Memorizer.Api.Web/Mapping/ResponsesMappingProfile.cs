@@ -15,6 +15,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                 .ForMember(dest => dest.Questions, opts => opts.MapFrom(src => src.Items.ToList()));
             CreateMap<SkorpFiles.Memorizer.Api.Models.PaginatedCollection<SkorpFiles.Memorizer.Api.Models.Label>, GetLabelsResponse>()
                 .ForMember(dest => dest.Labels, opts => opts.MapFrom(src => src.Items.ToList()));
+            CreateMap<SkorpFiles.Memorizer.Api.Models.PaginatedCollection<SkorpFiles.Memorizer.Api.Models.Training>, GetTrainingsResponse>()
+                .ForMember(dest => dest.Trainings, opts => opts.MapFrom(src => src.Items.ToList()));
         }
     }
 }

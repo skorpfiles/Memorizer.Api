@@ -20,5 +20,10 @@ namespace SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic
         Task<Label> CreateLabelAsync(Guid userId, string labelName);
         Task DeleteLabelAsync(Guid userId, Guid labelId);
         Task DeleteLabelAsync(Guid userId, int labelCode);
+        Task<PaginatedCollection<Training>> GetTrainingsForUserAsync(Guid userId, GetCollectionRequest request);
+        Task<Training> GetTrainingAsync(Guid userId, Guid trainingId);
+        Task<Training> CreateTrainingAsync(Guid userId, UpdateTrainingRequest request);
+        Task<Training> UpdateTrainingAsync(Guid userId, UpdateTrainingRequest request);
+        Task DeleteTrainingAsync(Guid userId, Guid trainingId);
     }
 }
