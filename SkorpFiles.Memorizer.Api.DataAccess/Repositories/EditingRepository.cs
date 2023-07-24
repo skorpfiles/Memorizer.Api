@@ -761,9 +761,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 changed = true;
             }
 
-            if (request.LastTimeUtc != null)
+            if (request.RefreshLastTime)
             {
-                trainingResult.TrainingLastTimeUtc = request.LastTimeUtc.Value;
+                trainingResult.TrainingLastTimeUtc = DateTime.UtcNow;
                 changed = true;
             }
 
@@ -782,7 +782,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (request.QuestionnairesIds != null)
             {
                 var currentQuestionnairesIds = trainingResult.QuestionnairesForTraining!.Select(qt=>qt.QuestionnaireId).ToList();
-                var questionnairesIdsToAdd = currentQuestionnairesIds.Where(q => !request.QuestionnairesIds.Contains(q)).ToList();
+                var questionnairesIdsToAdd = request.QuestionnairesIds.Where(q=> !currentQuestionnairesIds.Contains(q)).ToList();
 
                 await CheckQuestionnairesAvailabilityForManagingTrainingsAsync(userId, questionnairesIdsToAdd);
 
@@ -824,6 +824,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 CheckAvailabilityForUser(userId, Guid.Parse(trainingDetails.OwnerId), "The user doesn't have rights to delete the training.");
                 trainingDetails.ObjectIsRemoved = true;
                 trainingDetails.ObjectRemovalTimeUtc = DateTime.UtcNow;
+                await DbContext.SaveChangesAsync();
             }
             else
                 throw new ObjectNotFoundException("Training with such ID doesn't exist.");

@@ -60,7 +60,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
             CreateMap<PostQuestionsRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.UpdateQuestionsRequest>();
             CreateMap<PostMyStatusRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.UpdateUserQuestionStatusRequest>();
             CreateMap<GetLabelsRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.GetLabelsRequest>();
-            CreateMap<PostTrainingRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.UpdateTrainingRequest>();
+            CreateMap<PostTrainingRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.UpdateTrainingRequest>()
+                .ForMember(dest => dest.RefreshLastTime, opts => opts.MapFrom(src => src.RefreshLastTime ?? false));
         }
     }
 }

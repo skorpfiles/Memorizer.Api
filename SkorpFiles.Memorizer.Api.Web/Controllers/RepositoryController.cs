@@ -223,7 +223,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [Route("Training/{id}", Name = "GetTraining")]
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> GetTrainingAsync([FromQuery]Guid id)
+        public async Task<IActionResult> GetTrainingAsync(Guid id)
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
@@ -243,7 +243,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 var userGuid = await GetCurrentUserGuidAsync();
                 var result = await _editingLogic.CreateTrainingAsync(userGuid, _mapper.Map<UpdateTrainingRequest>(request));
                 if (result != null)
-                    return CreatedAtRoute("GetTraining", new { id = result.Id.ToString() });
+                    return CreatedAtRoute("GetTraining", new { id = result.Id.ToString() }, new { result.Id });
                 else
                     throw new InternalErrorException("The database hasn't returned a result.");
             });
@@ -262,6 +262,19 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                     return Ok();
                 else
                     throw new InternalErrorException("The database hasn't returned a result.");
+            });
+        }
+
+        [Route("Training/{id}")]
+        [HttpDelete]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> DeleteTrainingAsync(Guid id)
+        {
+            return await ExecuteActionToBusinessLogicAsync(async () =>
+            {
+                var userGuid = await GetCurrentUserGuidAsync();
+                await _editingLogic.DeleteTrainingAsync(userGuid, id);
+                return Ok();
             });
         }
 
