@@ -55,3 +55,11 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F85350328A5948EEAF67A2DA39E943C5 }}
           package: .
+          
+      - name: Update database
+        run: |
+          dotnet tool install --global dotnet-ef
+          dotnet tool restore
+          dotnet ef database update
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
