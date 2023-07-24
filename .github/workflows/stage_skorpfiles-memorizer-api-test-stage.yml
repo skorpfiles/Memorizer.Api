@@ -60,6 +60,6 @@ jobs:
         run: |
           dotnet tool install --global dotnet-ef
           dotnet tool restore
-          dotnet ef database update --project D:\a\Memorizer.Api
+          dotnet ef database update --project D:\a\Memorizer.Api\SkorpFiles.Memorizer.Api.Web
         env:
           ASPNETCORE_ENVIRONMENT: Development
