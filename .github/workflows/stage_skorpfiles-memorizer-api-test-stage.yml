@@ -40,7 +40,7 @@ jobs:
               path_to_directory: '${{env.DOTNET_ROOT}}/myapp'
               migrations_dll: 'SkorpFiles.Memorizer.Api.DataAccess.dll'
               migrations_namespace: 'SkorpFiles.Memorizer.Api.DataAccess.Migrations'
-              startup_dll: 'SkorpFiles.Memorizer.Api.DataAccess.dll'
+              startup_dll: 'SkorpFiles.Memorizer.Api.Web.dll'
               dbcontext_class_name: 'ApplicationDbContext'
 
   deploy:
