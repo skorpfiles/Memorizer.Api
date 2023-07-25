@@ -37,7 +37,7 @@ jobs:
       - name: Deploy Entity Framework Core migrations
         uses: benday-inc/deploy-ef-core-migration@main
         with:
-              path_to_directory: '${{github.workspace}}/Memorizer.Api/Memorizer.Api'
+              path_to_directory: '${{github.workspace}}'
               migrations_dll: 'SkorpFiles.Memorizer.Api.DataAccess.dll'
               migrations_namespace: 'SkorpFiles.Memorizer.Api.DataAccess.Migrations'
               startup_dll: 'SkorpFiles.Memorizer.Api.Web.dll'
