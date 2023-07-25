@@ -34,6 +34,15 @@ jobs:
           name: .net-app
           path: ${{env.DOTNET_ROOT}}/myapp
 
+      - name: Deploy Entity Framework Core migrations
+        uses: benday-inc/deploy-ef-core-migration@main
+        with:
+              path_to_directory: '${{github.workspace}}'
+              migrations_dll: 'SkorpFiles.Memorizer.Api.DataAccess.dll'
+              migrations_namespace: 'SkorpFiles.Memorizer.Api.DataAccess.Migrations'
+              startup_dll: 'SkorpFiles.Memorizer.Api.Web.dll'
+              dbcontext_class_name: 'ApplicationDbContext'
+
   deploy:
     runs-on: windows-latest
     needs: build
@@ -55,14 +64,5 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F85350328A5948EEAF67A2DA39E943C5 }}
           package: .
-          
-      - name: Deploy Entity Framework Core migrations
-        uses: benday-inc/deploy-ef-core-migration@main
-        with:
-              path_to_directory: '${{github.workspace}}'
-              migrations_dll: 'SkorpFiles.Memorizer.Api.DataAccess.dll'
-              migrations_namespace: 'SkorpFiles.Memorizer.Api.DataAccess.Migrations'
-              startup_dll: 'SkorpFiles.Memorizer.Api.Web.dll'
-              dbcontext_class_name: 'ApplicationDbContext'
         
 
