@@ -11,6 +11,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
         {
         }
 
+        public ApplicationDbContext() : base() { }
+
         public DbSet<UserActivity> UserActivities => Set<UserActivity>();
         public DbSet<Questionnaire> Questionnaires => Set<Questionnaire>();
         public DbSet<Question> Questions => Set<Question>();
