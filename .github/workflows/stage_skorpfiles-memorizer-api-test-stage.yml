@@ -38,9 +38,9 @@ jobs:
         uses: benday-inc/deploy-ef-core-migration@main
         with:
               path_to_directory: '${{github.workspace}}'
-              migrations_dll: 'SkorpFiles.Memorizer.Api.DataAccess.dll'
+              migrations_dll: 'SkorpFiles.Memorizer.Api.DataAccess\bin\Release\net7.0\SkorpFiles.Memorizer.Api.DataAccess.dll'
               migrations_namespace: 'SkorpFiles.Memorizer.Api.DataAccess.Migrations'
-              startup_dll: 'SkorpFiles.Memorizer.Api.Web.dll'
+              startup_dll: 'SkorpFiles.Memorizer.Api.Web\bin\Release\net7.0\SkorpFiles.Memorizer.Api.Web.dll'
               dbcontext_class_name: 'ApplicationDbContext'
 
   deploy:
