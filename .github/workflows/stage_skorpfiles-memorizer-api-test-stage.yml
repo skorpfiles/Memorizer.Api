@@ -27,21 +27,22 @@ jobs:
         
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v2
-        with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
-      
+        
       - name: Install EF Tool for updating database
         run: |
           dotnet new tool-manifest
           dotnet tool install dotnet-ef
           
       - name: Generate scripts for updating database
-        run: dotnet ef migrations script --output ${{env.DOTNET_ROOT}}/sql/sql-script.sql --idempotent --project ${{github.workspace}}/SkorpFiles.Memorizer.Api.DataAccess --startup-project ${{github.workspace}}/SkorpFiles.Memorizer.Api.Web
+        run: dotnet ef migrations script --output ${{env.DOTNET_ROOT}}/myapp/update-database.sql --idempotent --project ${{github.workspace}}/SkorpFiles.Memorizer.Api.DataAccess --startup-project ${{github.workspace}}/SkorpFiles.Memorizer.Api.Web
   
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v2
+        with:
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/myapp
+      
+      
   deploy:
     runs-on: windows-latest
     needs: build
@@ -69,5 +70,5 @@ jobs:
         with:
           server-name: ${{ secrets.DATABASE_SERVER_NAME_STAGE }}
           connection-string: ${{ secrets.DATABASE_CONNECTION_STRING_STAGE }}
-          sql-file: ${{env.DOTNET_ROOT}}/sql/sql-script.sql
+          sql-file: ${{env.DOTNET_ROOT}}/update-database.sql
 
