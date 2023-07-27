@@ -40,7 +40,7 @@ jobs:
           path: ${{env.DOTNET_ROOT}}/myapp
           
       - name: Generate scripts
-        run: dotnet ef migrations script --output ${{env.DOTNET_ROOT}}/sql/sql-script.sql --idempotent --project ${{github.workspace}}/SkorpFiles.Memorizer.Api.Web
+        run: dotnet ef migrations script --output ${{env.DOTNET_ROOT}}/sql/sql-script.sql --idempotent --project ${{github.workspace}}/SkorpFiles.Memorizer.Api.DataAccess --startup-project ${{github.workspace}}/SkorpFiles.Memorizer.Api.Web
 
       - name: Azure SQL Deploy
         uses: Azure/sql-action@v1
