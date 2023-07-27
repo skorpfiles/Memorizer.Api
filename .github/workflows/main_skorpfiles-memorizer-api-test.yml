@@ -28,6 +28,14 @@ jobs:
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
+      - name: Install EF Tool for updating database
+        run: |
+          dotnet new tool-manifest
+          dotnet tool install dotnet-ef
+          
+      - name: Generate scripts for updating database
+        run: dotnet ef migrations script --output ${{env.DOTNET_ROOT}}/myapp/update-database.sql --idempotent --project ${{github.workspace}}/SkorpFiles.Memorizer.Api.DataAccess --startup-project ${{github.workspace}}/SkorpFiles.Memorizer.Api.Web
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
@@ -55,3 +63,10 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_15A733A82023468298754EDF92ED085C }}
           package: .
+
+      - name: Update Azure Database
+        uses: Azure/sql-action@v1
+        with:
+          server-name: ${{ secrets.DATABASE_SERVER_NAME_MAIN }}
+          connection-string: ${{ secrets.DATABASE_CONNECTION_STRING_MAIN }}
+          sql-file: ${{github.workspace}}/update-database.sql
