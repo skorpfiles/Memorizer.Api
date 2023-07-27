@@ -33,21 +33,18 @@ jobs:
         with:
           name: .net-app
           path: ${{env.DOTNET_ROOT}}/myapp
-  
-  prepare-updating-database:
-    runs-on: windows-latest
-    needs: build
-    steps:
+      
       - name: Install EF Tool for updating database
         run: |
           dotnet new tool-manifest
           dotnet tool install dotnet-ef
+          
       - name: Generate scripts for updating database
         run: dotnet ef migrations script --output ${{env.DOTNET_ROOT}}/sql/sql-script.sql --idempotent --project ${{github.workspace}}/SkorpFiles.Memorizer.Api.DataAccess --startup-project ${{github.workspace}}/SkorpFiles.Memorizer.Api.Web
-        
+  
   deploy:
     runs-on: windows-latest
-    needs: [build, prepare-updating-database]
+    needs: build
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
@@ -69,7 +66,7 @@ jobs:
 
   update-database:
     runs-on: windows-latest
-    needs: [build, prepare-updating-database, deploy]
+    needs: [build, deploy]
     steps:
       - name: Update Azure Database
         uses: Azure/sql-action@v1
