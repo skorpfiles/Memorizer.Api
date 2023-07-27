@@ -70,5 +70,5 @@ jobs:
         with:
           server-name: ${{ secrets.DATABASE_SERVER_NAME_STAGE }}
           connection-string: ${{ secrets.DATABASE_CONNECTION_STRING_STAGE }}
-          sql-file: ${{env.DOTNET_ROOT}}/update-database.sql
+          sql-file: ${{github.workspace}}/update-database.sql
 
