@@ -25,11 +25,6 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
         
-      - name: Install EF Tool
-        run: |
-          dotnet new tool-manifest
-          dotnet tool install dotnet-ef
-
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
@@ -38,23 +33,21 @@ jobs:
         with:
           name: .net-app
           path: ${{env.DOTNET_ROOT}}/myapp
-          
-      - name: Generate scripts
-        run: dotnet ef migrations script --output ${{env.DOTNET_ROOT}}/sql/sql-script.sql --idempotent --project ${{github.workspace}}/SkorpFiles.Memorizer.Api.DataAccess --startup-project ${{github.workspace}}/SkorpFiles.Memorizer.Api.Web
-
-      - name: Azure SQL Deploy
-        uses: Azure/sql-action@v1
-        with:
-          # Name of the Azure SQL Server name, like Fabrikam.database.windows.net.
-          server-name: ${{ secrets.DATABASE_SERVER_NAME_STAGE }}
-          # The connection string, including authentication information, for the Azure SQL Server database.
-          connection-string: ${{ secrets.DATABASE_CONNECTION_STRING_STAGE }}
-          # Path to SQL script file to deploy
-          sql-file: ${{env.DOTNET_ROOT}}/sql/sql-script.sql
-
-  deploy:
+  
+  prepare-updating-database:
     runs-on: windows-latest
     needs: build
+    steps:
+      - name: Install EF Tool for updating database
+        run: |
+          dotnet new tool-manifest
+          dotnet tool install dotnet-ef
+      - name: Generate scripts for updating database
+        run: dotnet ef migrations script --output ${{env.DOTNET_ROOT}}/sql/sql-script.sql --idempotent --project ${{github.workspace}}/SkorpFiles.Memorizer.Api.DataAccess --startup-project ${{github.workspace}}/SkorpFiles.Memorizer.Api.Web
+        
+  deploy:
+    runs-on: windows-latest
+    needs: [build, prepare-updating-database]
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
@@ -73,3 +66,17 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F85350328A5948EEAF67A2DA39E943C5 }}
           package: .
+
+  update-database:
+    runs-on: windows-latest
+    needs: [build, prepare-updating-database, deploy]
+    steps:
+      - name: Update Azure Database
+        uses: Azure/sql-action@v1
+        with:
+          # Name of the Azure SQL Server name, like Fabrikam.database.windows.net.
+          server-name: ${{ secrets.DATABASE_SERVER_NAME_STAGE }}
+          # The connection string, including authentication information, for the Azure SQL Server database.
+          connection-string: ${{ secrets.DATABASE_CONNECTION_STRING_STAGE }}
+          # Path to SQL script file to deploy
+          sql-file: ${{env.DOTNET_ROOT}}/sql/sql-script.sql
