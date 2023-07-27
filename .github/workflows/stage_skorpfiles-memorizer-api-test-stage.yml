@@ -63,17 +63,11 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F85350328A5948EEAF67A2DA39E943C5 }}
           package: .
-
-  update-database:
-    runs-on: windows-latest
-    needs: [build, deploy]
-    steps:
+          
       - name: Update Azure Database
         uses: Azure/sql-action@v1
         with:
-          # Name of the Azure SQL Server name, like Fabrikam.database.windows.net.
           server-name: ${{ secrets.DATABASE_SERVER_NAME_STAGE }}
-          # The connection string, including authentication information, for the Azure SQL Server database.
           connection-string: ${{ secrets.DATABASE_CONNECTION_STRING_STAGE }}
-          # Path to SQL script file to deploy
           sql-file: ${{env.DOTNET_ROOT}}/sql/sql-script.sql
+
