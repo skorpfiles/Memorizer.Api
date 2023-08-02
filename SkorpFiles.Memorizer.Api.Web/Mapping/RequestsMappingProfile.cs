@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using SkorpFiles.Memorizer.Api.Models.Enums;
 using SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository;
+using SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository.Abstract;
 
 namespace SkorpFiles.Memorizer.Api.Web.Mapping
 {
@@ -62,6 +63,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
             CreateMap<GetLabelsRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.GetLabelsRequest>();
             CreateMap<PostTrainingRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.UpdateTrainingRequest>()
                 .ForMember(dest => dest.RefreshLastTime, opts => opts.MapFrom(src => src.RefreshLastTime ?? false));
+            CreateMap<CollectionRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.GetCollectionRequest>();
         }
     }
 }

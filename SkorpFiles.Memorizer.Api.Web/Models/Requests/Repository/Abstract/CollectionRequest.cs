@@ -1,6 +1,6 @@
 ﻿namespace SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository.Abstract
 {
-    public abstract class CollectionRequest
+    public class CollectionRequest
     {
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
