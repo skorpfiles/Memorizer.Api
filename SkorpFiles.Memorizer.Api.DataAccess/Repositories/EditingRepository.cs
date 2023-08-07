@@ -115,7 +115,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 if (questionnaire?.LabelsForQuestionnaire != null)
                     questionnaire.LabelsForQuestionnaire = questionnaire.LabelsForQuestionnaire.OrderBy(l => l.LabelNumber).ToList();
 
-            return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(_mapper.Map<IEnumerable<Api.Models.Questionnaire>>(foundQuestionnairesResult), totalCount, request.PageNumber);
+            return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(_mapper.Map<IEnumerable<Api.Models.Questionnaire>>(foundQuestionnairesResult), totalCount, request.PageNumber, request.PageSize);
         }
 
         public async Task<Api.Models.Questionnaire> GetQuestionnaireAsync(Guid userId, Guid questionnaireId)
@@ -243,7 +243,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 return question;
             });
 
-            return new Api.Models.PaginatedCollection<Api.Models.ExistingQuestion>(foundQuestions, totalCount, request.PageNumber);
+            return new Api.Models.PaginatedCollection<Api.Models.ExistingQuestion>(foundQuestions, totalCount, request.PageNumber, request.PageSize);
         }
 
         public async Task UpdateQuestionsAsync(Guid userId, UpdateQuestionsRequest request)
@@ -612,7 +612,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var foundLabelsResult = await foundLabels.ToListAsync();
 
-            return new Api.Models.PaginatedCollection<Api.Models.Label>(_mapper.Map<IEnumerable<Api.Models.Label>>(foundLabelsResult), totalCount, request.PageNumber);
+            return new Api.Models.PaginatedCollection<Api.Models.Label>(_mapper.Map<IEnumerable<Api.Models.Label>>(foundLabelsResult), totalCount, request.PageNumber, request.PageSize);
         }
 
         public async Task<Api.Models.Label> GetLabelAsync(Guid userId, Guid labelId) =>
@@ -666,7 +666,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var foundTrainingsResult = await foundTrainings.ToListAsync();
 
-            return new PaginatedCollection<Api.Models.Training>(_mapper.Map<IEnumerable<Api.Models.Training>>(foundTrainingsResult), totalCount, request.PageNumber);
+            return new PaginatedCollection<Api.Models.Training>(_mapper.Map<IEnumerable<Api.Models.Training>>(foundTrainingsResult), totalCount, request.PageNumber, request.PageSize);
         }
 
         public async Task<Api.Models.Training> GetTrainingAsync(Guid userId, Guid trainingId)

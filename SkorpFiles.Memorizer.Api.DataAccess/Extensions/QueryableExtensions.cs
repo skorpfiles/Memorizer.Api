@@ -19,7 +19,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Extensions
         {
             var totalCount = await source.CountAsync();
             var page = source.Page(pageNumber, pageSize);
-            return new PaginatedCollection<TSource>(await page.ToListAsync(), totalCount, pageNumber);
+            return new PaginatedCollection<TSource>(await page.ToListAsync(), totalCount, pageNumber, pageSize);
         }
     }
 }

@@ -10,13 +10,15 @@ namespace SkorpFiles.Memorizer.Api.Models
     {
         public IEnumerable<T> Items { get; set; }
         public int TotalCount { get; set; }
+        public int TotalPages { get;set; }
         public int PageNumber { get; set; }
 
-        public PaginatedCollection(IEnumerable<T> items, int totalCount, int pageNumber)
+        public PaginatedCollection(IEnumerable<T> items, int totalCount, int pageNumber, int pageSize)
         {
             Items = items;
             TotalCount = totalCount;
             PageNumber = pageNumber;
+            TotalPages = (int)Math.Ceiling((double)totalCount / pageSize);
         }
     }
 }
