@@ -1,21 +1,22 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Web.Exceptions;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers.Abstract
 {
     public abstract class ControllerWithUserInfo : Controller
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IUserStore<IdentityUser> _userStore;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserStore<ApplicationUser> _userStore;
 
-        protected internal ControllerWithUserInfo(UserManager<IdentityUser> userManager, IUserStore<IdentityUser> userStore)
+        protected internal ControllerWithUserInfo(UserManager<ApplicationUser> userManager, IUserStore<ApplicationUser> userStore)
         {
             _userManager = userManager;
             _userStore = userStore;
         }
 
-        protected internal async Task<IdentityUser> GetCurrentUserAsync()
+        protected internal async Task<ApplicationUser> GetCurrentUserAsync()
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
             if (user != null)

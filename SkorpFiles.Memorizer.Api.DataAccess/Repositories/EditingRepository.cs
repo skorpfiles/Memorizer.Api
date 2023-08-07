@@ -36,6 +36,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             IQueryable<Models.Questionnaire> foundQuestionnaires =
                 from questionnaire in DbContext.Questionnaires
+                    .Include(q=>q.Owner)
                     .Include(q => q.LabelsForQuestionnaire!)
                     .ThenInclude(el => el.Label)
                 where !questionnaire.ObjectIsRemoved

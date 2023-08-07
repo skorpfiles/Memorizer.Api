@@ -15,6 +15,7 @@ using SkorpFiles.Memorizer.Api.Web.Mapping;
 using StackExchange.Redis;
 using Autofac.Core;
 using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
+using SkorpFiles.Memorizer.Api.DataAccess.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,7 +57,7 @@ string connectionString = builder.Configuration["DatabaseConnectionString"]!;
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(connectionString));
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 ITokenCache? tokenCache=null;

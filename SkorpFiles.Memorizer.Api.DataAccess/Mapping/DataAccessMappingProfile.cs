@@ -20,7 +20,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
                 .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.ObjectIsRemoved))
                 .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc))
-                .ForMember(dest => dest.Labels, opts => opts.MapFrom(src => src.LabelsForQuestionnaire));
+                .ForMember(dest => dest.Labels, opts => opts.MapFrom(src => src.LabelsForQuestionnaire))
+                .ForMember(dest => dest.OwnerName, opts =>
+                {
+                    opts.Condition(src => src.Owner != null);
+                    opts.MapFrom(src => src.Owner!.UserName);
+                });
             CreateMap<EntityLabel, SkorpFiles.Memorizer.Api.Models.Label>()
                 .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.LabelId))
                 .ForMember(dest => dest.Name, opts => opts.MapFrom(src => src.Label!.LabelName))

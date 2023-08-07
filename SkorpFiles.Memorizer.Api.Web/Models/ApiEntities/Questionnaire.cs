@@ -7,6 +7,7 @@
         public string? Name { get; set; }
         public string? Availability { get; set; }
         public Guid OwnerId { get; set; }
+        public string? OwnerName { get; set; }
         public int QuestionsCount { get; set; }
         public List<Label>? Labels { get; set; }
     }

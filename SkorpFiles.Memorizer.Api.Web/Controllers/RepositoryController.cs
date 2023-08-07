@@ -23,7 +23,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         private readonly IEditingLogic _editingLogic;
         private readonly IMapper _mapper;
 
-        public RepositoryController(IEditingLogic editingLogic, UserManager<IdentityUser> userManager, IUserStore<IdentityUser> userStore, IMapper mapper):base(userManager,userStore)
+        public RepositoryController(IEditingLogic editingLogic, UserManager<DataAccess.Models.ApplicationUser> userManager, IUserStore<DataAccess.Models.ApplicationUser> userStore, IMapper mapper):base(userManager,userStore)
         {
             _editingLogic = editingLogic;
             _mapper = mapper;
