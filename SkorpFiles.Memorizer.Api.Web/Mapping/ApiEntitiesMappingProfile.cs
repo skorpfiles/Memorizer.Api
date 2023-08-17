@@ -57,6 +57,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                 .ForMember(dest => dest.LengthType, opts => opts.MapFrom(src => src.LengthType.ToString().PascalCaseToLowerCamelCase()))
                 .ForMember(dest => dest.LastTime, opts => opts.MapFrom(src => src.LastTimeUtc));
             CreateMap<SkorpFiles.Memorizer.Api.Models.Questionnaire, QuestionnaireForTraining>();
+            CreateMap<SkorpFiles.Memorizer.Api.Models.QuestionsCounts, QuestionsCounts>();
         }
     }
 }

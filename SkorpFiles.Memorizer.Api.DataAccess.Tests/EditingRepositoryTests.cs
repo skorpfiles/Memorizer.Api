@@ -50,7 +50,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             {
                 opts.Excluding(t => t.Id);
                 opts.Excluding(t => t.Code);
-                opts.Excluding(t => t.QuestionsCount);
+                opts.Excluding(t => t.CountsOfQuestions);
                 return opts;
             });
             actualQuestionnaire.Labels.Should().BeEquivalentTo(expectedQuestionnaireMapped.Labels);
@@ -61,7 +61,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             actualQuestionnaire.Name.Should().Be(expectedQuestionnaireDb.QuestionnaireName);
             actualQuestionnaire.Availability.Should().Be(expectedQuestionnaireDb.QuestionnaireAvailability);
             actualQuestionnaire.OwnerId.Should().Be(expectedQuestionnaireDb.OwnerId);
-            actualQuestionnaire.QuestionsCount.Should().Be(expectedQuestionnaireDb.Questions?.Count ?? 0);
+            actualQuestionnaire.CountsOfQuestions.Should().Be(expectedQuestionnaireDb.Questions?.Count ?? 0);
             actualQuestionnaire.Labels.Should().NotBeNull();
             actualQuestionnaire.Labels!.Count.Should().Be(expectedQuestionnaireDb.LabelsForQuestionnaire!.Count);
             foreach(var expectedLabel in expectedQuestionnaireDb.LabelsForQuestionnaire)

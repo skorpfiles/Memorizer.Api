@@ -15,7 +15,8 @@ namespace SkorpFiles.Memorizer.Api.Models
         public Availability Availability { get; set; }
         public Guid OwnerId { get; set; }
         public string? OwnerName { get; set; }
-        public int QuestionsCount { get; set; }
+        public QuestionsCounts? CountsOfQuestions { get; set; }
         public List<Label>? Labels { get; set; }
+        public long? TotalTrainingTimeSeconds { get; set; }
     }
 }

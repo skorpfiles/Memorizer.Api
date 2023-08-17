@@ -46,11 +46,11 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [Route("Questionnaire/{idOrCode}", Name = "GetQuestionnaire")]
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> GetQuestionnaireAsync(string idOrCode)
+        public async Task<IActionResult> GetQuestionnaireAsync(string idOrCode, [FromQuery]bool calculateTime)
         {
             return await SwitchIdOrCodeAndExecuteActionToBusinessLogicAsync(idOrCode,
-                async (id) => await _editingLogic.GetQuestionnaireAsync(await GetCurrentUserGuidAsync(), id),
-                async (code) => await _editingLogic.GetQuestionnaireAsync(await GetCurrentUserGuidAsync(), code),
+                async (id) => await _editingLogic.GetQuestionnaireAsync(await GetCurrentUserGuidAsync(), id, calculateTime),
+                async (code) => await _editingLogic.GetQuestionnaireAsync(await GetCurrentUserGuidAsync(), code, calculateTime),
                 (businessLogicResult) => Ok(_mapper.Map<Questionnaire>(businessLogicResult)));
         }
 

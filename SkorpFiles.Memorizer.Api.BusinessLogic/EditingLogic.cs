@@ -19,14 +19,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             _editingRepository = editingRepository;
         }
 
-        public async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid questionnaireId)
+        public async Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime)
         {
-            return await _editingRepository.GetQuestionnaireAsync(userId, questionnaireId);
+            return await _editingRepository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime);
         }
 
-        public async Task<Questionnaire> GetQuestionnaireAsync(Guid userId, int questionnaireCode)
+        public async Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime)
         {
-            return await _editingRepository.GetQuestionnaireAsync(userId, questionnaireCode);
+            return await _editingRepository.GetQuestionnaireAsync(userId, questionnaireCode, calculateTime);
         }
 
         public async Task<PaginatedCollection<Questionnaire>> GetQuestionnairesAsync(Guid userId, GetQuestionnairesRequest request)

@@ -118,18 +118,30 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(_mapper.Map<IEnumerable<Api.Models.Questionnaire>>(foundQuestionnairesResult), totalCount, request.PageNumber, request.PageSize);
         }
 
-        public async Task<Api.Models.Questionnaire> GetQuestionnaireAsync(Guid userId, Guid questionnaireId)
+        public async Task<Api.Models.Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime)
         {
             var result = _mapper.Map<Api.Models.Questionnaire>(await GetQuestionnaireAsync(userId, questionnaireId, null));
-            result.QuestionsCount = await GetQuestionsCountInQuestionnaireAsync(result.Id ?? default);
+            if (result != null)
+                await ProcessGetQuestionnaireResultAsync(result, userId, calculateTime);
             return result;
         }
 
-        public async Task<Api.Models.Questionnaire> GetQuestionnaireAsync(Guid userId, int questionnaireCode)
+        public async Task<Api.Models.Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime)
         {
             var result = _mapper.Map<Api.Models.Questionnaire>(await GetQuestionnaireAsync(userId, null, questionnaireCode));
-            result.QuestionsCount = await GetQuestionsCountInQuestionnaireAsync(result.Id ?? default);
+            if (result!=null)
+                await ProcessGetQuestionnaireResultAsync(result, userId, calculateTime);
             return result;
+        }
+
+        private async Task ProcessGetQuestionnaireResultAsync(Api.Models.Questionnaire questionnaireResult, Guid userId, bool calculateTime)
+        {
+            if (questionnaireResult != null)
+            {
+                (QuestionsCounts count, long timeSeconds) = await GetQuestionsStatisticsInQuestionnaireAsync(userId, questionnaireResult.Id!.Value, calculateTime);
+                questionnaireResult.CountsOfQuestions = count;
+                questionnaireResult.TotalTrainingTimeSeconds = timeSeconds;
+            }
         }
 
         public async Task<Api.Models.PaginatedCollection<Api.Models.ExistingQuestion>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
@@ -839,13 +851,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             Models.Questionnaire? questionnaireResult =
                 await (from questionnaire in DbContext.Questionnaires
-                       .Include(q=>q.LabelsForQuestionnaire!)
-                       .ThenInclude(el=>el.Label)
-                 where
-                     !questionnaire.ObjectIsRemoved &&
-                     (questionnaireId == null || questionnaire.QuestionnaireId == questionnaireId) &&
-                     (questionnaireCode == null || questionnaire.QuestionnaireCode == questionnaireCode)
-                 select questionnaire).SingleOrDefaultAsync();
+                       .Include(q => q.LabelsForQuestionnaire!)
+                       .ThenInclude(el => el.Label)
+                       where
+                           !questionnaire.ObjectIsRemoved &&
+                           (questionnaireId == null || questionnaire.QuestionnaireId == questionnaireId) &&
+                           (questionnaireCode == null || questionnaire.QuestionnaireCode == questionnaireCode)
+                       select questionnaire).SingleOrDefaultAsync();
 
             if (questionnaireResult != null)
             {
@@ -856,14 +868,34 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw new ObjectNotFoundException("Questionnaire with such ID or code is not found.");
         }
 
-        private async Task<int> GetQuestionsCountInQuestionnaireAsync(Guid questionnaireId)
+        private async Task<(QuestionsCounts QuestionsCount, long TrainingTimeSeconds)> GetQuestionsStatisticsInQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime)
         {
-            return await (from question in DbContext.Questions
-                          where
-                              !question.ObjectIsRemoved &&
-                              question.QuestionnaireId == questionnaireId
-                          select question)
-                   .CountAsync();
+            string userIdAsString = userId.ToAspNetUserIdString();
+
+            var groupedResult = await DbContext.Questions
+                .Where(q => !q.ObjectIsRemoved && q.QuestionnaireId == questionnaireId)
+                .GroupBy(q => 1)
+                .Select(g => new
+                {
+                    TotalCount = g.Count(),
+                    TimeSeconds = calculateTime ? g.Sum(q => q.QuestionEstimatedTrainingTimeSeconds) : 0
+                }).SingleOrDefaultAsync();
+
+            var countsByUser = await DbContext.QuestionsUsers.Include(q => q.Question)
+                .Where(qu => !qu.Question!.ObjectIsRemoved && qu.Question.QuestionnaireId == questionnaireId && qu.UserId == userIdAsString)
+                .GroupBy(q => 1)
+                .Select(g => new
+                {
+                    New = g.Count(qu => qu.QuestionUserIsNew),
+                    Rechecked = g.Count(qu => qu.QuestionUserPenaltyPoints > 0)
+                }).SingleOrDefaultAsync();
+
+            return (new QuestionsCounts
+            {
+                Total = groupedResult?.TotalCount ?? 0,
+                New = countsByUser?.New ?? 0,
+                Rechecked = countsByUser?.Rechecked ?? 0,
+            }, groupedResult?.TimeSeconds ?? 0);
         }
 
         private async Task DeleteQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)

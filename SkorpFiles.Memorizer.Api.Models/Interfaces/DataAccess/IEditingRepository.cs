@@ -5,8 +5,8 @@ namespace SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess
     public interface IEditingRepository
     {
         Task<PaginatedCollection<Questionnaire>> GetQuestionnairesAsync(Guid userId, GetQuestionnairesRequest request);
-        Task<Questionnaire> GetQuestionnaireAsync(Guid userId, Guid questionnaireId);
-        Task<Questionnaire> GetQuestionnaireAsync(Guid userId, int questionnaireCode);
+        Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime);
+        Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime);
         Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request);
         Task<Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request);
         Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId);
