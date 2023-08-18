@@ -41,8 +41,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
             Api.Models.Questionnaire actualQuestionnaire =
                 !useCodeInsteadOfId ?
-                await _editingRepository.GetQuestionnaireAsync(Constants.DefaultUserId, expectedQuestionnaireDb.QuestionnaireId) :
-                await _editingRepository.GetQuestionnaireAsync(Constants.DefaultUserId, expectedQuestionnaireDb.QuestionnaireCode);
+                await _editingRepository.GetQuestionnaireAsync(Constants.DefaultUserId, expectedQuestionnaireDb.QuestionnaireId,false) :
+                await _editingRepository.GetQuestionnaireAsync(Constants.DefaultUserId, expectedQuestionnaireDb.QuestionnaireCode, false);
 
             //Assert
             //checking to prevent lost fields
