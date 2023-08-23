@@ -36,9 +36,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             IQueryable<Models.Questionnaire> foundQuestionnaires =
                 from questionnaire in DbContext.Questionnaires
-                    .Include(q => q.Owner)
-                    .Include(q => q.LabelsForQuestionnaire!)
-                    .ThenInclude(el => el.Label)
                 where !questionnaire.ObjectIsRemoved
                 select questionnaire;
 
@@ -110,18 +107,26 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             foundQuestionnaires = foundQuestionnaires.Page(request.PageNumber, request.PageSize);
 
-            var foundGroupsResult = await (from questionnaire in foundQuestionnaires
-                                     from question in DbContext.Questions.Where(q => q.QuestionnaireId == questionnaire.QuestionnaireId).DefaultIfEmpty()
-                                     from questionUser in DbContext.QuestionsUsers.Where(qu => qu.QuestionId == question.QuestionId && qu.UserId == userId.ToAspNetUserIdString()).DefaultIfEmpty()
-                                           group new { question, questionUser } by questionnaire into questionnaireGroup
-                                     select new
-                                     {
-                                         Questionnaire = questionnaireGroup.Key,
-                                         QuestionsTotalCount = questionnaireGroup.Count(q => q.question != null),
-                                         QuestionsNewCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserIsNew),
-                                         QuestionsRecheckCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserPenaltyPoints > 0)
-                                     }).ToListAsync();
+            var foundGroups = from questionnaire in foundQuestionnaires.Include(q=>q.Owner)
+                              from question in DbContext.Questions.Where(q => q.QuestionnaireId == questionnaire.QuestionnaireId).DefaultIfEmpty()
+                              from questionUser in DbContext.QuestionsUsers.Where(qu => qu.QuestionId == question.QuestionId && qu.UserId == userIdString).DefaultIfEmpty()
+                              from user in DbContext.Users.Where(u=>u.Id==questionnaire.OwnerId).DefaultIfEmpty()
+                              group new { question, questionUser } by questionnaire into questionnaireGroup
+                              select new
+                              {
+                                  Questionnaire = questionnaireGroup.Key,
+                                  QuestionsTotalCount = questionnaireGroup.Count(q => q.question != null),
+                                  QuestionsNewCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserIsNew),
+                                  QuestionsRecheckCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserPenaltyPoints > 0)
+                              };
 
+            var foundGroupsResult = await foundGroups.ToListAsync();
+
+            var questionnairesIds = foundGroupsResult.Select(g => g.Questionnaire.QuestionnaireId).ToList();
+
+            var questionnairesWithRelations = foundGroupsResult.Any() ? (await (from questionnaire in DbContext.Questionnaires.Include(q => q.Owner)
+                                                                                  where questionnairesIds.Contains(questionnaire.QuestionnaireId)
+                                                                                  select questionnaire).ToListAsync()) : null;
 
             List<Api.Models.Questionnaire> resultList = new();
 
@@ -136,6 +141,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     New = group.QuestionsNewCount,
                     Rechecked = group.QuestionsRecheckCount
                 };
+
+                var questionnaireWithRelations = questionnairesWithRelations?.FirstOrDefault(q => group.Questionnaire.QuestionnaireId == q.QuestionnaireId);
+                if (questionnaireWithRelations != null)
+                {
+                    questionnaire.OwnerName = questionnaireWithRelations.Owner?.UserName;
+                }
 
                 resultList.Add(questionnaire);
             }
