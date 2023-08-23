@@ -36,7 +36,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             IQueryable<Models.Questionnaire> foundQuestionnaires =
                 from questionnaire in DbContext.Questionnaires
-                    .Include(q=>q.Owner)
+                    .Include(q => q.Owner)
                     .Include(q => q.LabelsForQuestionnaire!)
                     .ThenInclude(el => el.Label)
                 where !questionnaire.ObjectIsRemoved
@@ -110,38 +110,49 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             foundQuestionnaires = foundQuestionnaires.Page(request.PageNumber, request.PageSize);
 
-            var foundQuestionnairesResult = await foundQuestionnaires.ToListAsync();
-            foreach (var questionnaire in foundQuestionnairesResult)
-                if (questionnaire?.LabelsForQuestionnaire != null)
-                    questionnaire.LabelsForQuestionnaire = questionnaire.LabelsForQuestionnaire.OrderBy(l => l.LabelNumber).ToList();
+            var foundGroupsResult = await (from questionnaire in foundQuestionnaires
+                                     from question in DbContext.Questions.Where(q => q.QuestionnaireId == questionnaire.QuestionnaireId).DefaultIfEmpty()
+                                     from questionUser in DbContext.QuestionsUsers.Where(qu => qu.QuestionId == question.QuestionId && qu.UserId == userId.ToAspNetUserIdString()).DefaultIfEmpty()
+                                           group new { question, questionUser } by questionnaire into questionnaireGroup
+                                     select new
+                                     {
+                                         Questionnaire = questionnaireGroup.Key,
+                                         QuestionsTotalCount = questionnaireGroup.Count(q => q.question != null),
+                                         QuestionsNewCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserIsNew),
+                                         QuestionsRecheckCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserPenaltyPoints > 0)
+                                     }).ToListAsync();
 
-            return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(_mapper.Map<IEnumerable<Api.Models.Questionnaire>>(foundQuestionnairesResult), totalCount, request.PageNumber, request.PageSize);
+
+            List<Api.Models.Questionnaire> resultList = new();
+
+            foreach (var group in foundGroupsResult)
+            {
+                if (group.Questionnaire.LabelsForQuestionnaire != null)
+                    group.Questionnaire.LabelsForQuestionnaire = group.Questionnaire.LabelsForQuestionnaire.OrderBy(l => l.LabelNumber).ToList();
+                Api.Models.Questionnaire questionnaire = _mapper.Map<Api.Models.Questionnaire>(group.Questionnaire);
+                questionnaire.CountsOfQuestions = new QuestionsCounts
+                {
+                    Total = group.QuestionsTotalCount,
+                    New = group.QuestionsNewCount,
+                    Rechecked = group.QuestionsRecheckCount
+                };
+
+                resultList.Add(questionnaire);
+            }
+
+            return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(resultList, totalCount, request.PageNumber, request.PageSize);
         }
 
         public async Task<Api.Models.Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime)
         {
-            var result = _mapper.Map<Api.Models.Questionnaire>(await GetQuestionnaireAsync(userId, questionnaireId, null));
-            if (result != null)
-                await ProcessGetQuestionnaireResultAsync(result, userId, calculateTime);
+            var result = await GetFullQuestionnaireInfoAsync(userId, questionnaireId, null);
             return result;
         }
 
         public async Task<Api.Models.Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime)
         {
-            var result = _mapper.Map<Api.Models.Questionnaire>(await GetQuestionnaireAsync(userId, null, questionnaireCode));
-            if (result!=null)
-                await ProcessGetQuestionnaireResultAsync(result, userId, calculateTime);
+            var result = await GetFullQuestionnaireInfoAsync(userId, null, questionnaireCode);
             return result;
-        }
-
-        private async Task ProcessGetQuestionnaireResultAsync(Api.Models.Questionnaire questionnaireResult, Guid userId, bool calculateTime)
-        {
-            if (questionnaireResult != null)
-            {
-                (QuestionsCounts count, long timeSeconds) = await GetQuestionsStatisticsInQuestionnaireAsync(userId, questionnaireResult.Id!.Value, calculateTime);
-                questionnaireResult.CountsOfQuestions = count;
-                questionnaireResult.TotalTrainingTimeSeconds = timeSeconds;
-            }
         }
 
         public async Task<Api.Models.PaginatedCollection<Api.Models.ExistingQuestion>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
@@ -504,7 +515,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            var questionnaireResult = await GetQuestionnaireAsync(userId,request.Id,request.Code);
+            var questionnaireResult = await GetSpecialQuestionnaireInfoAsync(userId,request.Id,request.Code);
 
             if (questionnaireResult.OwnerId != userId.ToAspNetUserIdString())
                 throw new AccessDeniedForUserException(Constants.ExceptionMessages.UserCannotChangeQuestionnaire);
@@ -843,21 +854,25 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw new ObjectNotFoundException("Training with such ID doesn't exist.");
         }
 
-        private async Task<Models.Questionnaire> GetQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
+        private IQueryable<Models.Questionnaire> GetBasicQuestionnaireQuery(Guid? questionnaireId = null, int? questionnaireCode = null)
+        {
+            return from questionnaire in DbContext.Questionnaires
+                       .Include(q => q.LabelsForQuestionnaire!)
+                       .ThenInclude(el => el.Label)
+                   where
+                       !questionnaire.ObjectIsRemoved &&
+                       (questionnaireId == null || questionnaire.QuestionnaireId == questionnaireId) &&
+                       (questionnaireCode == null || questionnaire.QuestionnaireCode == questionnaireCode)
+                   select questionnaire;
+        }
+
+        private async Task<Models.Questionnaire> GetSpecialQuestionnaireInfoAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
 
-            Models.Questionnaire? questionnaireResult =
-                await (from questionnaire in DbContext.Questionnaires
-                       .Include(q => q.LabelsForQuestionnaire!)
-                       .ThenInclude(el => el.Label)
-                       where
-                           !questionnaire.ObjectIsRemoved &&
-                           (questionnaireId == null || questionnaire.QuestionnaireId == questionnaireId) &&
-                           (questionnaireCode == null || questionnaire.QuestionnaireCode == questionnaireCode)
-                       select questionnaire).SingleOrDefaultAsync();
+            var questionnaireResult = await GetBasicQuestionnaireQuery().SingleOrDefaultAsync();
 
             if (questionnaireResult != null)
             {
@@ -868,34 +883,43 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw new ObjectNotFoundException("Questionnaire with such ID or code is not found.");
         }
 
-        private async Task<(QuestionsCounts QuestionsCount, long TrainingTimeSeconds)> GetQuestionsStatisticsInQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime)
+        private async Task<Api.Models.Questionnaire> GetFullQuestionnaireInfoAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
-            string userIdAsString = userId.ToAspNetUserIdString();
+            CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
 
-            var groupedResult = await DbContext.Questions
-                .Where(q => !q.ObjectIsRemoved && q.QuestionnaireId == questionnaireId)
-                .GroupBy(q => 1)
-                .Select(g => new
-                {
-                    TotalCount = g.Count(),
-                    TimeSeconds = calculateTime ? g.Sum(q => q.QuestionEstimatedTrainingTimeSeconds) : 0
-                }).SingleOrDefaultAsync();
+            var groupResult =
+                await (from questionnaire in GetBasicQuestionnaireQuery(questionnaireId,questionnaireCode)
+                       from question in DbContext.Questions.Where(q => q.QuestionnaireId == questionnaire.QuestionnaireId).DefaultIfEmpty()
+                       from questionUser in DbContext.QuestionsUsers.Where(qu => qu.QuestionId == question.QuestionId && qu.UserId == userId.ToAspNetUserIdString()).DefaultIfEmpty()
+                       group new { question, questionUser } by questionnaire into questionnaireGroup
+                       select new
+                       {
+                           Questionnaire = questionnaireGroup.Key,
+                           QuestionsTotalCount = questionnaireGroup.Count(q => q.question != null),
+                           QuestionsNewCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserIsNew),
+                           QuestionsRecheckCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserPenaltyPoints > 0),
+                           TotalTrainingTimeSeconds = questionnaireGroup.Where(q=>q.question!=null).Sum(q=>q.question.QuestionEstimatedTrainingTimeSeconds)
+                       }).SingleOrDefaultAsync();
 
-            var countsByUser = await DbContext.QuestionsUsers.Include(q => q.Question)
-                .Where(qu => !qu.Question!.ObjectIsRemoved && qu.Question.QuestionnaireId == questionnaireId && qu.UserId == userIdAsString)
-                .GroupBy(q => 1)
-                .Select(g => new
-                {
-                    New = g.Count(qu => qu.QuestionUserIsNew),
-                    Rechecked = g.Count(qu => qu.QuestionUserPenaltyPoints > 0)
-                }).SingleOrDefaultAsync();
-
-            return (new QuestionsCounts
+            if (groupResult != null)
             {
-                Total = groupedResult?.TotalCount ?? 0,
-                New = countsByUser?.New ?? 0,
-                Rechecked = countsByUser?.Rechecked ?? 0,
-            }, groupedResult?.TimeSeconds ?? 0);
+                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(groupResult.Questionnaire.OwnerId), groupResult.Questionnaire.QuestionnaireAvailability);
+
+                Api.Models.Questionnaire result = _mapper.Map<Api.Models.Questionnaire>(groupResult.Questionnaire);
+                result.CountsOfQuestions = new QuestionsCounts
+                {
+                    Total = groupResult.QuestionsTotalCount,
+                    New = groupResult.QuestionsNewCount,
+                    Rechecked = groupResult.QuestionsRecheckCount
+                };
+                result.TotalTrainingTimeSeconds = groupResult.TotalTrainingTimeSeconds;
+
+                return result;
+            }
+            else
+                throw new ObjectNotFoundException("Questionnaire with such ID or code is not found.");
         }
 
         private async Task DeleteQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
