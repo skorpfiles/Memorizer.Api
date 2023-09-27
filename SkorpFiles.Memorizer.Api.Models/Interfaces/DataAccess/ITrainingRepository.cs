@@ -2,5 +2,7 @@
 {
     public interface ITrainingRepository
     {
+        Task<IEnumerable<Question>> GetQuestionsForTrainingAsync(Guid userId, Guid trainingId);
+        Task UpdateQuestionStatusAsync(UserQuestionStatus questionStatus);
     }
 }
