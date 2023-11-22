@@ -16,9 +16,13 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
         public List<Question> NewQuestionsList { get; set; } = new List<Question>();
         public List<Question> PrioritizedPenaltyQuestionsList { get; set; } = new List<Question>();
 
-        public static TrainingBuilder Build(IEnumerable<Question> initialQuestionsList)
+        public TrainingBuilder(IEnumerable<Question> initialQuestionsList)
         {
-            TrainingBuilder result = new TrainingBuilder();
+            FillQuestionsListsInitially(initialQuestionsList);
+        }
+
+        private void FillQuestionsListsInitially(IEnumerable<Question> initialQuestionsList)
+        {
             IEnumerator<Api.Models.Question> questionsEnumerator = initialQuestionsList.GetEnumerator();
             while (questionsEnumerator.MoveNext())
             {
@@ -27,16 +31,15 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                 if (currentQuestion.IsEnabled)
                 {
                     if (currentQuestion.MyStatus == null || currentQuestion.MyStatus.IsNew)
-                        result.NewQuestionsList.Add(currentQuestion);
+                        NewQuestionsList.Add(currentQuestion);
                     else
                     {
-                        result.BasicQuestionsList.Add(currentQuestion);
+                        BasicQuestionsList.Add(currentQuestion);
                         if (currentQuestion.MyStatus.PenaltyPoints > 0)
-                            result.PrioritizedPenaltyQuestionsList.Add(currentQuestion);
+                            PrioritizedPenaltyQuestionsList.Add(currentQuestion);
                     }
                 }
             }
-            return result;
         }
 
         public List<Question> MakeQuestionsListForTraining(TrainingOptions options)
@@ -49,6 +52,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             double expectedLengthForPrioritizedPenaltyQuestionsList = options.LengthValue * options.PrioritizedPenaltyQuestionsFraction;
 
             double consumedValue = 0;
+            int tryingAttemptInARowWithoutResult = 0;
+            const int MaxCountOfTryingAttemptInARowWithoutResult = 100;
 
             Dictionary<Guid, Question> selectedNewQuestions = new Dictionary<Guid, Question>();
             if (expectedLengthForNewQuestionList > 0)
@@ -67,44 +72,30 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         int lengthValue = 1;
                         if (options.LengthType == Models.Enums.TrainingLengthType.Time)
                         {
-                            lengthValue = selectedQuestion.EstimatedTrainingTimeSeconds * SecondsInMinute;
+                            lengthValue = selectedQuestion.EstimatedTrainingTimeSeconds;
 
-                            if (consumedValue + lengthValue - expectedLengthForNewQuestionList > expectedLengthForNewQuestionList * (1 - Settings.AllowableErrorFraction))
+                            if (Math.Abs(consumedValue + lengthValue - expectedLengthForNewQuestionList) > expectedLengthForNewQuestionList * (1 - Settings.AllowableErrorFraction))
                             {
                                 selectedNewQuestions.Add(selectedQuestion.Id.Value, selectedQuestion);
                                 consumedValue += lengthValue;
+                                tryingAttemptInARowWithoutResult = 0;
                             }
                             else
                             {
-
+                                tryingAttemptInARowWithoutResult++;
                             }
-
                         }
                     }
                     else
-                        
-                }
-                while (consumedValue < expectedLengthForNewQuestionList);
-
-                if (consumedValue - expectedLengthForNewQuestionList > expectedLengthForNewQuestionList * (1 - Settings.AllowableErrorFraction))
-                {
-                    selectedNewQuestions.Remove(selectedNewQuestions.Last());
-                    
-                    selectedQuestion = null;
-                    DateTime startTime = DateTime.UtcNow;
-                    int attemptsCounter = 0;
-                    do
                     {
-                        selectedQuestion = PickRandomElementFromList(NewQuestionsList);
+                        throw new InvalidOperationException("Question with the same ID found the second time.");
                     }
-                    while()
                 }
+                while (consumedValue < expectedLengthForNewQuestionList || tryingAttemptInARowWithoutResult >= MaxCountOfTryingAttemptInARowWithoutResult);
             }
 
 
         }
-
-        private T Find
 
         private T PickRandomElementFromList<T>(List<T> list)
         {

@@ -62,7 +62,10 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
         public Question PickAndDelete()
         {
             RatingComponent foundRatingComponent = PickRatingComponent();
-            return foundRatingComponent.PickAndDelete(_random);
+            Question foundQuestion = foundRatingComponent.PickAndDelete(_random);
+            if (foundRatingComponent.Consumed)
+                DeleteRatingComponent(foundRatingComponent);
+            return foundQuestion;
         }
 
         private RatingComponent PickRatingComponent()
