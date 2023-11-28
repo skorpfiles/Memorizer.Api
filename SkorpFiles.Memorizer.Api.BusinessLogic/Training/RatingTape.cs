@@ -7,10 +7,9 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
-    internal class RatingTape
+    internal class RatingTape:IPickable<Question>
     {
         private int _nextCoordinate = 1;
-        private Random _random = new();
 
         public SortedDictionary<int, RatingComponent> CoordinatesAndComponents { get; private set; } = new SortedDictionary<int, RatingComponent>();
         public SortedSet<int> Coordinates { get; private set; } = new SortedSet<int>();
@@ -53,24 +52,24 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                 throw new InvalidOperationException("No rating component with such rating.");
         }
 
-        public Question Pick()
+        public Question Pick(Random random)
         {
-            RatingComponent foundRatingComponent = PickRatingComponent();
-            return foundRatingComponent.Pick(_random);
+            RatingComponent foundRatingComponent = PickRatingComponent(random);
+            return foundRatingComponent.Pick(random);
         }
 
-        public Question PickAndDelete()
+        public Question PickAndDelete(Random random)
         {
-            RatingComponent foundRatingComponent = PickRatingComponent();
-            Question foundQuestion = foundRatingComponent.PickAndDelete(_random);
+            RatingComponent foundRatingComponent = PickRatingComponent(random);
+            Question foundQuestion = foundRatingComponent.PickAndDelete(random);
             if (foundRatingComponent.Consumed)
                 DeleteRatingComponent(foundRatingComponent);
             return foundQuestion;
         }
 
-        private RatingComponent PickRatingComponent()
+        private RatingComponent PickRatingComponent(Random random)
         {
-            int coordinateForPick = _random.Next(Length - 1);
+            int coordinateForPick = random.Next(Length - 1);
             int coordinateOfFoundElement = Coordinates.GetViewBetween(0, coordinateForPick).Max();
             return CoordinatesAndComponents[coordinateOfFoundElement];
         }

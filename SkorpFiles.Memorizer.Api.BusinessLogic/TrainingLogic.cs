@@ -30,11 +30,10 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 throw new IncorrectTrainingOptionsException("New questions fraction and penalty questions fraction cannot be more than 100% in total.");
 
             var allQuestions = (await _trainingRepository.GetQuestionsForTrainingAsync(userId, trainingId)).ToList();
-            var questionsListsCollection = TrainingBuilder.Build(allQuestions);
+            var questionsListsCollection = new TrainingBuilder(allQuestions);
+            var questionsList = questionsListsCollection.MakeQuestionsListForTraining(options);
 
-
-
-
+            return questionsList;
         }
     }
 }

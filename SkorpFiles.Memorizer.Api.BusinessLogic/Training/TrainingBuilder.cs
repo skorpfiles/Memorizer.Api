@@ -1,4 +1,5 @@
-﻿using SkorpFiles.Memorizer.Api.Models;
+﻿using Microsoft.Extensions.Options;
+using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
 using System;
 using System.Collections.Generic;
@@ -10,11 +11,11 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
     internal class TrainingBuilder
     {
-        private Random _random = new Random();
+        private Random _random = new();
 
         public List<Question> BasicQuestionsList { get; set; } = new List<Question>();
-        public List<Question> NewQuestionsList { get; set; } = new List<Question>();
-        public List<Question> PrioritizedPenaltyQuestionsList { get; set; } = new List<Question>();
+        public EntitiesListForRandomChoice<Question> NewQuestionsList { get; set; } = new EntitiesListForRandomChoice<Question>();
+        public EntitiesListForRandomChoice<Question> PrioritizedPenaltyQuestionsList { get; set; } = new EntitiesListForRandomChoice<Question>();
 
         public TrainingBuilder(IEnumerable<Question> initialQuestionsList)
         {
@@ -44,46 +45,69 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
         public List<Question> MakeQuestionsListForTraining(TrainingOptions options)
         {
-            const int SecondsInMinute = 60;
-            List<Question> result = new List<Question>();
+            if (options.NewQuestionsFraction + options.PrioritizedPenaltyQuestionsFraction > 1)
+                throw new ArgumentException($"Sum of {options.NewQuestionsFraction} and {options.PrioritizedPenaltyQuestionsFraction} cannot be more than 1 (100%).");
 
-            double expectedLengthForBasicQuestionList;
+            List<Question> result = new();
+
             double expectedLengthForNewQuestionList = options.LengthValue * options.NewQuestionsFraction;
             double expectedLengthForPrioritizedPenaltyQuestionsList = options.LengthValue * options.PrioritizedPenaltyQuestionsFraction;
+            double expectedLengthForBasicQuestionList = options.LengthValue - expectedLengthForNewQuestionList - expectedLengthForPrioritizedPenaltyQuestionsList;
+
+            //create new questions list
+            result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForNewQuestionList, _random).Values);
+            //create penalty questions list
+            result.AddRange(GetSelectedQuestionsFromGeneralList(PrioritizedPenaltyQuestionsList, options.LengthType, expectedLengthForPrioritizedPenaltyQuestionsList, _random).Values);
+
+            //basic list
+            RatingTape ratingTape = InitializeRatingTape(BasicQuestionsList, result);
+            result.AddRange(GetSelectedQuestionsFromGeneralList(ratingTape, options.LengthType, expectedLengthForBasicQuestionList, _random).Values);
+
+            return result;
+        }
+
+        private static Dictionary<Guid, Question> GetSelectedQuestionsFromGeneralList(IPickable<Question> sourceList, Models.Enums.TrainingLengthType lengthType, double expectedLength, Random random)
+        {
+            Dictionary<Guid, Question> selectedQuestions = new();
 
             double consumedValue = 0;
             int tryingAttemptInARowWithoutResult = 0;
             const int MaxCountOfTryingAttemptInARowWithoutResult = 100;
 
-            Dictionary<Guid, Question> selectedNewQuestions = new Dictionary<Guid, Question>();
-            if (expectedLengthForNewQuestionList > 0)
+            if (expectedLength > 0)
             {
                 Question? selectedQuestion;
                 do
                 {
-                    selectedQuestion = PickRandomElementFromList(NewQuestionsList);
+                    selectedQuestion = sourceList.PickAndDelete(random);
                     if (selectedQuestion?.Id == null)
                     {
                         throw new InvalidOperationException("Question cannot have null ID while creating training list.");
                     }
 
-                    if (!selectedNewQuestions.ContainsKey(selectedQuestion.Id.Value))
+                    if (!selectedQuestions.ContainsKey(selectedQuestion.Id.Value))
                     {
-                        int lengthValue = 1;
-                        if (options.LengthType == Models.Enums.TrainingLengthType.Time)
+                        switch (lengthType)
                         {
-                            lengthValue = selectedQuestion.EstimatedTrainingTimeSeconds;
+                            case Models.Enums.TrainingLengthType.Time:
+                                int lengthValue = selectedQuestion.EstimatedTrainingTimeSeconds;
 
-                            if (Math.Abs(consumedValue + lengthValue - expectedLengthForNewQuestionList) > expectedLengthForNewQuestionList * (1 - Settings.AllowableErrorFraction))
-                            {
-                                selectedNewQuestions.Add(selectedQuestion.Id.Value, selectedQuestion);
-                                consumedValue += lengthValue;
-                                tryingAttemptInARowWithoutResult = 0;
-                            }
-                            else
-                            {
-                                tryingAttemptInARowWithoutResult++;
-                            }
+                                if (Math.Abs(consumedValue + lengthValue - expectedLength) > expectedLength * (1 - Settings.AllowableErrorFraction))
+                                {
+                                    selectedQuestions.Add(selectedQuestion.Id.Value, selectedQuestion);
+                                    consumedValue += lengthValue;
+                                    tryingAttemptInARowWithoutResult = 0;
+                                }
+                                else
+                                {
+                                    tryingAttemptInARowWithoutResult++;
+                                }
+                                break;
+                            case Models.Enums.TrainingLengthType.QuestionsCount:
+                                consumedValue++;
+                                break;
+                            default:
+                                throw new InvalidOperationException("Unknown length type.");
                         }
                     }
                     else
@@ -91,15 +115,21 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         throw new InvalidOperationException("Question with the same ID found the second time.");
                     }
                 }
-                while (consumedValue < expectedLengthForNewQuestionList || tryingAttemptInARowWithoutResult >= MaxCountOfTryingAttemptInARowWithoutResult);
+                while (consumedValue < expectedLength || tryingAttemptInARowWithoutResult >= MaxCountOfTryingAttemptInARowWithoutResult);
             }
-
-
+            return selectedQuestions;
         }
 
-        private T PickRandomElementFromList<T>(List<T> list)
+        private static RatingTape InitializeRatingTape(IEnumerable<Question> basicList, IEnumerable<Question> questionsToFilter)
         {
-            return list[_random.Next(list.Count - 1)];
+            RatingTape result = new();
+
+            foreach(Question question in basicList)
+            {
+                if (!questionsToFilter.Any(q => q.Id == question.Id))
+                    result.Add(question);
+            }
+            return result;
         }
     }
 }
