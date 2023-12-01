@@ -8,6 +8,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
     internal interface IPickable<T>
     {
+        bool Consumed { get; }
+
         T Pick(Random random);
         T PickAndDelete(Random random);
     }

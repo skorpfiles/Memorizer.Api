@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using SkorpFiles.Memorizer.Api.Models;
+using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
 using System;
 using System.Collections.Generic;
@@ -45,8 +46,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
         public List<Question> MakeQuestionsListForTraining(TrainingOptions options)
         {
+            if (options.NewQuestionsFraction < 0 || options.PrioritizedPenaltyQuestionsFraction < 0)
+                throw new IncorrectTrainingOptionsException(Constants.NegativeFractionsMessage);
+
             if (options.NewQuestionsFraction + options.PrioritizedPenaltyQuestionsFraction > 1)
-                throw new ArgumentException($"Sum of {options.NewQuestionsFraction} and {options.PrioritizedPenaltyQuestionsFraction} cannot be more than 1 (100%).");
+                throw new IncorrectTrainingOptionsException(Constants.SumOfFractionsCannotBeMoreThan1Message);
+
+            if (options.LengthValue <= 0)
+                throw new IncorrectTrainingOptionsException(Constants.NonPositiveLengthValueMessage);
 
             List<Question> result = new();
 
@@ -74,7 +81,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             int tryingAttemptInARowWithoutResult = 0;
             const int MaxCountOfTryingAttemptInARowWithoutResult = 100;
 
-            if (expectedLength > 0)
+            if (expectedLength > 0 && !sourceList.Consumed)
             {
                 Question? selectedQuestion;
                 do
@@ -92,7 +99,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                             case Models.Enums.TrainingLengthType.Time:
                                 int lengthValue = selectedQuestion.EstimatedTrainingTimeSeconds;
 
-                                if (Math.Abs(consumedValue + lengthValue - expectedLength) > expectedLength * (1 - Settings.AllowableErrorFraction))
+                                if (Math.Abs(consumedValue + lengthValue - expectedLength) > expectedLength * (1 - Constants.AllowableErrorFraction))
                                 {
                                     selectedQuestions.Add(selectedQuestion.Id.Value, selectedQuestion);
                                     consumedValue += lengthValue;
@@ -115,7 +122,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         throw new InvalidOperationException("Question with the same ID found the second time.");
                     }
                 }
-                while (consumedValue < expectedLength || tryingAttemptInARowWithoutResult >= MaxCountOfTryingAttemptInARowWithoutResult);
+                while (!sourceList.Consumed && (consumedValue < expectedLength || tryingAttemptInARowWithoutResult >= MaxCountOfTryingAttemptInARowWithoutResult));
             }
             return selectedQuestions;
         }

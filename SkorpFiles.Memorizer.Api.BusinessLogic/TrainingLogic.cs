@@ -24,10 +24,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
         public async Task<IEnumerable<Api.Models.Question>> SelectQuestionsForTrainingAsync(Guid userId, Guid trainingId, TrainingOptions options)
         {
             if (options.NewQuestionsFraction < 0 || options.PrioritizedPenaltyQuestionsFraction < 0)
-                throw new IncorrectTrainingOptionsException("New questions fraction and penalty questions fraction cannot be negative.");
+                throw new IncorrectTrainingOptionsException(Constants.NegativeFractionsMessage);
 
             if (options.NewQuestionsFraction + options.PrioritizedPenaltyQuestionsFraction > 1)
-                throw new IncorrectTrainingOptionsException("New questions fraction and penalty questions fraction cannot be more than 100% in total.");
+                throw new IncorrectTrainingOptionsException(Constants.SumOfFractionsCannotBeMoreThan1Message);
+
+            if (options.LengthValue <= 0)
+                throw new IncorrectTrainingOptionsException(Constants.NonPositiveLengthValueMessage);
+
 
             var allQuestions = (await _trainingRepository.GetQuestionsForTrainingAsync(userId, trainingId)).ToList();
             var questionsListsCollection = new TrainingBuilder(allQuestions);

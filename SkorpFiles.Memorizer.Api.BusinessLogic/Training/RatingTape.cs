@@ -17,9 +17,11 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
         public int Length => _nextCoordinate - 1;
 
+        public bool Consumed => Length == 0;
+
         public void Add(Question question)
         {
-            int rating = question.MyStatus?.Rating ?? Settings.InitialQuestionRating;
+            int rating = question.MyStatus?.Rating ?? Constants.InitialQuestionRating;
 
             if (RatingsAndComponents.TryGetValue(rating, out RatingComponent? ratingComponent))
             {
