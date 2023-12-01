@@ -72,8 +72,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
         private void ResetDependencies()
         {
-            if (Container != null)
-                Container.Dispose();
+            Container?.Dispose();
         }
     }
 }
