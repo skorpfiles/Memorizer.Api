@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Moq;
+using SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
@@ -11,16 +12,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
     public class TrainingLogicUnitTests
     {
         [TestMethod]
-        [DataRow(-0.1234, 0.1234, 5, Constants.NegativeFractionsMessage)]
-        [DataRow(-0.3456, -0.2345, 5, Constants.NegativeFractionsMessage)]
-        [DataRow(-1.0, -0.9876, 5, Constants.NegativeFractionsMessage)]
-        [DataRow(2.5678, 1.4567, 5, Constants.SumOfFractionsCannotBeMoreThan1Message)]
-        [DataRow(0.1234, 1, 5, Constants.SumOfFractionsCannotBeMoreThan1Message)]
-        [DataRow(1, 0.2345, 5, Constants.SumOfFractionsCannotBeMoreThan1Message)]
-        [DataRow(0.567, 0.678, 5, Constants.SumOfFractionsCannotBeMoreThan1Message)]
-        [DataRow(0.789, 0.456, 5, Constants.SumOfFractionsCannotBeMoreThan1Message)]
-        [DataRow(0.1,0.2,0,Constants.NonPositiveLengthValueMessage)]
-        [DataRow(0.1,0.2,-5, Constants.NonPositiveLengthValueMessage)]
+        [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_IncorrectOptions_IncorrectTrainingOptionsException), typeof(TrainingLogicTestDataSource))]
         public async Task SelectQuestionsForTrainingAsync_IncorrectOptions_IncorrectTrainingOptionsException(double newQuestionsFraction, double prioritizedPenaltyQuestionsFraction, int lengthValue, string expectedErrorMessage)
         {
             //Arrange
@@ -40,14 +32,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         }
 
         [TestMethod]
-        [DataRow(0,0,5)]
-        [DataRow(0,0.234,5)]
-        [DataRow(0.345,0,5)]
-        [DataRow(0, 1, 5)]
-        [DataRow(1,0, 5)]
-        [DataRow(0.123,0.3456,5)]
-        [DataRow(0.1,0.9,5)]
-        [DataRow(0.8, 0.2,5)]
+        [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectOptions_NoExceptions), typeof(TrainingLogicTestDataSource))]
         public async Task SelectQuestionsForTrainingAsync_CorrectOptions_NoExceptions(double newQuestionsFraction, double prioritizedPenaltyQuestionsFraction, int lengthValue)
         {
             //Arrange
@@ -66,6 +51,10 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             await act.Should().NotThrowAsync();
         }
 
-        //public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectResult()
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectResult(double newQuestionsFraction, double prioritizedPenaltyQuestionsFraction, int lengthValue, List<Question> allQuestions)
+        {
+
+        }
+
     }
 }
