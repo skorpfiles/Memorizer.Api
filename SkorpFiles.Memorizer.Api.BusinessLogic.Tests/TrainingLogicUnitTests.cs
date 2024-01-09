@@ -73,7 +73,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             actualResult.Should().BeEmpty();
         }
 
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_AllQuestionsAreDistinct(Guid userId, Guid trainingId, TrainingOptions options, List<Models.Question> allQuestions)
+        [TestMethod]
+        [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData_AllQuestionsAreDistinct),typeof(TrainingLogicTestDataSource))]
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_AllQuestionsAreDistinct(Guid userId, Guid trainingId, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionFraction, List<Models.Question> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
@@ -81,8 +83,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
+            var trainingOptions = new TrainingOptions
+            {
+                LengthType = lengthType,
+                LengthValue = lengthValue,
+                NewQuestionsFraction = newQuestionsFraction,
+                PrioritizedPenaltyQuestionsFraction = penaltyQuestionFraction
+            };
+
             //Act
-            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, options).ConfigureAwait(false);
+            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, trainingOptions).ConfigureAwait(false);
 
             //Assert
             actualResult.Should().BeEquivalentTo(actualResult.Distinct(new GuidComparer()));
