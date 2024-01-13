@@ -74,7 +74,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         }
 
         [TestMethod]
-        [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData_AllQuestionsAreDistinct),typeof(TrainingLogicTestDataSource))]
+        [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData),typeof(TrainingLogicTestDataSource))]
         public async Task SelectQuestionsForTrainingAsync_CorrectData_AllQuestionsAreDistinct(Guid userId, Guid trainingId, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionFraction, List<Models.Question> allQuestions)
         {
             //Arrange

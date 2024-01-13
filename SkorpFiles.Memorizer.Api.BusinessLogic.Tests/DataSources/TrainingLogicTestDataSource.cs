@@ -438,7 +438,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             }
         }
 
-        public static IEnumerable<object[]> SelectQuestionsForTrainingAsync_CorrectData_AllQuestionsAreDistinct
+        public static IEnumerable<object[]> SelectQuestionsForTrainingAsync_CorrectData
         {
             get
             {
@@ -1759,9 +1759,18 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
         private static object[] GenerateQuestionData(Faker generalFaker, Faker<Question> questionFaker, Guid userId, Guid trainingId, int newCount, int penaltyCount, int usualCount, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction)
         {
             var questions = new List<Question>();
-            questions.AddRange(questionFaker.GenerateBetween(newCount, newCount, "new"));
-            questions.AddRange(questionFaker.GenerateBetween(penaltyCount, penaltyCount, "penalty"));
-            questions.AddRange(questionFaker.GenerateBetween(usualCount, usualCount, "usual"));
+            if (lengthType == TrainingLengthType.QuestionsCount)
+            {
+                questions.AddRange(questionFaker.GenerateBetween(newCount, newCount, "new"));
+                questions.AddRange(questionFaker.GenerateBetween(penaltyCount, penaltyCount, "penalty"));
+                questions.AddRange(questionFaker.GenerateBetween(usualCount, usualCount, "usual"));
+            }
+            else if (lengthType == TrainingLengthType.Time)
+            {
+                questions.AddRange(CreateQuestionsCollectionByTime(generalFaker, questionFaker, "new", newCount));
+                questions.AddRange(CreateQuestionsCollectionByTime(generalFaker, questionFaker, "penalty", penaltyCount));
+                questions.AddRange(CreateQuestionsCollectionByTime(generalFaker, questionFaker, "usual", usualCount));
+            }
 
             Shuffle(questions, generalFaker);
 
@@ -1786,6 +1795,25 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 int k = generalFaker.Random.Number(0, n);
                 (list[n], list[k]) = (list[k], list[n]);
             }
+        }
+
+        private static List<Question> CreateQuestionsCollectionByTime(Faker generalFaker, Faker<Question> questionFaker, string ruleSet, int fullTime)
+        {
+            List<Question> questions = new List<Question>();
+            const int recommendedMinimumCountOfQuestions = 50;
+            int minimumCountOfQuestions = fullTime > recommendedMinimumCountOfQuestions ? recommendedMinimumCountOfQuestions : fullTime;
+            int currentTimeLength = 0;
+            while (currentTimeLength < fullTime)
+            {
+                var question = questionFaker.Generate(ruleSet);
+                var nextTime = generalFaker.Random.Number(1, fullTime / minimumCountOfQuestions);
+                if (nextTime + currentTimeLength > fullTime)
+                    nextTime = fullTime - currentTimeLength;
+                question.EstimatedTrainingTimeSeconds = nextTime;
+                questions.Add(question);
+                currentTimeLength += nextTime;
+            }
+            return questions;
         }
     }
 }
