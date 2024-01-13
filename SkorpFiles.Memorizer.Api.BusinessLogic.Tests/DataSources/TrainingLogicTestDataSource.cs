@@ -793,6 +793,948 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
 
                 testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
+
+                // ----------------------- [20,200] 0 QN -------------------------
+
+                newCount = generalFaker.Random.Number(20, 200);
+                penaltyCount = 0;
+                usualCount = newCount;
+                lengthValue = generalFaker.Random.Number(5, usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(20, 200);
+                penaltyCount = 0;
+                usualCount = newCount;
+                lengthValue = usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(20, 200);
+                penaltyCount = 0;
+                usualCount = newCount;
+                lengthValue = generalFaker.Random.Number(usualCount + 1, usualCount + newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(20, 200);
+                penaltyCount = 0;
+                usualCount = newCount;
+                lengthValue = usualCount + newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(20, 200);
+                penaltyCount = 0;
+                usualCount = newCount;
+                lengthValue = generalFaker.Random.Number(usualCount + newCount + 1, 1000);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                // ------------------------- [10,50] 0 [60,100] -------------------------
+
+                newCount = generalFaker.Random.Number(10, 50);
+                penaltyCount = 0;
+                usualCount = generalFaker.Random.Number(60, 100);
+                lengthValue = generalFaker.Random.Number(5, newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(10, 50);
+                penaltyCount = 0;
+                usualCount = generalFaker.Random.Number(60, 100);
+                lengthValue = newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(10, 50);
+                penaltyCount = 0;
+                usualCount = generalFaker.Random.Number(60, 100);
+                lengthValue = generalFaker.Random.Number(newCount + 1, usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(10, 50);
+                penaltyCount = 0;
+                usualCount = generalFaker.Random.Number(60, 100);
+                lengthValue = usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(10, 50);
+                penaltyCount = 0;
+                usualCount = generalFaker.Random.Number(60, 100);
+                lengthValue = generalFaker.Random.Number(usualCount + 1, usualCount + newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(10, 50);
+                penaltyCount = 0;
+                usualCount = generalFaker.Random.Number(60, 100);
+                lengthValue = newCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(10, 50);
+                penaltyCount = 0;
+                usualCount = generalFaker.Random.Number(60, 100);
+                lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, 1000);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                // ------------------------- [60,100] [10,50] 0 -------------------------
+
+                newCount = generalFaker.Random.Number(60, 100);
+                penaltyCount = generalFaker.Random.Number(10, 50);
+                usualCount = 0;
+                lengthValue = generalFaker.Random.Number(5, penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(60, 100);
+                penaltyCount = generalFaker.Random.Number(10, 50);
+                usualCount = 0;
+                lengthValue = penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(60, 100);
+                penaltyCount = generalFaker.Random.Number(10, 50);
+                usualCount = 0;
+                lengthValue = generalFaker.Random.Number(penaltyCount + 1, newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(60, 100);
+                penaltyCount = generalFaker.Random.Number(10, 50);
+                usualCount = 0;
+                lengthValue = newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(60, 100);
+                penaltyCount = generalFaker.Random.Number(10, 50);
+                usualCount = 0;
+                lengthValue = generalFaker.Random.Number(newCount + 1, newCount + penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(60, 100);
+                penaltyCount = generalFaker.Random.Number(10, 50);
+                usualCount = 0;
+                lengthValue = newCount + penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(60, 100);
+                penaltyCount = generalFaker.Random.Number(10, 50);
+                usualCount = 0;
+                lengthValue = generalFaker.Random.Number(newCount + penaltyCount + 1, 1000);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                // ------------------------- [270,310] [150,190] [50,70] -------------------------
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = generalFaker.Random.Number(5, usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = generalFaker.Random.Number(usualCount + 1, penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = generalFaker.Random.Number(penaltyCount + 1, usualCount + penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = usualCount + penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = generalFaker.Random.Number(usualCount + penaltyCount + 1, newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = generalFaker.Random.Number(newCount + 1, newCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = newCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, newCount + penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = newCount + penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = generalFaker.Random.Number(newCount + penaltyCount + 1, newCount + penaltyCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = newCount + penaltyCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(270, 310);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(50, 70);
+                lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                // ------------------------- [310,350] [100,150] QP -------------------------
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = generalFaker.Random.Number(100, 150);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(3, usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = generalFaker.Random.Number(100, 150);
+                usualCount = penaltyCount;
+                lengthValue = usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = generalFaker.Random.Number(100, 150);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(usualCount + 1, penaltyCount + usualCount - 1 );
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = generalFaker.Random.Number(100, 150);
+                usualCount = penaltyCount;
+                lengthValue = penaltyCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = generalFaker.Random.Number(100, 150);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(penaltyCount + usualCount + 1, newCount-1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = generalFaker.Random.Number(100, 150);
+                usualCount = penaltyCount;
+                lengthValue = newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = generalFaker.Random.Number(100, 150);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(newCount + 1, newCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = generalFaker.Random.Number(100, 150);
+                usualCount = penaltyCount;
+                lengthValue = newCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = generalFaker.Random.Number(100, 150);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, newCount + penaltyCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = generalFaker.Random.Number(100, 150);
+                usualCount = penaltyCount;
+                lengthValue = newCount + penaltyCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = generalFaker.Random.Number(100, 150);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                // ------------------------- [150,190] [50,70] [270,310] -------------------------
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(5, penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(penaltyCount + 1, newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(newCount + 1, penaltyCount + newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = penaltyCount + newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(penaltyCount + newCount + 1, usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(usualCount + 1, usualCount + penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = usualCount + penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(usualCount + penaltyCount + 1, usualCount + newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = usualCount + newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(usualCount + newCount + 1, newCount + penaltyCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = newCount + penaltyCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(150, 190);
+                penaltyCount = generalFaker.Random.Number(50, 70);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                // ------------------------- [310,350] QN [100,150] -------------------------
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(3, usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(usualCount + 1, penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(penaltyCount + 1, newCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = newCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, newCount + penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = newCount + penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(newCount + penaltyCount + 1, newCount + penaltyCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = newCount + penaltyCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(310, 350);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                // ------------------------- [50,70] QN QP -------------------------
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = newCount;
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(5, penaltyCount-1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = newCount;
+                usualCount = penaltyCount;
+                lengthValue = penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = newCount;
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(penaltyCount + 1, penaltyCount * 2 - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = newCount;
+                usualCount = penaltyCount;
+                lengthValue = penaltyCount * 2;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = newCount;
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(penaltyCount * 2 + 1, penaltyCount * 3 - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = newCount;
+                usualCount = penaltyCount;
+                lengthValue = penaltyCount * 3;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = newCount;
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(penaltyCount * 3 + 1, 1000);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                // ------------------------- [100,150] QN [310,350] -------------------------
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(310, 350);
+                lengthValue = generalFaker.Random.Number(3, newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(310, 350);
+                lengthValue = newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(310, 350);
+                lengthValue = generalFaker.Random.Number(newCount + 1, penaltyCount + newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(310, 350);
+                lengthValue = penaltyCount + newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(310, 350);
+                lengthValue = generalFaker.Random.Number(penaltyCount + newCount + 1, usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(310, 350);
+                lengthValue = usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(310, 350);
+                lengthValue = generalFaker.Random.Number(newCount + 1, newCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(310, 350);
+                lengthValue = newCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(310, 350);
+                lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, newCount + penaltyCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(310, 350);
+                lengthValue = newCount + penaltyCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = newCount;
+                usualCount = generalFaker.Random.Number(310, 350);
+                lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                // ------------------------- [100,150] [310,350] QP -------------------------
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = generalFaker.Random.Number(310, 350);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(3, newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = generalFaker.Random.Number(310, 350);
+                usualCount = penaltyCount;
+                lengthValue = newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = generalFaker.Random.Number(310, 350);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(newCount + 1, penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = generalFaker.Random.Number(310, 350);
+                usualCount = penaltyCount;
+                lengthValue = penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = generalFaker.Random.Number(310, 350);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(penaltyCount + 1, newCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = generalFaker.Random.Number(310, 350);
+                usualCount = penaltyCount;
+                lengthValue = newCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = generalFaker.Random.Number(310, 350);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, usualCount + penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = generalFaker.Random.Number(310, 350);
+                usualCount = penaltyCount;
+                lengthValue = usualCount + penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = generalFaker.Random.Number(310, 350);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(usualCount + penaltyCount + 1, newCount + penaltyCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = generalFaker.Random.Number(310, 350);
+                usualCount = penaltyCount;
+                lengthValue = newCount + penaltyCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(100, 150);
+                penaltyCount = generalFaker.Random.Number(310, 350);
+                usualCount = penaltyCount;
+                lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                // ------------------------- [50,70] [150,190] [270,310] -------------------------
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(5, newCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = newCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(newCount + 1, penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(penaltyCount + 1, newCount + penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = newCount + penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(newCount + penaltyCount + 1, usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(usualCount + 1, newCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = newCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, usualCount + penaltyCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = usualCount + penaltyCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(usualCount + penaltyCount + 1, newCount + penaltyCount + usualCount - 1);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = newCount + penaltyCount + usualCount;
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                newCount = generalFaker.Random.Number(50, 70);
+                penaltyCount = generalFaker.Random.Number(150, 190);
+                usualCount = generalFaker.Random.Number(270, 310);
+                lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
+
+                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                foreach (var testCase in testCases) { yield return testCase; }
             }
         }
 
@@ -801,29 +1743,27 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             List<TrainingLengthType> lengthTypes = new() { TrainingLengthType.QuestionsCount, TrainingLengthType.Time };
             foreach (var lengthType in lengthTypes)
             {
-                yield return GenerateQuestionData(questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, 0);
-                yield return GenerateQuestionData(questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, generalFaker.Random.Double(0.1, 0.4));
-                yield return GenerateQuestionData(questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, generalFaker.Random.Double(0.6, 0.9));
-                yield return GenerateQuestionData(questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, 1);
-                yield return GenerateQuestionData(questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.1, 0.4), 0);
-                yield return GenerateQuestionData(questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.1, 0.4), generalFaker.Random.Double(0.1, 0.4));
-                yield return GenerateQuestionData(questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.1, 0.25), generalFaker.Random.Double(0.6, 0.7));
-                yield return GenerateQuestionData(questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.6, 0.9), 0);
-                yield return GenerateQuestionData(questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.6, 0.7), generalFaker.Random.Double(0.1, 0.25));
-                yield return GenerateQuestionData(questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 1, 0);
+                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, 0);
+                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, generalFaker.Random.Double(0.1, 0.4));
+                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, generalFaker.Random.Double(0.6, 0.9));
+                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, 1);
+                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.1, 0.4), 0);
+                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.1, 0.4), generalFaker.Random.Double(0.1, 0.4));
+                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.1, 0.25), generalFaker.Random.Double(0.6, 0.7));
+                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.6, 0.9), 0);
+                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.6, 0.7), generalFaker.Random.Double(0.1, 0.25));
+                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 1, 0);
             }
         }
 
-        private static object[] GenerateQuestionData(Faker<Question> questionFaker, Guid userId, Guid trainingId, int newCount, int penaltyCount, int usualCount, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction)
+        private static object[] GenerateQuestionData(Faker generalFaker, Faker<Question> questionFaker, Guid userId, Guid trainingId, int newCount, int penaltyCount, int usualCount, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction)
         {
-            var newQuestions = questionFaker.GenerateBetween(newCount, newCount, "new");
-            var penaltyQuestions = questionFaker.GenerateBetween(penaltyCount, penaltyCount, "penalty");
-            var usualQuestions = questionFaker.GenerateBetween(usualCount, usualCount, "usual");
-
             var questions = new List<Question>();
-            questions.AddRange(newQuestions);
-            questions.AddRange(penaltyQuestions);
-            questions.AddRange(usualQuestions);
+            questions.AddRange(questionFaker.GenerateBetween(newCount, newCount, "new"));
+            questions.AddRange(questionFaker.GenerateBetween(penaltyCount, penaltyCount, "penalty"));
+            questions.AddRange(questionFaker.GenerateBetween(usualCount, usualCount, "usual"));
+
+            Shuffle(questions, generalFaker);
 
             return new object[]
             {
@@ -835,6 +1775,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 penaltyQuestionsFraction,
                 questions
             };
+        }
+
+        private static void Shuffle<T>(List<T> list, Faker generalFaker)
+        {
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = generalFaker.Random.Number(0, n);
+                (list[n], list[k]) = (list[k], list[n]);
+            }
         }
     }
 }
