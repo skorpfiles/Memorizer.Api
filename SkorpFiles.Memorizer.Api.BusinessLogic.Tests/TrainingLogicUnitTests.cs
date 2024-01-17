@@ -98,7 +98,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             actualResult.Should().BeEquivalentTo(actualResult.Distinct(new GuidComparer()));
         }
 
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectFullLengthDelta(Guid userId, Guid trainingId, TrainingOptions options, List<Models.Question> allQuestions)
+        [TestMethod]
+        [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData), typeof(TrainingLogicTestDataSource))]
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectFullLengthDelta(Guid userId, Guid trainingId, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
@@ -107,13 +109,13 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
-            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, options).ConfigureAwait(false);
+            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
 
             //Assert
 
             int fullLengthOfAllQuestions;
             int fullLengthOfActualResult;
-            switch (options.LengthType)
+            switch (lengthType)
             {
                 case Models.Enums.TrainingLengthType.QuestionsCount:
                     fullLengthOfAllQuestions = allQuestions.Count;
@@ -127,10 +129,10 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                     throw new FluentAssertions.Execution.AssertionFailedException("There is no such length type.");
             }
 
-            if (fullLengthOfAllQuestions > options.LengthValue)
+            if (fullLengthOfAllQuestions > lengthValue)
             {
-                int fractionValue = Convert.ToInt32(Math.Round(options.LengthValue * Constants.AllowableErrorFraction));
-                fullLengthOfActualResult.Should().BeInRange(options.LengthValue - fractionValue, options.LengthValue + fractionValue);
+                int fractionValue = Convert.ToInt32(Math.Round(lengthValue * Constants.AllowableErrorFraction));
+                fullLengthOfActualResult.Should().BeInRange(lengthValue - fractionValue, lengthValue + fractionValue);
             }
             else
             {
@@ -143,7 +145,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         //Secondly, it chooses questions with PENALTY POINTS until the percentage are reached OR the questions run out.
         //Finally, it fills the whole remaining room with usual questions while it's possible (including penalty questions).
 
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectNewDeltas(Guid userId, Guid trainingId, TrainingOptions options, List<Models.Question> allQuestions)
+        [TestMethod]
+        [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData), typeof(TrainingLogicTestDataSource))]
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectNewDeltas(Guid userId, Guid trainingId, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
@@ -152,14 +156,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
-            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId,trainingId,options).ConfigureAwait(false);
+            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId,trainingId, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
 
             //Assert
 
             int lengthOfAllNewQuestions;
             int lengthOfNewQuestionsInActualResult;
 
-            switch(options.LengthType)
+            switch(lengthType)
             {
                 case Models.Enums.TrainingLengthType.QuestionsCount:
                     lengthOfAllNewQuestions = allQuestions.Where(q=>q.MyStatus!.IsNew).Count();
@@ -173,7 +177,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                     throw new FluentAssertions.Execution.AssertionFailedException("There is no such length type.");
             }
 
-            double expectedLengthOfNewQuestions = options.LengthValue * options.NewQuestionsFraction;
+            double expectedLengthOfNewQuestions = lengthValue * newQuestionsFraction;
             //Do we have probability to fill all the percent by NEW questions?
             bool canCompleteByNew = lengthOfAllNewQuestions >= expectedLengthOfNewQuestions - expectedLengthOfNewQuestions * Constants.AllowableErrorFraction;
 
@@ -189,8 +193,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                 actualResult.Should().ContainEquivalentOf(expectedNewQuestions);
             }
         }
-
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectPenaltyDeltas(Guid userId, Guid trainingId, TrainingOptions options, List<Models.Question> allQuestions)
+        [TestMethod]
+        [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData), typeof(TrainingLogicTestDataSource))]
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectPenaltyDeltas(Guid userId, Guid trainingId, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
@@ -199,14 +204,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
-            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, options).ConfigureAwait(false);
+            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
 
             //Assert
 
             int lengthOfAllPenaltyQuestions;
             int lengthOfPenaltyQuestionsInActualResult;
 
-            switch (options.LengthType)
+            switch (lengthType)
             {
                 case Models.Enums.TrainingLengthType.QuestionsCount:
                     lengthOfAllPenaltyQuestions = allQuestions.Where(q => q.MyStatus!.PenaltyPoints > 0).Count();
@@ -220,7 +225,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                     throw new FluentAssertions.Execution.AssertionFailedException("There is no such length type.");
             }
 
-            double expectedLengthOfPenaltyQuestions = options.LengthValue * options.PrioritizedPenaltyQuestionsFraction;
+            double expectedLengthOfPenaltyQuestions = lengthValue * penaltyQuestionsFraction;
             //Do we have probability to fill all the percent by PENALTY questions?
             bool canCompleteByPenalty = lengthOfAllPenaltyQuestions >= expectedLengthOfPenaltyQuestions - expectedLengthOfPenaltyQuestions * Constants.AllowableErrorFraction;
 
