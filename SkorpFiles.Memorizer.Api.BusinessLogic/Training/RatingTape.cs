@@ -71,7 +71,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
         private RatingComponent PickRatingComponent(Random random)
         {
-            int coordinateForPick = random.Next(Length - 1);
+            int coordinateForPick = random.Next(1, Length - 1);
             int coordinateOfFoundElement = Coordinates.GetViewBetween(0, coordinateForPick).Max();
             return CoordinatesAndComponents[coordinateOfFoundElement];
         }
@@ -91,9 +91,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             var coordinate = ratingComponent.Coordinate;
             var length = ratingComponent.Length;
             CoordinatesAndComponents.Remove(coordinate);
-            MoveCoordinatesBack(coordinate, length);
-            RatingsAndComponents.Remove(coordinate);
             Coordinates.Remove(coordinate);
+            RatingsAndComponents.Remove(coordinate);
+            MoveCoordinatesBack(coordinate, length);
         }
 
         private void MoveCoordinatesBack(int coordinateOfDeletedElement, int lengthOfDeletedElement)

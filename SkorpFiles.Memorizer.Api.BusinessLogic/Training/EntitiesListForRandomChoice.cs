@@ -13,7 +13,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
         private readonly List<Wrapper<Guid>> _existingIds = new();
         private readonly Dictionary<Guid, T> _existingEntities = new();
 
-        public bool Consumed => !_existingEntities.Any();
+        public bool Consumed => !_existingIds.Any();
 
         public void Add(T entity)
         {
