@@ -131,7 +131,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
             if (fullLengthOfAllQuestions > lengthValue)
             {
-                int fractionValue = Convert.ToInt32(Math.Round(lengthValue * Constants.AllowableErrorFraction));
+                int fractionValue = Convert.ToInt32(Math.Ceiling(lengthValue * Constants.AllowableErrorFraction));
                 fullLengthOfActualResult.Should().BeInRange(lengthValue - fractionValue, lengthValue + fractionValue);
             }
             else

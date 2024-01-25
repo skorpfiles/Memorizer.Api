@@ -71,7 +71,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
         private RatingComponent PickRatingComponent(Random random)
         {
-            int coordinateForPick = random.Next(1, Length - 1);
+            int coordinateForPick = random.Next(1, Length);
             int coordinateOfFoundElement = Coordinates.GetViewBetween(0, coordinateForPick).Max();
             return CoordinatesAndComponents[coordinateOfFoundElement];
         }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Azure.Core;
+using Microsoft.Extensions.Options;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
@@ -71,7 +72,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             if (expectedLengthForBasicQuestionList > 0)
             {
                 RatingTape ratingTape = InitializeRatingTape(BasicQuestionsList, result);
-                result.AddRange(GetSelectedQuestionsFromGeneralList(ratingTape, options.LengthType, expectedLengthForBasicQuestionList, _random, out _).Values);
+                result.AddRange(GetSelectedQuestionsFromGeneralList(ratingTape, options.LengthType, expectedLengthForBasicQuestionList, _random, out int resultBasicLength).Values);
+
+                //if there is lack of questions, add from new ones
+                int expectedLengthForAdditionalNewQuestionList = expectedLengthForBasicQuestionList - resultBasicLength;
+                if (expectedLengthForAdditionalNewQuestionList>0)
+                {
+                    result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForAdditionalNewQuestionList, _random, out _).Values);
+                }
             }
 
             return result;
@@ -103,7 +111,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                             case Models.Enums.TrainingLengthType.Time:
                                 int lengthValue = selectedQuestion.EstimatedTrainingTimeSeconds;
 
-                                if (Math.Abs(consumedValue + lengthValue - expectedLength) < expectedLength * (1 - Constants.AllowableErrorFraction))
+                                if (Math.Abs(consumedValue + lengthValue) < expectedLength + expectedLength * (1 - Constants.AllowableErrorFraction))
                                 {
                                     selectedQuestions.Add(selectedQuestion.Id.Value, selectedQuestion);
                                     consumedValue += lengthValue;
