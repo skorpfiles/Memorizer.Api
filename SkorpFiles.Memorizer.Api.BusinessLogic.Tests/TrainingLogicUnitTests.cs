@@ -190,7 +190,15 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             else
             {
                 var expectedNewQuestions = allQuestions.Where(q => q.MyStatus!.IsNew).ToList();
-                actualResult.Should().ContainEquivalentOf(expectedNewQuestions);
+                var actualNewQuestions = actualResult.Where(q=>q.MyStatus!.IsNew).ToList();
+                if (expectedNewQuestions.Any())
+                {
+                    actualNewQuestions.Should().ContainEquivalentOf(expectedNewQuestions);
+                }
+                else
+                {
+                    actualNewQuestions.Should().BeEmpty();
+                }
             }
         }
         [TestMethod]
@@ -238,7 +246,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             else
             {
                 var expectedPenaltyQuestions = allQuestions.Where(q => q.MyStatus!.PenaltyPoints>0).ToList();
-                actualResult.Should().ContainEquivalentOf(expectedPenaltyQuestions);
+                var actualPenaltyQuestions = actualResult.Where(q => q.MyStatus!.PenaltyPoints > 0).ToList();
+
+                if (expectedPenaltyQuestions.Any())
+                {
+                    actualPenaltyQuestions.Should().ContainEquivalentOf(expectedPenaltyQuestions);
+                }
+                else
+                {
+                    actualPenaltyQuestions.Should().BeEmpty();
+                }
             }
         }
     }

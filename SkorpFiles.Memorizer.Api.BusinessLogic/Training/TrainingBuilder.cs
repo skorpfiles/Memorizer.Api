@@ -59,25 +59,29 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
             double expectedLengthForNewQuestionList = options.LengthValue * options.NewQuestionsFraction;
             double expectedLengthForPrioritizedPenaltyQuestionsList = options.LengthValue * options.PrioritizedPenaltyQuestionsFraction;
-            double expectedLengthForBasicQuestionList = options.LengthValue - expectedLengthForNewQuestionList - expectedLengthForPrioritizedPenaltyQuestionsList;
+            //double expectedLengthForBasicQuestionList = options.LengthValue - expectedLengthForNewQuestionList - expectedLengthForPrioritizedPenaltyQuestionsList;
 
             //create new questions list
-            result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForNewQuestionList, _random).Values);
+            result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForNewQuestionList, _random, out int resultNewLength).Values);
             //create penalty questions list
-            result.AddRange(GetSelectedQuestionsFromGeneralList(PrioritizedPenaltyQuestionsList, options.LengthType, expectedLengthForPrioritizedPenaltyQuestionsList, _random).Values);
+            result.AddRange(GetSelectedQuestionsFromGeneralList(PrioritizedPenaltyQuestionsList, options.LengthType, expectedLengthForPrioritizedPenaltyQuestionsList, _random, out int resultPenaltyLength).Values);
 
             //basic list
-            RatingTape ratingTape = InitializeRatingTape(BasicQuestionsList, result);
-            result.AddRange(GetSelectedQuestionsFromGeneralList(ratingTape, options.LengthType, expectedLengthForBasicQuestionList, _random).Values);
+            int expectedLengthForBasicQuestionList = options.LengthValue - resultNewLength - resultPenaltyLength;
+            if (expectedLengthForBasicQuestionList > 0)
+            {
+                RatingTape ratingTape = InitializeRatingTape(BasicQuestionsList, result);
+                result.AddRange(GetSelectedQuestionsFromGeneralList(ratingTape, options.LengthType, expectedLengthForBasicQuestionList, _random, out _).Values);
+            }
 
             return result;
         }
 
-        private static Dictionary<Guid, Question> GetSelectedQuestionsFromGeneralList(IPickable<Question> sourceList, Models.Enums.TrainingLengthType lengthType, double expectedLength, Random random)
+        private static Dictionary<Guid, Question> GetSelectedQuestionsFromGeneralList(IPickable<Question> sourceList, Models.Enums.TrainingLengthType lengthType, double expectedLength, Random random, out int resultLength)
         {
             Dictionary<Guid, Question> selectedQuestions = new();
 
-            double consumedValue = 0;
+            int consumedValue = 0;
             int tryingAttemptInARowWithoutResult = 0;
             const int MaxCountOfTryingAttemptInARowWithoutResult = 100;
 
@@ -99,7 +103,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                             case Models.Enums.TrainingLengthType.Time:
                                 int lengthValue = selectedQuestion.EstimatedTrainingTimeSeconds;
 
-                                if (Math.Abs(consumedValue + lengthValue - expectedLength) > expectedLength * (1 - Constants.AllowableErrorFraction))
+                                if (Math.Abs(consumedValue + lengthValue - expectedLength) < expectedLength * (1 - Constants.AllowableErrorFraction))
                                 {
                                     selectedQuestions.Add(selectedQuestion.Id.Value, selectedQuestion);
                                     consumedValue += lengthValue;
@@ -111,6 +115,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                                 }
                                 break;
                             case Models.Enums.TrainingLengthType.QuestionsCount:
+                                selectedQuestions.Add(selectedQuestion.Id.Value, selectedQuestion);
                                 consumedValue++;
                                 break;
                             default:
@@ -124,6 +129,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                 }
                 while (!sourceList.Consumed && (consumedValue < expectedLength || tryingAttemptInARowWithoutResult >= MaxCountOfTryingAttemptInARowWithoutResult));
             }
+            resultLength = consumedValue;
             return selectedQuestions;
         }
 
