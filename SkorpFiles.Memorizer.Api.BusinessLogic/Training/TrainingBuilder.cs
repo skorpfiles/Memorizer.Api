@@ -111,7 +111,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                             case Models.Enums.TrainingLengthType.Time:
                                 int lengthValue = selectedQuestion.EstimatedTrainingTimeSeconds;
 
-                                if (Math.Abs(consumedValue + lengthValue) < expectedLength + expectedLength * (1 - Constants.AllowableErrorFraction))
+                                if (Math.Abs(consumedValue + lengthValue) <= Math.Round(expectedLength + expectedLength * Constants.AllowableErrorFraction))
                                 {
                                     selectedQuestions.Add(selectedQuestion.Id.Value, selectedQuestion);
                                     consumedValue += lengthValue;
@@ -135,7 +135,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         throw new InvalidOperationException("Question with the same ID found the second time.");
                     }
                 }
-                while (!sourceList.Consumed && (consumedValue < expectedLength || tryingAttemptInARowWithoutResult >= MaxCountOfTryingAttemptInARowWithoutResult));
+                while (!sourceList.Consumed && (consumedValue < Math.Round(expectedLength) || tryingAttemptInARowWithoutResult >= MaxCountOfTryingAttemptInARowWithoutResult));
             }
             resultLength = consumedValue;
             return selectedQuestions;

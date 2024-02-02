@@ -160,29 +160,44 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
             //Assert
 
-            int lengthOfAllNewQuestions;
+            int lengthOfAllNewQuestions, lengthOfAllQuestionsExceptNew;
             int lengthOfNewQuestionsInActualResult;
+            int expectedLengthValue;
 
-            switch(lengthType)
+            switch (lengthType)
             {
                 case Models.Enums.TrainingLengthType.QuestionsCount:
                     lengthOfAllNewQuestions = allQuestions.Where(q=>q.MyStatus!.IsNew).Count();
+                    lengthOfAllQuestionsExceptNew = allQuestions.Count() - lengthOfAllNewQuestions;
                     lengthOfNewQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.IsNew).Count();
+                    expectedLengthValue = lengthValue < allQuestions.Count ? lengthValue : allQuestions.Count;
                     break;
                 case Models.Enums.TrainingLengthType.Time:
                     lengthOfAllNewQuestions = allQuestions.Where(q => q.MyStatus!.IsNew).Sum(q => q.EstimatedTrainingTimeSeconds);
+                    lengthOfAllQuestionsExceptNew = allQuestions.Sum(q=>q.EstimatedTrainingTimeSeconds) - lengthOfAllNewQuestions;
                     lengthOfNewQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.IsNew).Sum(q => q.EstimatedTrainingTimeSeconds);
+                    int allQuestionsTimeSum = allQuestions.Sum(q => q.EstimatedTrainingTimeSeconds);
+                    expectedLengthValue = lengthValue < allQuestionsTimeSum ? lengthValue : allQuestionsTimeSum;
                     break;
                 default:
                     throw new FluentAssertions.Execution.AssertionFailedException("There is no such length type.");
             }
 
-            double expectedLengthOfNewQuestions = lengthValue * newQuestionsFraction;
+            double expectedLengthOfNewQuestions = expectedLengthValue * newQuestionsFraction;
             //Do we have probability to fill all the percent by NEW questions?
             bool canCompleteByNew = lengthOfAllNewQuestions >= expectedLengthOfNewQuestions - expectedLengthOfNewQuestions * Constants.AllowableErrorFraction;
+            //Do we need to fill the list by new questions due to lack of other ones?
+            bool needCompleteByNew = lengthOfAllQuestionsExceptNew + expectedLengthOfNewQuestions < expectedLengthValue;
 
+            //If we need to fill the list by new questions, check whether we fill it in correct volume.
+            if (needCompleteByNew)
+            {
+                double lengthOfNewQuestionsDueToNecessity = expectedLengthValue - lengthOfAllQuestionsExceptNew;
+                lengthOfNewQuestionsInActualResult.Should().BeInRange(Convert.ToInt32(Math.Round(lengthOfNewQuestionsDueToNecessity - lengthOfNewQuestionsDueToNecessity * Constants.AllowableErrorFraction)),
+                    Convert.ToInt32(Math.Round(lengthOfNewQuestionsDueToNecessity + lengthOfNewQuestionsDueToNecessity * Constants.AllowableErrorFraction)));
+            }
             //If we can't fill the percent, check whether all the new questions are present in the actual list. If we can - check whether the percent is followed.
-            if (canCompleteByNew)
+            else if (canCompleteByNew)
             {
                 lengthOfNewQuestionsInActualResult.Should().BeInRange(Convert.ToInt32(Math.Round(expectedLengthOfNewQuestions - expectedLengthOfNewQuestions * Constants.AllowableErrorFraction)),
                     Convert.ToInt32(Math.Round(expectedLengthOfNewQuestions + expectedLengthOfNewQuestions * Constants.AllowableErrorFraction)));
@@ -193,7 +208,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                 var actualNewQuestions = actualResult.Where(q=>q.MyStatus!.IsNew).ToList();
                 if (expectedNewQuestions.Any())
                 {
-                    actualNewQuestions.Should().ContainEquivalentOf(expectedNewQuestions);
+                    actualNewQuestions.Should().BeEquivalentTo(expectedNewQuestions);
                 }
                 else
                 {
