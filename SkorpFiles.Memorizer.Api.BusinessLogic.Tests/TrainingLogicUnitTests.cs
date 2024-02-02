@@ -233,22 +233,26 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
             int lengthOfAllPenaltyQuestions;
             int lengthOfPenaltyQuestionsInActualResult;
+            int expectedLengthValue;
 
             switch (lengthType)
             {
                 case Models.Enums.TrainingLengthType.QuestionsCount:
                     lengthOfAllPenaltyQuestions = allQuestions.Where(q => q.MyStatus!.PenaltyPoints > 0).Count();
                     lengthOfPenaltyQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.PenaltyPoints > 0).Count();
+                    expectedLengthValue = lengthValue < allQuestions.Count ? lengthValue : allQuestions.Count;
                     break;
                 case Models.Enums.TrainingLengthType.Time:
                     lengthOfAllPenaltyQuestions = allQuestions.Where(q => q.MyStatus!.PenaltyPoints > 0).Sum(q => q.EstimatedTrainingTimeSeconds);
                     lengthOfPenaltyQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.PenaltyPoints > 0).Sum(q => q.EstimatedTrainingTimeSeconds);
+                    int allQuestionsTimeSum = allQuestions.Sum(q => q.EstimatedTrainingTimeSeconds);
+                    expectedLengthValue = lengthValue < allQuestionsTimeSum ? lengthValue : allQuestionsTimeSum;
                     break;
                 default:
                     throw new FluentAssertions.Execution.AssertionFailedException("There is no such length type.");
             }
 
-            double expectedLengthOfPenaltyQuestions = lengthValue * penaltyQuestionsFraction;
+            double expectedLengthOfPenaltyQuestions = expectedLengthValue * penaltyQuestionsFraction;
             //Do we have probability to fill all the percent by PENALTY questions?
             bool canCompleteByPenalty = lengthOfAllPenaltyQuestions >= expectedLengthOfPenaltyQuestions - expectedLengthOfPenaltyQuestions * Constants.AllowableErrorFraction;
 
@@ -265,7 +269,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
                 if (expectedPenaltyQuestions.Any())
                 {
-                    actualPenaltyQuestions.Should().ContainEquivalentOf(expectedPenaltyQuestions);
+                    actualPenaltyQuestions.Should().BeEquivalentTo(expectedPenaltyQuestions);
                 }
                 else
                 {
