@@ -60,7 +60,6 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
             double expectedLengthForNewQuestionList = options.LengthValue * options.NewQuestionsFraction;
             double expectedLengthForPrioritizedPenaltyQuestionsList = options.LengthValue * options.PrioritizedPenaltyQuestionsFraction;
-            //double expectedLengthForBasicQuestionList = options.LengthValue - expectedLengthForNewQuestionList - expectedLengthForPrioritizedPenaltyQuestionsList;
 
             //create new questions list
             result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForNewQuestionList, _random, out int resultNewLength).Values);
@@ -76,7 +75,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
                 //if there is lack of questions, add from new ones
                 int expectedLengthForAdditionalNewQuestionList = expectedLengthForBasicQuestionList - resultBasicLength;
-                if (expectedLengthForAdditionalNewQuestionList>0)
+                if (expectedLengthForAdditionalNewQuestionList > expectedLengthForAdditionalNewQuestionList * Constants.AllowableErrorFraction)
                 {
                     result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForAdditionalNewQuestionList, _random, out _).Values);
                 }
