@@ -277,6 +277,24 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                 }
             }
         }
+
+        [TestMethod]
+        [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectDataThatIsImpossibleToMatchLength_CorrectSelection),typeof(TrainingLogicTestDataSource))]
+        public async Task SelectQuestionsForTrainingAsync_CorrectDataThatIsImpossibleToMatchLength_CorrectSelection(Guid userId, Guid trainingId,
+            int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions, List<Guid> expectedQuestionIds)
+        {
+            //Arrange
+            var trainingRepositoryMock = new Mock<ITrainingRepository>();
+            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, trainingId)).ReturnsAsync(allQuestions);
+
+            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
+
+            //Act
+            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, new TrainingOptions { LengthType = TrainingLengthType.Time, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
+
+            //Assert
+            actualResult.Select(q => q.Id).ToList().Should().BeEquivalentTo(expectedQuestionIds);
+        }
     }
 
     class GuidComparer : IEqualityComparer<Models.Question>

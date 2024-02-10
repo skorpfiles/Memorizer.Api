@@ -7,6 +7,7 @@ using SkorpFiles.Memorizer.Api.Models.RequestModels;
 using SkorpFiles.Memorizer.Api.Models.Utils;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -443,55 +444,10 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             get
             {
                 var generalFaker = new Faker();
-
                 var userId = generalFaker.Random.Guid();
                 var trainingId = generalFaker.Random.Guid();
-
-                var userQuestionStatusFaker = new Faker<UserQuestionStatus>()
-                    .RuleSet("new", rs =>
-                    {
-                        rs.RuleFor(uqs => uqs.PenaltyPoints, 0);
-                        rs.RuleFor(uqs => uqs.IsNew, true);
-                        rs.RuleFor(uqs => uqs.Rating, Constants.InitialQuestionRating);
-                    })
-                    .RuleSet("penalty", rs =>
-                    {
-                        rs.RuleFor(uqs => uqs.PenaltyPoints, f => generalFaker.Random.Number(min: 1));
-                        rs.RuleFor(uqs => uqs.IsNew, false);
-                        rs.RuleFor(uqs => uqs.Rating, Constants.InitialQuestionRating);
-                    })
-                    .RuleSet("usual", rs =>
-                    {
-                        rs.RuleFor(uqs => uqs.PenaltyPoints, 0);
-                        rs.RuleFor(uqs => uqs.IsNew, false);
-                        rs.RuleFor(uqs => uqs.Rating, f => f.Random.Number(Constants.MinQuestionRating, Constants.MaxQuestionRating));
-                    });
-
-                var questionFaker = new Faker<Question>()
-                    .RuleSet("default",rs=>
-                    {
-                        rs.RuleFor(q => q.Id, f => f.Random.Guid());
-                        rs.RuleFor(q => q.Type, f => f.PickRandom<QuestionType>());
-                        rs.RuleFor(q => q.Text, f => f.Lorem.Text().ClampLength(1, Restrictions.QuestionTextMaxLength));
-                        rs.RuleFor(q => q.IsEnabled, true);
-                        rs.RuleFor(q => q.EstimatedTrainingTimeSeconds, f => f.Random.Number(Restrictions.QuestionEstimatedTrainingTimeSecondsMinValue, Restrictions.QuestionEstimatedTrainingTimeSecondsMaxValue));
-                        rs.RuleFor(q => q.QuestionnaireId, f => f.Random.Guid());
-                        rs.RuleFor(q => q.CodeInQuestionnaire, f => f.IndexFaker);
-                        rs.RuleFor(q => q.CreationTimeUtc, DateTime.UtcNow);
-                        rs.RuleFor(q => q.UntypedAnswer, f => f.Lorem.Text().ClampLength(1, Restrictions.QuestionUntypedAnswerMaxLength));
-                    })
-                    .RuleSet("new", rs =>
-                    {
-                        rs.RuleFor(q => q.MyStatus, f => userQuestionStatusFaker.Generate("new"));
-                    })
-                    .RuleSet("penalty", rs =>
-                    {
-                        rs.RuleFor(q => q.MyStatus, f => userQuestionStatusFaker.Generate("penalty"));
-                    })
-                    .RuleSet("usual", rs =>
-                    {
-                        rs.RuleFor(q => q.MyStatus, f=> userQuestionStatusFaker.Generate("usual"));
-                    });
+                var userQuestionStatusFaker = GetUserQuestionStatusFaker(generalFaker);
+                var questionFaker = GetQuestionFaker(userQuestionStatusFaker);
 
                 // test cases
 
@@ -505,7 +461,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 var usualCount = generalFaker.Random.Number(10, 200);
                 var lengthValue = generalFaker.Random.Number(5, usualCount - 1);
 
-                var testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                var testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -513,7 +469,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 200);
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -521,7 +477,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 200);
                 lengthValue = generalFaker.Random.Number(usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // -----------------------0[10, 200] 0------------------------ -
@@ -531,7 +487,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = generalFaker.Random.Number(5, penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -539,7 +495,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -547,7 +503,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = generalFaker.Random.Number(penaltyCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ----------------------- 0 [60,100] [10,50] -------------------------
@@ -556,7 +512,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = generalFaker.Random.Number(5, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -564,7 +520,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -572,7 +528,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = generalFaker.Random.Number(usualCount + 1, penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -580,7 +536,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -588,7 +544,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = generalFaker.Random.Number(penaltyCount + 1, penaltyCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -596,7 +552,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = penaltyCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -604,7 +560,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = generalFaker.Random.Number(penaltyCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ----------------------- 0 [10,200] QP -------------------------
@@ -614,7 +570,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(5, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -622,7 +578,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -630,7 +586,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -638,7 +594,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(penaltyCount + 1, penaltyCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -646,7 +602,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = penaltyCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -654,7 +610,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(penaltyCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ----------------------- 0 [10,50] [60,100] -------------------------
@@ -664,7 +620,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = generalFaker.Random.Number(5, penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -672,7 +628,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -680,7 +636,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = generalFaker.Random.Number(penaltyCount + 1, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -688,7 +644,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -696,7 +652,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = generalFaker.Random.Number(usualCount + 1, usualCount + penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -704,7 +660,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = penaltyCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = 0;
@@ -712,7 +668,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = generalFaker.Random.Number(penaltyCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ----------------------- [5,200] 0 0 -------------------------
@@ -722,7 +678,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = generalFaker.Random.Number(5, newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(10, 200);
@@ -730,7 +686,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(10, 200);
@@ -738,7 +694,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = generalFaker.Random.Number(newCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ----------------------- [60,100] 0 [10,50] -------------------------
@@ -748,7 +704,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = generalFaker.Random.Number(5, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -756,7 +712,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -764,7 +720,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = generalFaker.Random.Number(usualCount + 1, newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -772,7 +728,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -780,7 +736,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = generalFaker.Random.Number(newCount + 1, newCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -788,7 +744,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = newCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -796,7 +752,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(10, 50);
                 lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ----------------------- [20,200] 0 QN -------------------------
@@ -806,7 +762,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = newCount;
                 lengthValue = generalFaker.Random.Number(5, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(20, 200);
@@ -814,7 +770,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = newCount;
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(20, 200);
@@ -822,7 +778,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = newCount;
                 lengthValue = generalFaker.Random.Number(usualCount + 1, usualCount + newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(20, 200);
@@ -830,7 +786,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = newCount;
                 lengthValue = usualCount + newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(20, 200);
@@ -838,7 +794,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = newCount;
                 lengthValue = generalFaker.Random.Number(usualCount + newCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ------------------------- [10,50] 0 [60,100] -------------------------
@@ -848,7 +804,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = generalFaker.Random.Number(5, newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(10, 50);
@@ -856,7 +812,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(10, 50);
@@ -864,7 +820,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = generalFaker.Random.Number(newCount + 1, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(10, 50);
@@ -872,7 +828,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(10, 50);
@@ -880,7 +836,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = generalFaker.Random.Number(usualCount + 1, usualCount + newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(10, 50);
@@ -888,7 +844,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = newCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(10, 50);
@@ -896,7 +852,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(60, 100);
                 lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ------------------------- [60,100] [10,50] 0 -------------------------
@@ -906,7 +862,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = generalFaker.Random.Number(5, penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -914,7 +870,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -922,7 +878,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = generalFaker.Random.Number(penaltyCount + 1, newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -930,7 +886,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -938,7 +894,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = generalFaker.Random.Number(newCount + 1, newCount + penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -946,7 +902,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = newCount + penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(60, 100);
@@ -954,7 +910,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = 0;
                 lengthValue = generalFaker.Random.Number(newCount + penaltyCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ------------------------- [270,310] [150,190] [50,70] -------------------------
@@ -964,7 +920,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = generalFaker.Random.Number(5, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -972,7 +928,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -980,7 +936,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = generalFaker.Random.Number(usualCount + 1, penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -988,7 +944,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -996,7 +952,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = generalFaker.Random.Number(penaltyCount + 1, usualCount + penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -1004,7 +960,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = usualCount + penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -1012,7 +968,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = generalFaker.Random.Number(usualCount + penaltyCount + 1, newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -1020,7 +976,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -1028,7 +984,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = generalFaker.Random.Number(newCount + 1, newCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -1036,7 +992,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = newCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -1044,7 +1000,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, newCount + penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -1052,7 +1008,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = newCount + penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -1060,7 +1016,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = generalFaker.Random.Number(newCount + penaltyCount + 1, newCount + penaltyCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -1068,7 +1024,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = newCount + penaltyCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(270, 310);
@@ -1076,7 +1032,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(50, 70);
                 lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ------------------------- [310,350] [100,150] QP -------------------------
@@ -1086,7 +1042,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(3, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1094,7 +1050,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1102,7 +1058,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(usualCount + 1, penaltyCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1110,7 +1066,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = penaltyCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1118,7 +1074,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(penaltyCount + usualCount + 1, newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1126,7 +1082,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1134,7 +1090,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(newCount + 1, newCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1142,7 +1098,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = newCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1150,7 +1106,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, newCount + penaltyCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1158,7 +1114,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = newCount + penaltyCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1166,7 +1122,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ------------------------- [150,190] [50,70] [270,310] -------------------------
@@ -1176,7 +1132,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(5, penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1184,7 +1140,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1192,7 +1148,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(penaltyCount + 1, newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1200,7 +1156,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1208,7 +1164,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(newCount + 1, penaltyCount + newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1216,7 +1172,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = penaltyCount + newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1224,7 +1180,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(penaltyCount + newCount + 1, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1232,7 +1188,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1240,7 +1196,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(usualCount + 1, usualCount + penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1248,7 +1204,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = usualCount + penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1256,7 +1212,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(usualCount + penaltyCount + 1, usualCount + newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1264,7 +1220,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = usualCount + newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1272,7 +1228,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(usualCount + newCount + 1, newCount + penaltyCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1280,7 +1236,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = newCount + penaltyCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(150, 190);
@@ -1288,7 +1244,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ------------------------- [310,350] QN [100,150] -------------------------
@@ -1298,7 +1254,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(3, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1306,7 +1262,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1314,7 +1270,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(usualCount + 1, penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1322,7 +1278,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1330,7 +1286,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(penaltyCount + 1, newCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1338,7 +1294,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = newCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1346,7 +1302,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, newCount + penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1354,7 +1310,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = newCount + penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1362,7 +1318,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(newCount + penaltyCount + 1, newCount + penaltyCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1370,7 +1326,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = newCount + penaltyCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(310, 350);
@@ -1378,7 +1334,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ------------------------- [50,70] QN QP -------------------------
@@ -1388,7 +1344,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(5, penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1396,7 +1352,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1404,7 +1360,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(penaltyCount + 1, penaltyCount * 2 - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1412,7 +1368,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = penaltyCount * 2;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1420,7 +1376,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(penaltyCount * 2 + 1, penaltyCount * 3 - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1428,7 +1384,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = penaltyCount * 3;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1436,7 +1392,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(penaltyCount * 3 + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ------------------------- [100,150] QN [310,350] -------------------------
@@ -1446,7 +1402,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(310, 350);
                 lengthValue = generalFaker.Random.Number(3, newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1454,7 +1410,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(310, 350);
                 lengthValue = newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1462,7 +1418,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(310, 350);
                 lengthValue = generalFaker.Random.Number(newCount + 1, penaltyCount + newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1470,7 +1426,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(310, 350);
                 lengthValue = penaltyCount + newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1478,7 +1434,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(310, 350);
                 lengthValue = generalFaker.Random.Number(penaltyCount + newCount + 1, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1486,7 +1442,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(310, 350);
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1494,7 +1450,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(310, 350);
                 lengthValue = generalFaker.Random.Number(newCount + 1, newCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1502,7 +1458,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(310, 350);
                 lengthValue = newCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1510,7 +1466,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(310, 350);
                 lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, newCount + penaltyCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1518,7 +1474,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(310, 350);
                 lengthValue = newCount + penaltyCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1526,7 +1482,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(310, 350);
                 lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ------------------------- [100,150] [310,350] QP -------------------------
@@ -1536,7 +1492,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(3, newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1544,7 +1500,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1552,7 +1508,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(newCount + 1, penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1560,7 +1516,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1568,7 +1524,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(penaltyCount + 1, newCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1576,7 +1532,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = newCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1584,7 +1540,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, usualCount + penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1592,7 +1548,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = usualCount + penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1600,7 +1556,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(usualCount + penaltyCount + 1, newCount + penaltyCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1608,7 +1564,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = newCount + penaltyCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(100, 150);
@@ -1616,7 +1572,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = penaltyCount;
                 lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 // ------------------------- [50,70] [150,190] [270,310] -------------------------
@@ -1626,7 +1582,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(5, newCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1634,7 +1590,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = newCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1642,7 +1598,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(newCount + 1, penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1650,7 +1606,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1658,7 +1614,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(penaltyCount + 1, newCount + penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1666,7 +1622,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = newCount + penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1674,7 +1630,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(newCount + penaltyCount + 1, usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1682,7 +1638,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1690,7 +1646,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(usualCount + 1, newCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1698,7 +1654,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = newCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1706,7 +1662,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(newCount + usualCount + 1, usualCount + penaltyCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1714,7 +1670,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = usualCount + penaltyCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1722,7 +1678,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(usualCount + penaltyCount + 1, newCount + penaltyCount + usualCount - 1);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1730,7 +1686,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = newCount + penaltyCount + usualCount;
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 newCount = generalFaker.Random.Number(50, 70);
@@ -1738,26 +1694,636 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 usualCount = generalFaker.Random.Number(270, 310);
                 lengthValue = generalFaker.Random.Number(newCount + penaltyCount + usualCount + 1, 1000);
 
-                testCases = TestWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
+                testCases = TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthValue);
                 foreach (var testCase in testCases) { yield return testCase; }
             }
         }
 
-        private static IEnumerable<object[]> TestWithAllStandardFractionsAndLengthTypes(Faker generalFaker, Faker<Question> questionFaker, Guid userId, Guid trainingId, int newCount, int penaltyCount, int usualCount, int lengthValue)
+        public static IEnumerable<object[]> SelectQuestionsForTrainingAsync_CorrectDataThatIsImpossibleToMatchLength_CorrectSelection
+        {
+            get
+            {
+                var generalFaker = new Faker();
+                var userId = generalFaker.Random.Guid();
+                var trainingId = generalFaker.Random.Guid();
+                var userQuestionStatusFaker = GetUserQuestionStatusFaker(generalFaker);
+                var questionFaker = GetQuestionFaker(userQuestionStatusFaker);
+
+                var testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(30, 150) },
+                    new List<CustomQuestionRule> { new(30, 150) },
+                    out List<Guid> expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(20, 29), new(30, 39), new(40, 49) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(100), new(15), new(25) },
+                    new List<CustomQuestionRule> { new(25), new(15) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(121), new(120), new(1), new(2) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(30, 150) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(30, 150) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(20, 29), new(30, 39), new(40, 49) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(30, 39), new(40, 49) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    new List<CustomQuestionRule> { new(30, 39), new(40, 49) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(100), new(15), new(25) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(15), new(25) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(100) },
+                    new List<CustomQuestionRule> { new(15), new(25) },
+                    new List<CustomQuestionRule> { new(15), new(25) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(15), new(25) },
+                    new List<CustomQuestionRule> { new(100) },
+                    new List<CustomQuestionRule> { new(15), new(25) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(121), new(120), new(1), new(2) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(120), new(1), new(2) },
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule> { new(121), new(120) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule> { new(120), new(1), new(2) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(121), new(120) },
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(30,150) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(30, 150) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(20, 29), new(30, 39), new(40, 49) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(30, 39), new(40, 49) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(30, 39), new(40, 49) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(30, 39), new(40, 49) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    new List<CustomQuestionRule> { new(30, 39), new(40, 49) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(30, 39) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    new List<CustomQuestionRule> { new(40, 49) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(30, 39) },
+                    new List<CustomQuestionRule> { new(40, 49) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    new List<CustomQuestionRule> { new(30, 39) },
+                    new List<CustomQuestionRule> { new(40, 49) },
+                    new List<CustomQuestionRule> { new(20, 29) },
+                    out expectedQuestionsIds),
+                    5,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(100), new(15), new(25) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(25), new(15) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(15), new(25) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(100) },
+                    new List<CustomQuestionRule> { new(25), new(15) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(100) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(25), new(15) },
+                    new List<CustomQuestionRule> { new(25), new(15) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(15), new(25) },
+                    new List<CustomQuestionRule> { new(100) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(25), new(15) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(100) },
+                    new List<CustomQuestionRule> { new(15), new(25) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(25), new(15) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(25) },
+                    new List<CustomQuestionRule> { new(15) },
+                    new List<CustomQuestionRule> { new(100) },
+                    new List<CustomQuestionRule> { new(25), new(15) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(25) },
+                    new List<CustomQuestionRule> { new(100) },
+                    new List<CustomQuestionRule> { new(15) },
+                    new List<CustomQuestionRule> { new(25), new(15) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(100) },
+                    new List<CustomQuestionRule> { new(25) },
+                    new List<CustomQuestionRule> { new(15) },
+                    new List<CustomQuestionRule> { new(25), new(15) },
+                    out expectedQuestionsIds),
+                    50,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(121), new(120), new(1), new(2) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(121), new(120) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(121), new(120) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(121), new(120) },
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule> { new(121), new(120) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(1) },
+                    new List<CustomQuestionRule> { new(2) },
+                    new List<CustomQuestionRule> { new(121),new(120)},
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule> { new(120) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule> { new(120) },
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule> { new(120) },
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(120) },
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(120) },
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(121) },
+                    new List<CustomQuestionRule> { new(1), new(2) },
+                    new List<CustomQuestionRule> { new(120) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(1) },
+                    new List<CustomQuestionRule> { new(121), new(120) },
+                    new List<CustomQuestionRule> { new(2) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(121), new(120) },
+                    new List<CustomQuestionRule> { new(1) },
+                    new List<CustomQuestionRule> { new(2) },
+                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
+                    out expectedQuestionsIds),
+                    100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+            }
+        }
+
+        private static List<Question> GenerateQuestionsUsingRules(Faker generalFaker, Faker<Question> questionFaker, List<CustomQuestionRule> rulesForNewQuestions, List<CustomQuestionRule> rulesForPenaltyQuestions, List<CustomQuestionRule> rulesForUsualQuestions, 
+            List<CustomQuestionRule> expectedRules, out List<Guid> expectedQuestionsGuids)
+        {
+            List<Question> result = new List<Question>();
+
+            expectedQuestionsGuids = new();
+
+            foreach(var rule in rulesForNewQuestions)
+            {
+                Question question = GenerateQuestion(generalFaker, questionFaker, "default,new", rule);
+                if (question.Id!=null && expectedRules.Any(rule.Equals))
+                {
+                    expectedQuestionsGuids.Add(question.Id.Value);
+                }
+                result.Add(question);
+            }
+
+            foreach (var rule in rulesForPenaltyQuestions)
+            {
+                Question question = GenerateQuestion(generalFaker, questionFaker, "default,penalty", rule);
+                if (question.Id != null && expectedRules.Any(rule.Equals))
+                {
+                    expectedQuestionsGuids.Add(question.Id.Value);
+                }
+                result.Add(question);
+            }
+
+            foreach (var rule in rulesForUsualQuestions)
+            {
+                Question question = GenerateQuestion(generalFaker, questionFaker, "default,usual", rule);
+                if (question.Id != null && expectedRules.Any(rule.Equals))
+                {
+                    expectedQuestionsGuids.Add(question.Id.Value);
+                }
+                result.Add(question);
+            }
+
+            Shuffle(result, generalFaker);
+
+            return result;
+        }
+
+        private static Question GenerateQuestion(Faker generalFaker, Faker<Question> questionFaker, string fakerRuleSet, CustomQuestionRule questionRule)
+        {
+            Question question = questionFaker.Generate(fakerRuleSet);
+            if (questionRule.IsExactValue)
+            {
+                question.EstimatedTrainingTimeSeconds = questionRule.ExactValue;
+            }
+            else
+            {
+                question.EstimatedTrainingTimeSeconds = generalFaker.Random.Number(questionRule.MinValue, questionRule.MaxValue);
+            } 
+            return question;
+        }
+
+        private static List<(double newQuestionsFraction, double penaltyQuestionsFraction)> GetAllStandardFractions(Faker generalFaker)
+        {
+            return new List<(double newQuestionsFraction, double penaltyQuestionsFraction)>
+            {
+                (0,0),
+                (0,generalFaker.Random.Double(0.1, 0.4)),
+                (0, generalFaker.Random.Double(0.6, 0.9)),
+                (0,1),
+                (generalFaker.Random.Double(0.1, 0.4), 0),
+                (generalFaker.Random.Double(0.1, 0.4), generalFaker.Random.Double(0.1, 0.4)),
+                (generalFaker.Random.Double(0.1, 0.25), generalFaker.Random.Double(0.6, 0.7)),
+                (generalFaker.Random.Double(0.6, 0.9), 0),
+                (generalFaker.Random.Double(0.6, 0.7), generalFaker.Random.Double(0.1, 0.25)),
+                (1,0)
+            };
+        }
+
+        private static IEnumerable<object[]> TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(Faker generalFaker, Faker<Question> questionFaker, Guid userId, Guid trainingId, int newCount, int penaltyCount, int usualCount, int lengthValue)
         {
             List<TrainingLengthType> lengthTypes = new() { TrainingLengthType.QuestionsCount, TrainingLengthType.Time };
-            foreach (var lengthType in lengthTypes)
+            List<(double newQuestionsFraction, double penaltyQuestionsFraction)> allStandardFractions = GetAllStandardFractions(generalFaker);
+
+            foreach(var lengthType in lengthTypes)
             {
-                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, 0);
-                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, generalFaker.Random.Double(0.1, 0.4));
-                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, generalFaker.Random.Double(0.6, 0.9));
-                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 0, 1);
-                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.1, 0.4), 0);
-                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.1, 0.4), generalFaker.Random.Double(0.1, 0.4));
-                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.1, 0.25), generalFaker.Random.Double(0.6, 0.7));
-                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.6, 0.9), 0);
-                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, generalFaker.Random.Double(0.6, 0.7), generalFaker.Random.Double(0.1, 0.25));
-                yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, 1, 0);
+                foreach(var (newQuestionsFraction, penaltyQuestionsFraction) in allStandardFractions)
+                {
+                    yield return GenerateQuestionData(generalFaker, questionFaker, userId, trainingId, newCount, penaltyCount, usualCount, lengthType, lengthValue, newQuestionsFraction, penaltyQuestionsFraction);
+                }
+            }
+        }
+
+        private static IEnumerable<object[]> TestCustomQuestionCollectionWithAllStandardFractions(Faker generalFaker, Guid userId, Guid trainingId,
+            List<Question> questions, int lengthValue, List<Guid> expectedQuestionsGuids)
+        {
+            List<(double newQuestionsFraction, double penaltyQuestionsFraction)> allStandardFractions = GetAllStandardFractions(generalFaker);
+            foreach (var (newQuestionsFraction, penaltyQuestionsFraction) in allStandardFractions)
+            {
+                yield return new object[]
+                {
+                    userId,
+                    trainingId,
+                    lengthValue,
+                    newQuestionsFraction,
+                    penaltyQuestionsFraction,
+                    questions,
+                    expectedQuestionsGuids
+                };
             }
         }
 
@@ -1819,6 +2385,93 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 currentTimeLength += nextTime;
             }
             return questions;
+        }
+
+        private static Faker<UserQuestionStatus> GetUserQuestionStatusFaker(Faker generalFaker)
+        {
+            return new Faker<UserQuestionStatus>()
+                    .RuleSet("new", rs =>
+                    {
+                        rs.RuleFor(uqs => uqs.PenaltyPoints, 0);
+                        rs.RuleFor(uqs => uqs.IsNew, true);
+                        rs.RuleFor(uqs => uqs.Rating, Constants.InitialQuestionRating);
+                    })
+                    .RuleSet("penalty", rs =>
+                    {
+                        rs.RuleFor(uqs => uqs.PenaltyPoints, f => generalFaker.Random.Number(min: 1));
+                        rs.RuleFor(uqs => uqs.IsNew, false);
+                        rs.RuleFor(uqs => uqs.Rating, Constants.InitialQuestionRating);
+                    })
+                    .RuleSet("usual", rs =>
+                    {
+                        rs.RuleFor(uqs => uqs.PenaltyPoints, 0);
+                        rs.RuleFor(uqs => uqs.IsNew, false);
+                        rs.RuleFor(uqs => uqs.Rating, f => f.Random.Number(Constants.MinQuestionRating, Constants.MaxQuestionRating));
+                    });
+        }
+
+        private static Faker<Question> GetQuestionFaker(Faker<UserQuestionStatus> userQuestionStatusFaker)
+        {
+            return new Faker<Question>()
+                    .RuleSet("default", rs =>
+                    {
+                        rs.RuleFor(q => q.Id, f => f.Random.Guid());
+                        rs.RuleFor(q => q.Type, f => f.PickRandom<QuestionType>());
+                        rs.RuleFor(q => q.Text, f => f.Lorem.Text().ClampLength(1, Restrictions.QuestionTextMaxLength));
+                        rs.RuleFor(q => q.IsEnabled, true);
+                        rs.RuleFor(q => q.EstimatedTrainingTimeSeconds, f => f.Random.Number(Restrictions.QuestionEstimatedTrainingTimeSecondsMinValue, Restrictions.QuestionEstimatedTrainingTimeSecondsMaxValue));
+                        rs.RuleFor(q => q.QuestionnaireId, f => f.Random.Guid());
+                        rs.RuleFor(q => q.CodeInQuestionnaire, f => f.IndexFaker);
+                        rs.RuleFor(q => q.CreationTimeUtc, DateTime.UtcNow);
+                        rs.RuleFor(q => q.UntypedAnswer, f => f.Lorem.Text().ClampLength(1, Restrictions.QuestionUntypedAnswerMaxLength));
+                    })
+                    .RuleSet("new", rs =>
+                    {
+                        rs.RuleFor(q => q.MyStatus, f => userQuestionStatusFaker.Generate("new"));
+                    })
+                    .RuleSet("penalty", rs =>
+                    {
+                        rs.RuleFor(q => q.MyStatus, f => userQuestionStatusFaker.Generate("penalty"));
+                    })
+                    .RuleSet("usual", rs =>
+                    {
+                        rs.RuleFor(q => q.MyStatus, f => userQuestionStatusFaker.Generate("usual"));
+                    });
+        }
+
+        class CustomQuestionRule
+        {
+            public CustomQuestionRule(int exactValue)
+            {
+                IsExactValue = true;
+                ExactValue = exactValue;
+            }
+
+            public CustomQuestionRule(int minValue, int maxValue)
+            {
+                IsExactValue = false;
+                MinValue = minValue;
+                MaxValue = maxValue;
+            }
+
+            public override bool Equals(object? obj)
+            {
+                if (obj!=null && obj is CustomQuestionRule customQuestionRuleObj)
+                {
+                    return IsExactValue.Equals(customQuestionRuleObj.IsExactValue) && ExactValue.Equals(customQuestionRuleObj.ExactValue) && MinValue.Equals(customQuestionRuleObj.MinValue) && MaxValue.Equals(customQuestionRuleObj.MaxValue);
+                }
+                else { return false; }
+            }
+
+            public bool IsExactValue;
+            public int ExactValue;
+            public int MinValue;
+            public int MaxValue;
+
+            public override int GetHashCode()
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }
