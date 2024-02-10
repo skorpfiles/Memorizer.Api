@@ -69,6 +69,24 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             return foundQuestion;
         }
 
+        public bool Return(Question question)
+        {
+            bool result;
+
+            int rating = question.MyStatus?.Rating ?? Constants.InitialQuestionRating;
+
+            if (RatingsAndComponents.TryGetValue(rating, out RatingComponent? ratingComponent))
+            {
+                result = ratingComponent.Return(question);
+            }
+            else
+            {
+                ratingComponent = CreateRatingComponent(rating);
+                result = ratingComponent.Return(question);
+            }
+            return result;
+        }
+
         private RatingComponent PickRatingComponent(Random random)
         {
             int coordinateForPick = random.Next(1, Length);

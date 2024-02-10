@@ -122,8 +122,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                     fullLengthOfActualResult = actualResult.Count();
                     break;
                 case Models.Enums.TrainingLengthType.Time:
-                    fullLengthOfAllQuestions = allQuestions.Sum(q => q.EstimatedTrainingTimeSeconds);
-                    fullLengthOfActualResult = actualResult.Sum(q => q.EstimatedTrainingTimeSeconds);
+                    fullLengthOfAllQuestions = allQuestions.Sum(GetFullEstimatedTimeOfQuestion);
+                    fullLengthOfActualResult = actualResult.Sum(GetFullEstimatedTimeOfQuestion);
                     break;
                 default:
                     throw new FluentAssertions.Execution.AssertionFailedException("There is no such length type.");
@@ -140,6 +140,19 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             }
         }
 
+        private static int GetFullEstimatedTimeOfQuestion(Question question)
+        {
+            int result;
+            if (!question.MyStatus!.IsNew)
+            {
+                result = question.EstimatedTrainingTimeSeconds;
+            }
+            else
+            {
+                result = (int)Math.Round(question.EstimatedTrainingTimeSeconds * Constants.NewQuestionsLearningTimeMultiplicator);
+            }
+            return result;
+        }
         //PRINCIPLES OF THE ALGORYTHM WE ARE TESTING:
         //Firstly, it chooses NEW questions until the percentage are reached OR the questions run out.
         //Secondly, it chooses questions with PENALTY POINTS until the percentage are reached OR the questions run out.
@@ -173,10 +186,10 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                     expectedLengthValue = lengthValue < allQuestions.Count ? lengthValue : allQuestions.Count;
                     break;
                 case Models.Enums.TrainingLengthType.Time:
-                    lengthOfAllNewQuestions = allQuestions.Where(q => q.MyStatus!.IsNew).Sum(q => q.EstimatedTrainingTimeSeconds);
-                    lengthOfAllQuestionsExceptNew = allQuestions.Sum(q=>q.EstimatedTrainingTimeSeconds) - lengthOfAllNewQuestions;
-                    lengthOfNewQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.IsNew).Sum(q => q.EstimatedTrainingTimeSeconds);
-                    int allQuestionsTimeSum = allQuestions.Sum(q => q.EstimatedTrainingTimeSeconds);
+                    lengthOfAllNewQuestions = allQuestions.Where(q => q.MyStatus!.IsNew).Sum(GetFullEstimatedTimeOfQuestion);
+                    lengthOfAllQuestionsExceptNew = allQuestions.Sum(GetFullEstimatedTimeOfQuestion) - lengthOfAllNewQuestions;
+                    lengthOfNewQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.IsNew).Sum(GetFullEstimatedTimeOfQuestion);
+                    int allQuestionsTimeSum = allQuestions.Sum(GetFullEstimatedTimeOfQuestion);
                     expectedLengthValue = lengthValue < allQuestionsTimeSum ? lengthValue : allQuestionsTimeSum;
                     break;
                 default:
@@ -243,9 +256,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                     expectedLengthValue = lengthValue < allQuestions.Count ? lengthValue : allQuestions.Count;
                     break;
                 case Models.Enums.TrainingLengthType.Time:
-                    lengthOfAllPenaltyQuestions = allQuestions.Where(q => q.MyStatus!.PenaltyPoints > 0).Sum(q => q.EstimatedTrainingTimeSeconds);
-                    lengthOfPenaltyQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.PenaltyPoints > 0).Sum(q => q.EstimatedTrainingTimeSeconds);
-                    int allQuestionsTimeSum = allQuestions.Sum(q => q.EstimatedTrainingTimeSeconds);
+                    lengthOfAllPenaltyQuestions = allQuestions.Where(q => q.MyStatus!.PenaltyPoints > 0).Sum(GetFullEstimatedTimeOfQuestion);
+                    lengthOfPenaltyQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.PenaltyPoints > 0).Sum(GetFullEstimatedTimeOfQuestion);
+                    int allQuestionsTimeSum = allQuestions.Sum(GetFullEstimatedTimeOfQuestion);
                     expectedLengthValue = lengthValue < allQuestionsTimeSum ? lengthValue : allQuestionsTimeSum;
                     break;
                 default:

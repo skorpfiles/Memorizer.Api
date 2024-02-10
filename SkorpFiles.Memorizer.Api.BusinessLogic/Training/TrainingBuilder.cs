@@ -91,8 +91,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             int consumedValue = 0;
             int tryingAttemptInARowWithoutResult = 0;
             const int MaxCountOfTryingAttemptInARowWithoutResult = 100;
+            bool stoppedByAlgorithm = false;
 
-            if (expectedLength > 0 && !sourceList.Consumed)
+            if (Math.Round(expectedLength) > 0 && !sourceList.Consumed)
             {
                 Question? selectedQuestion;
                 do
@@ -108,17 +109,30 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         switch (lengthType)
                         {
                             case Models.Enums.TrainingLengthType.Time:
-                                int lengthValue = selectedQuestion.EstimatedTrainingTimeSeconds;
+                                int lengthValue = selectedQuestion.MyStatus?.IsNew ?? true ? (int)Math.Round(selectedQuestion.EstimatedTrainingTimeSeconds * Constants.NewQuestionsLearningTimeMultiplicator) : selectedQuestion.EstimatedTrainingTimeSeconds;
 
-                                if (Math.Abs(consumedValue + lengthValue) <= Math.Round(expectedLength + expectedLength * Constants.AllowableErrorFraction))
+                                if (consumedValue <= Math.Round(expectedLength))
                                 {
-                                    selectedQuestions.Add(selectedQuestion.Id.Value, selectedQuestion);
-                                    consumedValue += lengthValue;
-                                    tryingAttemptInARowWithoutResult = 0;
+                                    if (consumedValue+lengthValue <= Math.Round(expectedLength + expectedLength * Constants.AllowableErrorFraction))
+                                    {
+                                        selectedQuestions.Add(selectedQuestion.Id.Value, selectedQuestion);
+                                        consumedValue += lengthValue;
+                                        tryingAttemptInARowWithoutResult = 0;
+                                    }
+                                    else
+                                    {
+                                        sourceList.Return(selectedQuestion);
+                                        tryingAttemptInARowWithoutResult++;
+                                    }
+                                }
+                                else if (consumedValue > Math.Round(expectedLength))
+                                {
+                                    sourceList.Return(selectedQuestion);
+                                    stoppedByAlgorithm = true;
                                 }
                                 else
                                 {
-                                    tryingAttemptInARowWithoutResult++;
+                                    throw new InvalidOperationException("Impossible condition. This is an internal error.");
                                 }
                                 break;
                             case Models.Enums.TrainingLengthType.QuestionsCount:
@@ -134,7 +148,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         throw new InvalidOperationException("Question with the same ID found the second time.");
                     }
                 }
-                while (!sourceList.Consumed && (consumedValue < Math.Round(expectedLength) || tryingAttemptInARowWithoutResult >= MaxCountOfTryingAttemptInARowWithoutResult));
+                while (!sourceList.Consumed &&
+                    ((lengthType == Models.Enums.TrainingLengthType.QuestionsCount && consumedValue < Math.Round(expectedLength)) ||
+                    (lengthType == Models.Enums.TrainingLengthType.Time && consumedValue != Math.Round(expectedLength) && tryingAttemptInARowWithoutResult < MaxCountOfTryingAttemptInARowWithoutResult && !stoppedByAlgorithm)));
             }
             resultLength = consumedValue;
             return selectedQuestions;

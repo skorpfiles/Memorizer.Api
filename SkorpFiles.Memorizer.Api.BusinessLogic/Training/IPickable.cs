@@ -12,5 +12,6 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
         T Pick(Random random);
         T PickAndDelete(Random random);
+        bool Return(T item);
     }
 }

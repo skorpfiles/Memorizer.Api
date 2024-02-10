@@ -17,6 +17,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
 
         public const int StandardTrainingTimeSeconds = 10;
 
+        public const double NewQuestionsLearningTimeMultiplicator = 2;
+
         public const string SumOfFractionsCannotBeMoreThan1Message = "New questions fraction and penalty questions fraction cannot be negative.";
         public const string NegativeFractionsMessage = "New questions fraction and penalty questions fraction cannot be more than 100% in total.";
         public const string NonPositiveLengthValueMessage = "Length value must be positive.";

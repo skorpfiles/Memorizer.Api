@@ -47,11 +47,28 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             return result;
         }
 
+        public bool Return(T entity)
+        {
+            bool result;
+            if (entity.Id != null)
+            {
+                _existingEntities.TryAdd(entity.Id.Value, entity);
+                _existingIds.Add(new Wrapper<Guid>(entity.Id.Value));
+                result = true;
+            }
+            else
+            {
+                result = false;
+            }
+            return result;
+        }
+
         private T Pick(Random random, out Wrapper<Guid> wrapperForPickedId)
         {
             int index = random.Next(_existingIds.Count - 1);
             wrapperForPickedId = _existingIds[index];
             return _existingEntities[wrapperForPickedId.Value];
         }
+
     }
 }
