@@ -81,6 +81,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                 }
             }
 
+            //if there is lack of questions after all selections, search for questions to fill 
+            
+
             return result;
         }
 
