@@ -91,12 +91,33 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         remainingQuestions.AddRange(BasicQuestionsList.ToList());
 
                         result.AddRange(Utils.FindBestQuestionsTimesCombination(remainingQuestions, options.LengthValue));
+
+                        //if the list is empty, add one the cheapest question
+                        if (!result.Any() && remainingQuestions.Any())
+                        {
+                            result.Add(GetQuestionWithMinimalCost(remainingQuestions)!);
+                        }
                     }
                 }
             }
 
             
 
+            return result;
+        }
+
+        private static Question? GetQuestionWithMinimalCost(IEnumerable<Question> questions)
+        {
+            Question? result = null;
+            int currentMinimum = -1;
+            foreach (Question question in questions)
+            {
+                if (question.EstimatedTrainingTimeSeconds < currentMinimum || currentMinimum == -1)
+                {
+                    currentMinimum = question.EstimatedTrainingTimeSeconds;
+                    result = question;
+                }
+            }
             return result;
         }
 
