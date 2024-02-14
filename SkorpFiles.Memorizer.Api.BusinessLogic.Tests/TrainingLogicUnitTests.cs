@@ -314,7 +314,11 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
     {
         public bool Equals(Question? x, Question? y)
         {
-            return x?.Id.Equals(y?.Id) ?? x == y;
+            if (x == null && y == null)
+                return true;
+            if (x == null || y == null)
+                return false;
+            return x.Id.Equals(y.Id);
         }
 
         public int GetHashCode([DisallowNull] Question obj)

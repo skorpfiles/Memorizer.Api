@@ -64,7 +64,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             //create new questions list
             result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForNewQuestionList, _random, out int resultNewLength).Values);
             //create penalty questions list
-            result.AddRange(GetSelectedQuestionsFromGeneralList(PrioritizedPenaltyQuestionsList, options.LengthType, expectedLengthForPrioritizedPenaltyQuestionsList, _random, out int resultPenaltyLength).Values);
+            var selectedPenaltyQuestions = GetSelectedQuestionsFromGeneralList(PrioritizedPenaltyQuestionsList, options.LengthType, expectedLengthForPrioritizedPenaltyQuestionsList, _random, out int resultPenaltyLength);
+            BasicQuestionsList.RemoveAll(q => selectedPenaltyQuestions.ContainsKey(q.Id!.Value));
+            result.AddRange(selectedPenaltyQuestions.Values);
 
             //basic list
             int expectedLengthForBasicQuestionList = options.LengthValue - resultNewLength - resultPenaltyLength;
@@ -86,7 +88,6 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                     {
                         List<Question> remainingQuestions = new();
                         remainingQuestions.AddRange(NewQuestionsList.ToList());
-                        remainingQuestions.AddRange(PrioritizedPenaltyQuestionsList.ToList());
                         remainingQuestions.AddRange(BasicQuestionsList.ToList());
 
                         result.AddRange(Utils.FindBestQuestionsTimesCombination(remainingQuestions, options.LengthValue));
