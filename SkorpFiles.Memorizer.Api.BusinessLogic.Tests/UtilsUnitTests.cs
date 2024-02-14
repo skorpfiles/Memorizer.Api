@@ -14,14 +14,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
     {
         [TestMethod]
         [DynamicData(nameof(UtilsUnitTestDataSource.FindBestQuestionsTimesCombination_CorrectParameters_CorrectResult), typeof(UtilsUnitTestDataSource))]
-        public void FindBestQuestionsTimesCombination_CorrectParameters_CorrectResult(List<Question> sourceList, int target, List<Question> expectedList)
+        public void FindBestQuestionsTimesCombination_CorrectParameters_CorrectResult(List<Question> sourceList, int target, List<Guid> expectedGuids)
         {
             //Arrange
             //Act
             var actualResult = Utils.FindBestQuestionsTimesCombination(sourceList, target);
 
             //Assert
-            actualResult.Should().BeEquivalentTo(expectedList);
+            actualResult.Select(q=>q.Id).ToList().Should().BeEquivalentTo(expectedGuids);
         }
     }
 }

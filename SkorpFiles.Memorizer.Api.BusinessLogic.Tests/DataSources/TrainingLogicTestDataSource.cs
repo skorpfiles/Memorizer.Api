@@ -446,8 +446,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 var generalFaker = new Faker();
                 var userId = generalFaker.Random.Guid();
                 var trainingId = generalFaker.Random.Guid();
-                var userQuestionStatusFaker = GetUserQuestionStatusFaker(generalFaker);
-                var questionFaker = GetQuestionFaker(userQuestionStatusFaker);
+                var userQuestionStatusFaker = DataUtils.GetUserQuestionStatusFaker(generalFaker);
+                var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
 
                 // test cases
 
@@ -1706,8 +1706,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 var generalFaker = new Faker();
                 var userId = generalFaker.Random.Guid();
                 var trainingId = generalFaker.Random.Guid();
-                var userQuestionStatusFaker = GetUserQuestionStatusFaker(generalFaker);
-                var questionFaker = GetQuestionFaker(userQuestionStatusFaker);
+                var userQuestionStatusFaker = DataUtils.GetUserQuestionStatusFaker(generalFaker);
+                var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
 
                 var testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
                     new List<CustomQuestionRule>(),
@@ -2258,7 +2258,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 result.Add(question);
             }
 
-            Shuffle(result, generalFaker);
+            DataUtils.Shuffle(result, generalFaker);
 
             return result;
         }
@@ -2343,7 +2343,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 questions.AddRange(CreateQuestionsCollectionByTime(generalFaker, questionFaker, "default,usual", usualCount));
             }
 
-            Shuffle(questions, generalFaker);
+            DataUtils.Shuffle(questions, generalFaker);
 
             return new object[]
             {
@@ -2355,17 +2355,6 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 penaltyQuestionsFraction,
                 questions
             };
-        }
-
-        private static void Shuffle<T>(List<T> list, Faker generalFaker)
-        {
-            int n = list.Count;
-            while (n > 1)
-            {
-                n--;
-                int k = generalFaker.Random.Number(0, n);
-                (list[n], list[k]) = (list[k], list[n]);
-            }
         }
 
         private static List<Question> CreateQuestionsCollectionByTime(Faker generalFaker, Faker<Question> questionFaker, string ruleSet, int fullTime)
@@ -2385,93 +2374,6 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 currentTimeLength += nextTime;
             }
             return questions;
-        }
-
-        private static Faker<UserQuestionStatus> GetUserQuestionStatusFaker(Faker generalFaker)
-        {
-            return new Faker<UserQuestionStatus>()
-                    .RuleSet("new", rs =>
-                    {
-                        rs.RuleFor(uqs => uqs.PenaltyPoints, 0);
-                        rs.RuleFor(uqs => uqs.IsNew, true);
-                        rs.RuleFor(uqs => uqs.Rating, Constants.InitialQuestionRating);
-                    })
-                    .RuleSet("penalty", rs =>
-                    {
-                        rs.RuleFor(uqs => uqs.PenaltyPoints, f => generalFaker.Random.Number(min: 1));
-                        rs.RuleFor(uqs => uqs.IsNew, false);
-                        rs.RuleFor(uqs => uqs.Rating, Constants.InitialQuestionRating);
-                    })
-                    .RuleSet("usual", rs =>
-                    {
-                        rs.RuleFor(uqs => uqs.PenaltyPoints, 0);
-                        rs.RuleFor(uqs => uqs.IsNew, false);
-                        rs.RuleFor(uqs => uqs.Rating, f => f.Random.Number(Constants.MinQuestionRating, Constants.MaxQuestionRating));
-                    });
-        }
-
-        private static Faker<Question> GetQuestionFaker(Faker<UserQuestionStatus> userQuestionStatusFaker)
-        {
-            return new Faker<Question>()
-                    .RuleSet("default", rs =>
-                    {
-                        rs.RuleFor(q => q.Id, f => f.Random.Guid());
-                        rs.RuleFor(q => q.Type, f => f.PickRandom<QuestionType>());
-                        rs.RuleFor(q => q.Text, f => f.Lorem.Text().ClampLength(1, Restrictions.QuestionTextMaxLength));
-                        rs.RuleFor(q => q.IsEnabled, true);
-                        rs.RuleFor(q => q.EstimatedTrainingTimeSeconds, f => f.Random.Number(Restrictions.QuestionEstimatedTrainingTimeSecondsMinValue, Restrictions.QuestionEstimatedTrainingTimeSecondsMaxValue));
-                        rs.RuleFor(q => q.QuestionnaireId, f => f.Random.Guid());
-                        rs.RuleFor(q => q.CodeInQuestionnaire, f => f.IndexFaker);
-                        rs.RuleFor(q => q.CreationTimeUtc, DateTime.UtcNow);
-                        rs.RuleFor(q => q.UntypedAnswer, f => f.Lorem.Text().ClampLength(1, Restrictions.QuestionUntypedAnswerMaxLength));
-                    })
-                    .RuleSet("new", rs =>
-                    {
-                        rs.RuleFor(q => q.MyStatus, f => userQuestionStatusFaker.Generate("new"));
-                    })
-                    .RuleSet("penalty", rs =>
-                    {
-                        rs.RuleFor(q => q.MyStatus, f => userQuestionStatusFaker.Generate("penalty"));
-                    })
-                    .RuleSet("usual", rs =>
-                    {
-                        rs.RuleFor(q => q.MyStatus, f => userQuestionStatusFaker.Generate("usual"));
-                    });
-        }
-
-        class CustomQuestionRule
-        {
-            public CustomQuestionRule(int exactValue)
-            {
-                IsExactValue = true;
-                ExactValue = exactValue;
-            }
-
-            public CustomQuestionRule(int minValue, int maxValue)
-            {
-                IsExactValue = false;
-                MinValue = minValue;
-                MaxValue = maxValue;
-            }
-
-            public override bool Equals(object? obj)
-            {
-                if (obj!=null && obj is CustomQuestionRule customQuestionRuleObj)
-                {
-                    return IsExactValue.Equals(customQuestionRuleObj.IsExactValue) && ExactValue.Equals(customQuestionRuleObj.ExactValue) && MinValue.Equals(customQuestionRuleObj.MinValue) && MaxValue.Equals(customQuestionRuleObj.MaxValue);
-                }
-                else { return false; }
-            }
-
-            public bool IsExactValue;
-            public int ExactValue;
-            public int MinValue;
-            public int MaxValue;
-
-            public override int GetHashCode()
-            {
-                throw new NotImplementedException();
-            }
         }
     }
 }
