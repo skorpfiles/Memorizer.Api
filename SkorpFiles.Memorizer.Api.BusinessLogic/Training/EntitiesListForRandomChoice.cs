@@ -1,6 +1,7 @@
 ﻿using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Abstract;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
-    internal class EntitiesListForRandomChoice<T>:IPickable<T> where T: Entity
+    internal class EntitiesListForRandomChoice<T>:IPickable<T>, IEnumerable<T> where T: Entity
     {
         private readonly List<Wrapper<Guid>> _existingIds = new();
         private readonly Dictionary<Guid, T> _existingEntities = new();
@@ -29,6 +30,20 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
         public bool Delete(Guid id)
         {
             return _existingIds.RemoveAll(i => i.Value == id) > 0;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            foreach(var entity in _existingEntities)
+            {
+                if (entity.Value?.Id!=null && _existingIds.Any(i=>i.Value == entity.Value.Id))
+                    yield return entity.Value;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         public T Pick(Random random)

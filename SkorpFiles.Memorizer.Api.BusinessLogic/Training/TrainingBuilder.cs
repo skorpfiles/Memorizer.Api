@@ -71,17 +71,29 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             if (expectedLengthForBasicQuestionList > 0)
             {
                 RatingTape ratingTape = InitializeRatingTape(BasicQuestionsList, result);
-                result.AddRange(GetSelectedQuestionsFromGeneralList(ratingTape, options.LengthType, expectedLengthForBasicQuestionList, _random, out int resultBasicLength).Values);
+                Dictionary<Guid, Question> questionsSelectedFromRatingTape = GetSelectedQuestionsFromGeneralList(ratingTape, options.LengthType, expectedLengthForBasicQuestionList, _random, out int resultBasicLength);
+                BasicQuestionsList.RemoveAll(q => questionsSelectedFromRatingTape.ContainsKey(q.Id!.Value));
+                result.AddRange(questionsSelectedFromRatingTape.Values);
 
                 //if there is lack of questions, add from new ones
                 int expectedLengthForAdditionalNewQuestionList = expectedLengthForBasicQuestionList - resultBasicLength;
                 if (expectedLengthForAdditionalNewQuestionList > expectedLengthForAdditionalNewQuestionList * Constants.AllowableErrorFraction)
                 {
-                    result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForAdditionalNewQuestionList, _random, out _).Values);
+                    result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForAdditionalNewQuestionList, _random, out int resultAdditionalNewLength).Values);
+
+                    //if there is lack of questions after all selections, search for questions to fill 
+                    if (options.LengthType == Models.Enums.TrainingLengthType.Time && options.LengthValue - options.LengthValue * Constants.AllowableErrorFraction > resultNewLength+resultPenaltyLength+resultBasicLength+resultAdditionalNewLength)
+                    {
+                        List<Question> remainingQuestions = new();
+                        remainingQuestions.AddRange(NewQuestionsList.ToList());
+                        remainingQuestions.AddRange(PrioritizedPenaltyQuestionsList.ToList());
+                        remainingQuestions.AddRange(BasicQuestionsList.ToList());
+
+                        result.AddRange(Utils.FindBestQuestionsTimesCombination(remainingQuestions, options.LengthValue));
+                    }
                 }
             }
 
-            //if there is lack of questions after all selections, search for questions to fill 
             
 
             return result;
@@ -159,15 +171,20 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             return selectedQuestions;
         }
 
-        private static RatingTape InitializeRatingTape(IEnumerable<Question> basicList, IEnumerable<Question> questionsToFilter)
+        private static RatingTape InitializeRatingTape(List<Question> basicList, IEnumerable<Question> questionsToFilter)
         {
             RatingTape result = new();
+            List<Question> questionsToRemoveFromBasicList = new List<Question>();
 
             foreach(Question question in basicList)
             {
                 if (!questionsToFilter.Any(q => q.Id == question.Id))
+                {
                     result.Add(question);
+                    questionsToRemoveFromBasicList.Add(question);
+                }
             }
+            
             return result;
         }
     }
