@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using Microsoft.Extensions.Options;
+using SkorpFiles.Memorizer.Api.BusinessLogic.Extensions;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
@@ -112,9 +113,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             int currentMinimum = -1;
             foreach (Question question in questions)
             {
-                if (Utils.GetFullEstimatedTimeOfQuestion(question) < currentMinimum || currentMinimum == -1)
+                if (question.FullEstimatedTrainingTimeSeconds() < currentMinimum || currentMinimum == -1)
                 {
-                    currentMinimum = Utils.GetFullEstimatedTimeOfQuestion(question);
+                    currentMinimum = question.FullEstimatedTrainingTimeSeconds();
                     result = question;
                 }
             }
@@ -146,7 +147,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         switch (lengthType)
                         {
                             case Models.Enums.TrainingLengthType.Time:
-                                int lengthValue = Utils.GetFullEstimatedTimeOfQuestion(selectedQuestion);
+                                int lengthValue = selectedQuestion.FullEstimatedTrainingTimeSeconds();
 
                                 if (consumedValue <= Math.Round(expectedLength))
                                 {

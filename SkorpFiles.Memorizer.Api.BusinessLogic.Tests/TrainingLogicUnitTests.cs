@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Moq;
+using SkorpFiles.Memorizer.Api.BusinessLogic.Extensions;
 using SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
@@ -122,8 +123,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                     fullLengthOfActualResult = actualResult.Count();
                     break;
                 case Models.Enums.TrainingLengthType.Time:
-                    fullLengthOfAllQuestions = allQuestions.Sum(Utils.GetFullEstimatedTimeOfQuestion);
-                    fullLengthOfActualResult = actualResult.Sum(Utils.GetFullEstimatedTimeOfQuestion);
+                    fullLengthOfAllQuestions = allQuestions.Sum(q=>q.FullEstimatedTrainingTimeSeconds());
+                    fullLengthOfActualResult = actualResult.Sum(q=>q.FullEstimatedTrainingTimeSeconds());
                     break;
                 default:
                     throw new FluentAssertions.Execution.AssertionFailedException("There is no such length type.");
@@ -173,10 +174,10 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                     expectedLengthValue = lengthValue < allQuestions.Count ? lengthValue : allQuestions.Count;
                     break;
                 case Models.Enums.TrainingLengthType.Time:
-                    lengthOfAllNewQuestions = allQuestions.Where(q => q.MyStatus!.IsNew).Sum(Utils.GetFullEstimatedTimeOfQuestion);
-                    lengthOfAllQuestionsExceptNew = allQuestions.Sum(Utils.GetFullEstimatedTimeOfQuestion) - lengthOfAllNewQuestions;
-                    lengthOfNewQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.IsNew).Sum(Utils.GetFullEstimatedTimeOfQuestion);
-                    int allQuestionsTimeSum = allQuestions.Sum(Utils.GetFullEstimatedTimeOfQuestion);
+                    lengthOfAllNewQuestions = allQuestions.Where(q => q.MyStatus!.IsNew).Sum(q => q.FullEstimatedTrainingTimeSeconds());
+                    lengthOfAllQuestionsExceptNew = allQuestions.Sum(q => q.FullEstimatedTrainingTimeSeconds()) - lengthOfAllNewQuestions;
+                    lengthOfNewQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.IsNew).Sum(q => q.FullEstimatedTrainingTimeSeconds());
+                    int allQuestionsTimeSum = allQuestions.Sum(q => q.FullEstimatedTrainingTimeSeconds());
                     expectedLengthValue = lengthValue < allQuestionsTimeSum ? lengthValue : allQuestionsTimeSum;
                     break;
                 default:
@@ -243,9 +244,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                     expectedLengthValue = lengthValue < allQuestions.Count ? lengthValue : allQuestions.Count;
                     break;
                 case Models.Enums.TrainingLengthType.Time:
-                    lengthOfAllPenaltyQuestions = allQuestions.Where(q => q.MyStatus!.PenaltyPoints > 0).Sum(Utils.GetFullEstimatedTimeOfQuestion);
-                    lengthOfPenaltyQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.PenaltyPoints > 0).Sum(Utils.GetFullEstimatedTimeOfQuestion);
-                    int allQuestionsTimeSum = allQuestions.Sum(Utils.GetFullEstimatedTimeOfQuestion);
+                    lengthOfAllPenaltyQuestions = allQuestions.Where(q => q.MyStatus!.PenaltyPoints > 0).Sum(q => q.FullEstimatedTrainingTimeSeconds());
+                    lengthOfPenaltyQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.PenaltyPoints > 0).Sum(q => q.FullEstimatedTrainingTimeSeconds());
+                    int allQuestionsTimeSum = allQuestions.Sum(q => q.FullEstimatedTrainingTimeSeconds());
                     expectedLengthValue = lengthValue < allQuestionsTimeSum ? lengthValue : allQuestionsTimeSum;
                     break;
                 default:

@@ -1,4 +1,5 @@
-﻿using SkorpFiles.Memorizer.Api.Models;
+﻿using SkorpFiles.Memorizer.Api.BusinessLogic.Extensions;
+using SkorpFiles.Memorizer.Api.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,8 +26,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 {
                     if (i == 0 || j == 0)
                         dp[i, j] = 0;
-                    else if (GetFullEstimatedTimeOfQuestion(questions[i - 1]) <= j)
-                        dp[i, j] = Math.Max(dp[i - 1, j], dp[i - 1, j - GetFullEstimatedTimeOfQuestion(questions[i - 1])] + GetFullEstimatedTimeOfQuestion(questions[i - 1]));
+                    else if (questions[i - 1].FullEstimatedTrainingTimeSeconds() <= j)
+                        dp[i, j] = Math.Max(dp[i - 1, j], dp[i - 1, j - questions[i - 1].FullEstimatedTrainingTimeSeconds()] + questions[i - 1].FullEstimatedTrainingTimeSeconds());
                     else
                         dp[i, j] = dp[i - 1, j];
                 }
@@ -39,24 +40,10 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 if (dp[i, res] != dp[i - 1, res])
                 {
                     result.Add(questions[i - 1]);
-                    res -= GetFullEstimatedTimeOfQuestion(questions[i - 1]);
+                    res -= questions[i - 1].FullEstimatedTrainingTimeSeconds();
                 }
             }
 
-            return result;
-        }
-
-        public static int GetFullEstimatedTimeOfQuestion(Question question)
-        {
-            int result;
-            if (!question.MyStatus!.IsNew)
-            {
-                result = question.EstimatedTrainingTimeSeconds;
-            }
-            else
-            {
-                result = (int)Math.Round(question.EstimatedTrainingTimeSeconds * Constants.NewQuestionsLearningTimeMultiplicator);
-            }
             return result;
         }
     }
