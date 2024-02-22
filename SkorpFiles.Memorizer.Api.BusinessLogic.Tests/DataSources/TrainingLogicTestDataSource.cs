@@ -2003,7 +2003,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     new List<CustomQuestionRule> { new(50) },
                     new List<CustomQuestionRule> { new(15), new(25) },
                     new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(12), new(15) },
+                    new List<CustomQuestionRule> { new(15), new(25) },
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
@@ -2216,6 +2216,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
                     out expectedQuestionsIds),
                     100,
+                    expectedQuestionsIds);
+                foreach (var testCase in testCases) { yield return testCase; }
+
+                testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, trainingId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
+                    new List<CustomQuestionRule> { new(50) },
+                    new List<CustomQuestionRule>(),
+                    new List<CustomQuestionRule> { new(99) },
+                    new List<CustomQuestionRule> { new(99) },
+                    out expectedQuestionsIds),
+                    5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
             }

@@ -20,8 +20,6 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             get
             {
                 var generalFaker = new Faker();
-                var userId = generalFaker.Random.Guid();
-                var trainingId = generalFaker.Random.Guid();
                 var userQuestionStatusFaker = DataUtils.GetUserQuestionStatusFaker(generalFaker);
                 var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
 
@@ -36,6 +34,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 {
                     new List<Question>(),
                     generalFaker.Random.Number(1,int.MaxValue),
+                    new List<Guid>()
+                };
+
+                yield return new object[]
+                {
+                    GenerateQuestionsUsingRules(generalFaker,questionFaker,
+                        new List<CustomQuestionRule>{ new(30, 150) },
+                        new List<CustomQuestionRule>(),
+                        out _
+                        ),
+                    0,
                     new List<Guid>()
                 };
 
@@ -114,6 +123,28 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                         ),
                     8,
                     expectedQuestionsGuids
+                };
+            }
+        }
+
+        public static IEnumerable<object[]> FindBestQuestionsTimesCombination_IncorrectTarget_ThrowArgumentExceptionOnTarget
+        {
+            get
+            {
+                var generalFaker = new Faker();
+                var userQuestionStatusFaker = DataUtils.GetUserQuestionStatusFaker(generalFaker);
+                var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
+
+                yield return new object[]
+                {
+                    new List<Question>(),
+                    generalFaker.Random.Number(int.MinValue, -1)
+                };
+
+                yield return new object[]
+                {
+                    questionFaker.GenerateBetween(20,100,"default,usual"),
+                    generalFaker.Random.Number(int.MinValue, -1)
                 };
             }
         }

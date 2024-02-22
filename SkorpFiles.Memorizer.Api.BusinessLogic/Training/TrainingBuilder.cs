@@ -112,9 +112,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             int currentMinimum = -1;
             foreach (Question question in questions)
             {
-                if (question.EstimatedTrainingTimeSeconds < currentMinimum || currentMinimum == -1)
+                if (Utils.GetFullEstimatedTimeOfQuestion(question) < currentMinimum || currentMinimum == -1)
                 {
-                    currentMinimum = question.EstimatedTrainingTimeSeconds;
+                    currentMinimum = Utils.GetFullEstimatedTimeOfQuestion(question);
                     result = question;
                 }
             }
@@ -146,7 +146,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         switch (lengthType)
                         {
                             case Models.Enums.TrainingLengthType.Time:
-                                int lengthValue = selectedQuestion.MyStatus?.IsNew ?? true ? (int)Math.Round(selectedQuestion.EstimatedTrainingTimeSeconds * Constants.NewQuestionsLearningTimeMultiplicator) : selectedQuestion.EstimatedTrainingTimeSeconds;
+                                int lengthValue = Utils.GetFullEstimatedTimeOfQuestion(selectedQuestion);
 
                                 if (consumedValue <= Math.Round(expectedLength))
                                 {
