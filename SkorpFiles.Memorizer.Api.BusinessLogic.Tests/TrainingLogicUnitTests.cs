@@ -17,7 +17,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
     {
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_IncorrectOptions_IncorrectTrainingOptionsException), typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_IncorrectOptions_IncorrectTrainingOptionsException(Guid userId, Guid trainingId, double newQuestionsFraction, double prioritizedPenaltyQuestionsFraction, int lengthValue, string expectedErrorMessage)
+        public async Task SelectQuestionsForTrainingAsync_IncorrectOptions_IncorrectTrainingOptionsException(Guid userId, IEnumerable<Guid> questionnairesIds, double newQuestionsFraction, double prioritizedPenaltyQuestionsFraction, int lengthValue, string expectedErrorMessage)
         {
             //Arrange
             var trainingLogic = new TrainingLogic(new Mock<ITrainingRepository>().Object);
@@ -27,7 +27,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             trainingOptions.LengthValue = lengthValue;
 
             //Act
-            Func<Task> act = async () => await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, trainingOptions).ConfigureAwait(false);
+            Func<Task> act = async () => await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, trainingOptions).ConfigureAwait(false);
 
             //Assert
             await act.Should().ThrowAsync<IncorrectTrainingOptionsException>().WithMessage(expectedErrorMessage).ConfigureAwait(false);
@@ -35,7 +35,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectOptions_NoExceptions), typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_CorrectOptions_NoExceptions(Guid userId, Guid trainingId, double newQuestionsFraction, double prioritizedPenaltyQuestionsFraction, int lengthValue)
+        public async Task SelectQuestionsForTrainingAsync_CorrectOptions_NoExceptions(Guid userId, IEnumerable<Guid> questionnairesIds, double newQuestionsFraction, double prioritizedPenaltyQuestionsFraction, int lengthValue)
         {
             //Arrange
             var trainingLogic = new TrainingLogic(new Mock<ITrainingRepository>().Object);
@@ -45,7 +45,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             trainingOptions.LengthValue = lengthValue;
 
             //Act
-            Func<Task> act = async () => await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, trainingOptions).ConfigureAwait(false);
+            Func<Task> act = async () => await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, trainingOptions).ConfigureAwait(false);
 
             //Assert
             await act.Should().NotThrowAsync();
@@ -53,16 +53,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_NoQuestions_EmptyResult), typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_NoQuestions_EmptyResult(Guid userId, Guid trainingId, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction)
+        public async Task SelectQuestionsForTrainingAsync_NoQuestions_EmptyResult(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
-            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, trainingId)).ReturnsAsync(new List<Question>());
+            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(new List<Question>());
 
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
-            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, new TrainingOptions
+            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, new TrainingOptions
             { 
                 LengthType = lengthType, 
                 LengthValue = lengthValue, 
@@ -76,11 +76,11 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData),typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_AllQuestionsAreDistinct(Guid userId, Guid trainingId, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionFraction, List<Models.Question> allQuestions)
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_AllQuestionsAreDistinct(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionFraction, List<Models.Question> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
-            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, trainingId)).ReturnsAsync(allQuestions);
+            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(allQuestions);
 
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
@@ -93,7 +93,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             };
 
             //Act
-            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, trainingOptions).ConfigureAwait(false);
+            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, trainingOptions).ConfigureAwait(false);
 
             //Assert
             actualResult.Should().BeEquivalentTo(actualResult.Distinct(new GuidComparer()));
@@ -101,16 +101,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData), typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectFullLengthDelta(Guid userId, Guid trainingId, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectFullLengthDelta(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
-            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, trainingId)).ReturnsAsync(allQuestions);
+            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(allQuestions);
 
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
-            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
+            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
 
             //Assert
 
@@ -148,16 +148,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData), typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectNewDeltas(Guid userId, Guid trainingId, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectNewDeltas(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
-            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, trainingId)).ReturnsAsync(allQuestions);
+            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(allQuestions);
 
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
-            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId,trainingId, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
+            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
 
             //Assert
 
@@ -219,16 +219,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         }
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData), typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectPenaltyDeltas(Guid userId, Guid trainingId, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectPenaltyDeltas(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
-            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, trainingId)).ReturnsAsync(allQuestions);
+            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(allQuestions);
 
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
-            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
+            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
 
             //Assert
 
@@ -281,17 +281,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectDataThatIsImpossibleToMatchLength_CorrectSelection),typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_CorrectDataThatIsImpossibleToMatchLength_CorrectSelection(Guid userId, Guid trainingId,
+        public async Task SelectQuestionsForTrainingAsync_CorrectDataThatIsImpossibleToMatchLength_CorrectSelection(Guid userId, IEnumerable<Guid> questionnairesIds,
             int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions, List<Guid> expectedQuestionIds)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
-            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, trainingId)).ReturnsAsync(allQuestions);
+            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(allQuestions);
 
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
-            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, trainingId, new TrainingOptions { LengthType = TrainingLengthType.Time, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
+            var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, new TrainingOptions { LengthType = TrainingLengthType.Time, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
 
             //Assert
             actualResult.Select(q => q.Id).ToList().Should().BeEquivalentTo(expectedQuestionIds);

@@ -19,21 +19,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Api.Models.Question>> GetQuestionsForTrainingAsync(Guid userId, Guid trainingId)
+        public async Task<IEnumerable<Api.Models.Question>> GetQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds)
         {
             string userIdString = userId.ToAspNetUserIdString();
 
-            var query = await (from t in DbContext.Trainings
-                               where !t.ObjectIsRemoved &&
-                               t.TrainingId == trainingId &&
-                               t.OwnerId == userIdString
-                               join tq in DbContext.TrainingsQuestionnaires
-                               .Include(tq => tq.Questionnaire)
-                               on t.TrainingId equals tq.TrainingId
-                               where !tq.Questionnaire.ObjectIsRemoved
-                               join q in DbContext.Questions
-                               on tq.Questionnaire.QuestionnaireId equals q.QuestionnaireId
-                               where !q.ObjectIsRemoved
+            var query = await (from q in DbContext.Questions
+                               where !q.ObjectIsRemoved && questionnairesIds.Contains(q.QuestionnaireId)
                                join qu in DbContext.QuestionsUsers
                                on q.QuestionId equals qu.QuestionId into quGroup
                                from quo in quGroup.DefaultIfEmpty()

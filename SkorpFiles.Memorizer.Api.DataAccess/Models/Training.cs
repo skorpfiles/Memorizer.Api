@@ -24,6 +24,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public int TrainingQuestionsCount { get; set; }
         public int TrainingTimeMinutes { get; set; }
 
+        [Column(TypeName = "decimal(4,3)")]
+        public decimal TrainingNewQuestionsFraction {  get; set; }
+
+        [Column(TypeName = "decimal(4,3)")]
+        public decimal TrainingPenaltyQuestionsFraction {  get; set; }
+
         [ForeignKey(nameof(OwnerId))]
         public ApplicationUser? Owner { get; set; }
 

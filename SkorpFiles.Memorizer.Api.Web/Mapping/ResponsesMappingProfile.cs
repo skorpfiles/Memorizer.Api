@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using SkorpFiles.Memorizer.Api.Web.Models.Responses;
+using SkorpFiles.Memorizer.Api.Web.Models.Responses.Repository;
 
 namespace SkorpFiles.Memorizer.Api.Web.Mapping
 {

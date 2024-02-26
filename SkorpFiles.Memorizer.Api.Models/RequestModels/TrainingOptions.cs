@@ -10,7 +10,7 @@ namespace SkorpFiles.Memorizer.Api.Models.RequestModels
     public class TrainingOptions
     {
         public TrainingLengthType LengthType { get; set; }
-        public int LengthValue { get; set; } //for time - minutes
+        public int LengthValue { get; set; } //for time - seconds
         public double NewQuestionsFraction {  get; set; }
         public double PrioritizedPenaltyQuestionsFraction {  get; set; }
     }

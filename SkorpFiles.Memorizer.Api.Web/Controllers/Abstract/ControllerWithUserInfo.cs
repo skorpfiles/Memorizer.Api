@@ -5,7 +5,7 @@ using SkorpFiles.Memorizer.Api.Web.Exceptions;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers.Abstract
 {
-    public abstract class ControllerWithUserInfo : Controller
+    public abstract class ControllerWithUserInfo : ControllerWithActionsToBusinessLogic
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserStore<ApplicationUser> _userStore;

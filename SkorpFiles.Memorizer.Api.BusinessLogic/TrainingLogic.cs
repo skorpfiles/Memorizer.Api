@@ -21,7 +21,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             _trainingRepository = trainingRepository;
         }
 
-        public async Task<IEnumerable<Api.Models.Question>> SelectQuestionsForTrainingAsync(Guid userId, Guid trainingId, TrainingOptions options)
+        public async Task<IEnumerable<Api.Models.Question>> SelectQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingOptions options)
         {
             if (options.NewQuestionsFraction < 0 || options.PrioritizedPenaltyQuestionsFraction < 0)
                 throw new IncorrectTrainingOptionsException(Constants.NegativeFractionsMessage);
@@ -32,8 +32,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             if (options.LengthValue <= 0)
                 throw new IncorrectTrainingOptionsException(Constants.NonPositiveLengthValueMessage);
 
-
-            var allQuestions = (await _trainingRepository.GetQuestionsForTrainingAsync(userId, trainingId)).ToList();
+            var allQuestions = (await _trainingRepository.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ToList();
             var questionsListsCollection = new TrainingBuilder(allQuestions);
             var questionsList = questionsListsCollection.MakeQuestionsListForTraining(options);
 
