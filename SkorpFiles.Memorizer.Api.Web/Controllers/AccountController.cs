@@ -54,10 +54,10 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             if (request.Login == null || request.Password == null)
                 return BadRequest(new { errorText = "Login and password cannot be null." });
 
-            var (status, identity) = await GetIdentityAsync(request.Login, request.Password);
+            var (status, user, identity) = await GetIdentityAsync(request.Login, request.Password);
             if (status == SignInStatus.Failure)
                 return Unauthorized(new { errorCode = "InvalidLoginPassword", errorText = "Invalid login or password." });
-            else if (status == SignInStatus.Success || status == SignInStatus.EmailNotConfirmed)
+            else if ((status == SignInStatus.Success || status == SignInStatus.EmailNotConfirmed) && identity!=null && user!=null)
             {
 
                 var now = DateTime.UtcNow;
@@ -79,6 +79,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                         {
                             AccessToken = encodedJwt,
                             Login = identity.Name,
+                            UserId = user.Id,
                             IsEmailConfirmed = status != SignInStatus.EmailNotConfirmed
                         });
                     }
@@ -245,11 +246,11 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             throw new NotImplementedException();
         }
 
-        private async Task<(SignInStatus status, ClaimsIdentity? claims)> GetIdentityAsync(string username, string password)
+        private async Task<(SignInStatus status, ApplicationUser? user, ClaimsIdentity? claims)> GetIdentityAsync(string username, string password)
         {
-            var signInStatus = await CheckUserCredentialsAsync(username, password);
+            var signInStatusData = await CheckUserCredentialsAsync(username, password);
 
-            if (signInStatus == SignInStatus.Success || signInStatus == SignInStatus.EmailNotConfirmed)
+            if (signInStatusData.status == SignInStatus.Success || signInStatusData.status == SignInStatus.EmailNotConfirmed)
             {
                 var claims = new List<Claim>
                 {
@@ -259,43 +260,43 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 ClaimsIdentity claimsIdentity =
                 new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
                     ClaimsIdentity.DefaultRoleClaimType);
-                return (signInStatus, claimsIdentity);
+                return (signInStatusData.status, signInStatusData.user, claimsIdentity);
             }
             else
-                return (signInStatus, null);
+                return (signInStatusData.status, null, null);
         }
 
-        private async Task<SignInStatus> CheckUserCredentialsAsync(string username, string password)
+        private async Task<(SignInStatus status, ApplicationUser? user)> CheckUserCredentialsAsync(string username, string password)
         {
             if (_userManager == null)
             {
-                return SignInStatus.Failure;
+                return (SignInStatus.Failure, null);
             }
             else
             {
                 var user = await _userManager.FindByNameAsync(username);
                 if (user == null)
                 {
-                    return SignInStatus.Failure;
+                    return (SignInStatus.Failure, null);
                 }
                 else if (await _userManager.IsLockedOutAsync(user))
                 {
-                    return SignInStatus.LockedOut;
+                    return (SignInStatus.LockedOut, null);
                 }
                 else if (await _userManager.CheckPasswordAsync(user, password))
                 {
                     if (user.EmailConfirmed)
                     {
-                        return SignInStatus.Success;
+                        return (SignInStatus.Success, user);
                     }
                     else
                     {
-                        return SignInStatus.EmailNotConfirmed;
+                        return (SignInStatus.EmailNotConfirmed, user);
                     }    
                 }
                 else
                 {
-                    return SignInStatus.Failure;
+                    return (SignInStatus.Failure, null);
                 }
             }
         }

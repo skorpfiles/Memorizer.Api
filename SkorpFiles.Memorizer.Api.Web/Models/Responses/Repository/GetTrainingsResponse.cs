@@ -5,6 +5,6 @@ namespace SkorpFiles.Memorizer.Api.Web.Models.Responses.Repository
 {
     public class GetTrainingsResponse : PaginatedCollectionResponse
     {
-        public List<Training>? Trainings { get; set; }
+        public List<ApiEntities.Training>? Trainings { get; set; }
     }
 }

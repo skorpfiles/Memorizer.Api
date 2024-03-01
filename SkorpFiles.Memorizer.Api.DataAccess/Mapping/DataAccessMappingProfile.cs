@@ -114,9 +114,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.TrainingLengthType, opts => opts.MapFrom(src => src.LengthType))
                 .ForMember(dest => dest.TrainingQuestionsCount, opts => opts.MapFrom(src => src.QuestionsCount))
                 .ForMember(dest => dest.TrainingTimeMinutes, opts => opts.MapFrom(src => src.TimeMinutes))
+                .ForMember(dest => dest.TrainingNewQuestionsFraction, opts => opts.MapFrom(src => src.NewQuestionsFraction))
+                .ForMember(dest => dest.TrainingPenaltyQuestionsFraction, opts => opts.MapFrom(src => src.PenaltyQuestionsFraction))
                 .ForMember(dest => dest.ObjectCreationTimeUtc, opts => opts.MapFrom(src => src.CreationTimeUtc))
                 .ForMember(dest => dest.ObjectIsRemoved, opts => opts.MapFrom(src => src.IsRemoved))
                 .ForMember(dest => dest.ObjectRemovalTimeUtc, opts => opts.MapFrom(src => src.RemovalTimeUtc));
+                
             CreateMap<Training, SkorpFiles.Memorizer.Api.Models.Training>()
                 .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.TrainingId))
                 .ForMember(dest => dest.Name, opts => opts.MapFrom(src => src.TrainingName))
@@ -124,6 +127,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.LengthType, opts => opts.MapFrom(src => src.TrainingLengthType))
                 .ForMember(dest => dest.QuestionsCount, opts => opts.MapFrom(src => src.TrainingQuestionsCount))
                 .ForMember(dest => dest.TimeMinutes, opts => opts.MapFrom(src => src.TrainingTimeMinutes))
+                .ForMember(dest => dest.NewQuestionsFraction, opts => opts.MapFrom(src => src.TrainingNewQuestionsFraction))
+                .ForMember(dest => dest.PenaltyQuestionsFraction, opts => opts.MapFrom(src => src.TrainingPenaltyQuestionsFraction))
                 .ForMember(dest => dest.Questionnaires, opts =>
                 {
                     opts.Condition(src => src.QuestionnairesForTraining != null);

@@ -8,6 +8,8 @@
         public string? LengthType { get; set; }
         public int? QuestionsCount { get; set; }
         public int? TimeMinutes { get; set; }
+        public decimal? NewQuestionsFraction { get; set; }
+        public decimal? PenaltyQuestionsFraction { get; set; }
         public List<Guid>? QuestionnairesIds { get; set; }
     }
 }

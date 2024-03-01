@@ -1,16 +1,21 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using SkorpFiles.Memorizer.Api.BusinessLogic;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
+using SkorpFiles.Memorizer.Api.Models.RequestModels;
 using SkorpFiles.Memorizer.Api.Web.Controllers.Abstract;
 using SkorpFiles.Memorizer.Api.Web.Exceptions;
 using SkorpFiles.Memorizer.Api.Web.Models.Responses.Training;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
+    [ApiController]
+    [Route("[controller]")]
     public class TrainingController : ControllerWithUserInfo
     {
         private readonly ITrainingLogic _trainingLogic;
@@ -24,28 +29,22 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             _mapper = mapper;
         }
 
-        public async Task<IActionResult> StartAsync(Guid trainingId)
+        [Route("Start")]
+        [HttpGet]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> StartAsync(Guid id)
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
                 var userGuid = await GetCurrentUserGuidAsync();
-                var training = await _editingLogic.GetTrainingAsync(userGuid, trainingId);
+                var training = await _editingLogic.GetTrainingAsync(userGuid, id);
                 if (training?.Questionnaires != null)
                 {
-                    var result = await _trainingLogic.SelectQuestionsForTrainingAsync(userGuid, training.Questionnaires.Select(q => q.Id).ToList(),
-                        new Api.Models.RequestModels.TrainingOptions
-                        {
-                            LengthType = training.LengthType,
-                            LengthValue = training.LengthType == Api.Models.Enums.TrainingLengthType.QuestionsCount? 
-                            training.QuestionsCount:
-                            (training.LengthType == Api.Models.Enums.TrainingLengthType.Time?training.TimeMinutes*Constants.SecondsInMinute:throw new InternalErrorException("Invalid length type."),
-                            NewQuestionsFraction = training.NewQuestionsFraction,
-                            PrioritizedPenaltyQuestionsFraction = training.PrioritizedPenaltyQuestionsFraction
-                        });
+                    var result = await _trainingLogic.SelectQuestionsForTrainingAsync(userGuid, training.Questionnaires.Select(q => q.Id!.Value).ToList(), _mapper.Map<TrainingOptions>(training));
                     if (result != null)
                         return Ok(_mapper.Map<StartTrainingResponse>(result));
                     else
-                        throw new InternalErrorException("The database hasn't returned a result.");
+                        throw new InternalErrorException("The database hasn't returned questions for training.");
                 }
                 else
                     throw new ObjectNotFoundException("There is no such training.");

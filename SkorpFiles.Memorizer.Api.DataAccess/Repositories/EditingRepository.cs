@@ -749,6 +749,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 TrainingLengthType = request.LengthType.Value,
                 TrainingQuestionsCount = request.QuestionsCount.Value,
                 TrainingTimeMinutes = request.TimeMinutes.Value,
+                TrainingNewQuestionsFraction = request.NewQuestionsFraction,
+                TrainingPenaltyQuestionsFraction = request.PenaltyQuestionsFraction,
                 OwnerId = userId.ToAspNetUserIdString(),
                 ObjectCreationTimeUtc = DateTime.UtcNow,
             };
@@ -1026,7 +1028,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     var questionnaireFromDb = questionnairesFromDb.SingleOrDefault(q => q.QuestionnaireId == questionnaireIdFromRequest);
                     if (questionnaireFromDb != null)
                     {
-                        CheckAvailabilityForUser(userId, Guid.Parse(questionnaireFromDb.OwnerId), $"The user '{userId}' doesn't have a managing access to the questionnaire '{questionnaireIdFromRequest}'.");
+                        CheckAvailabilityForUser(userId,
+                            Guid.Parse(questionnaireFromDb.OwnerId),
+                            $"The user '{userId}' doesn't have a managing access to the questionnaire '{questionnaireIdFromRequest}'.",
+                            questionnaireFromDb.QuestionnaireAvailability);
                     }
                     else
                     {
