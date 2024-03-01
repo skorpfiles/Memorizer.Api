@@ -64,7 +64,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             await _editingRepository.UpdateQuestionsAsync(userId, request);
         }
 
-        public async Task UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request)
+        public async Task UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusesRequest request)
         {
             await _editingRepository.UpdateUserQuestionStatusAsync(userId, request);
         }

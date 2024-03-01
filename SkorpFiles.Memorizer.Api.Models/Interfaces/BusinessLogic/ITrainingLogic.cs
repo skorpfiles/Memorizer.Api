@@ -5,5 +5,6 @@ namespace SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic
     public interface ITrainingLogic
     {
         public Task<IEnumerable<Question>> SelectQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingOptions options);
+        public Task<UserQuestionStatus> UpdateQuestionStatusAsync(Guid userId, TrainingResultRequest requestData);
     }
 }

@@ -184,7 +184,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 select questionnaire).SingleOrDefaultAsync();
 
             if (questionnaireResult != null)
-                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
+                Utils.CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
             else
                 throw new ObjectNotFoundException("No questionnaire with such ID or code.");
 
@@ -586,7 +586,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         public async Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)=>
             await DeleteQuestionnaireAsync(userId,null,questionnaireCode);
 
-        public async Task UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request)
+        public async Task UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusesRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -714,7 +714,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                                                      ).SingleOrDefaultAsync();
             if (trainingResult!=null)
             {
-                CheckAvailabilityForUser(userId, Guid.Parse(trainingResult.OwnerId), "The user doesn't own the training.");
+                Utils.CheckAvailabilityForUser(userId, Guid.Parse(trainingResult.OwnerId), "The user doesn't own the training.");
                 return _mapper.Map<Api.Models.Training>(trainingResult);
             }
             else
@@ -858,7 +858,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                        select training).SingleOrDefaultAsync();
             if (trainingDetails != null)
             {
-                CheckAvailabilityForUser(userId, Guid.Parse(trainingDetails.OwnerId), "The user doesn't have rights to delete the training.");
+                Utils.CheckAvailabilityForUser(userId, Guid.Parse(trainingDetails.OwnerId), "The user doesn't have rights to delete the training.");
                 trainingDetails.ObjectIsRemoved = true;
                 trainingDetails.ObjectRemovalTimeUtc = DateTime.UtcNow;
                 await DbContext.SaveChangesAsync();
@@ -889,7 +889,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             if (questionnaireResult != null)
             {
-                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
+                Utils.CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
                 return questionnaireResult;
             }
             else
@@ -918,7 +918,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             if (groupResult != null)
             {
-                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(groupResult.Questionnaire.OwnerId), groupResult.Questionnaire.QuestionnaireAvailability);
+                Utils.CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(groupResult.Questionnaire.OwnerId), groupResult.Questionnaire.QuestionnaireAvailability);
 
                 Api.Models.Questionnaire result = _mapper.Map<Api.Models.Questionnaire>(groupResult.Questionnaire);
                 result.CountsOfQuestions = new QuestionsCounts
@@ -963,25 +963,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw new ObjectNotFoundException("Questionnaire with such ID or Code doesn't exist.");
         }
 
-        private static void CheckQuestionnaireAvailabilityForUser(Guid currentUserId, Guid ownerId, Availability availability)
-        {
-            CheckAvailabilityForUser(currentUserId, ownerId, "Unable to get details about a private questionnaire to a foreign user.", availability);
-        }
-
-        private static void CheckAvailabilityForUser(Guid currentUserId, Guid ownerId, string errorMessage, Availability? availability = null)
-        {
-            if (availability != null)
-            {
-                if (availability == Availability.Private && ownerId != currentUserId)
-                    throw new AccessDeniedForUserException(errorMessage);
-            }
-            else
-            {
-                if (ownerId != currentUserId)
-                    throw new AccessDeniedForUserException(errorMessage);
-            }
-        }
-
         private static void CheckIdAndCodeDefinitionRule(Guid? id, int? code, Exception exceptionWhenBothNull, Exception exceptionWhenBothNotNull)
         {
             if (id == null && code == null)
@@ -1004,7 +985,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     var labelFromDb = labelsFromDb.SingleOrDefault(l => l.LabelId == labelIdFromRequest);
                     if (labelFromDb != null)
                     {
-                        CheckAvailabilityForUser(userId, Guid.Parse(labelFromDb.OwnerId), $"The user '{userId}' doesn't have a managing access to the label '{labelIdFromRequest}'.");
+                        Utils.CheckAvailabilityForUser(userId, Guid.Parse(labelFromDb.OwnerId), $"The user '{userId}' doesn't have a managing access to the label '{labelIdFromRequest}'.");
                     }
                     else
                     {
@@ -1028,7 +1009,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     var questionnaireFromDb = questionnairesFromDb.SingleOrDefault(q => q.QuestionnaireId == questionnaireIdFromRequest);
                     if (questionnaireFromDb != null)
                     {
-                        CheckAvailabilityForUser(userId,
+                        Utils.CheckAvailabilityForUser(userId,
                             Guid.Parse(questionnaireFromDb.OwnerId),
                             $"The user '{userId}' doesn't have a managing access to the questionnaire '{questionnaireIdFromRequest}'.",
                             questionnaireFromDb.QuestionnaireAvailability);

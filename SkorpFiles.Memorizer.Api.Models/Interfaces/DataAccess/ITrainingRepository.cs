@@ -3,6 +3,7 @@
     public interface ITrainingRepository
     {
         Task<IEnumerable<Question>> GetQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds);
-        Task UpdateQuestionStatusAsync(UserQuestionStatus questionStatus);
+        Task UpdateQuestionStatusAsync(UserQuestionStatus newQuestionStatus);
+        Task<UserQuestionStatus?> GetUserQuestionStatusAsync(Guid userId, Guid questionId);
     }
 }

@@ -139,7 +139,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
                 await _editingLogic.UpdateUserQuestionStatusAsync(await GetCurrentUserGuidAsync(),
-                    _mapper.Map<Api.Models.RequestModels.UpdateUserQuestionStatusRequest>(request));
+                    _mapper.Map<Api.Models.RequestModels.UpdateUserQuestionStatusesRequest>(request));
                 return Ok();
             });
         }

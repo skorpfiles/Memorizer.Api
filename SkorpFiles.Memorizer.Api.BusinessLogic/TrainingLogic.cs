@@ -1,5 +1,6 @@
 ﻿using SkorpFiles.Memorizer.Api.BusinessLogic.Training;
 using SkorpFiles.Memorizer.Api.DataAccess.Repositories;
+using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
@@ -37,6 +38,66 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             var questionsList = questionsListsCollection.MakeQuestionsListForTraining(options);
 
             return questionsList;
+        }
+
+        public async Task<UserQuestionStatus> UpdateQuestionStatusAsync(Guid userId, TrainingResultRequest requestData)
+        {
+            if (requestData == null) 
+                throw new ArgumentNullException(nameof(requestData));
+
+            if (requestData.QuestionId == Guid.Empty)
+                throw new ArgumentException("QuestionId cannot be empty.");
+
+            var currentUserQuestionStatus = await _trainingRepository.GetUserQuestionStatusAsync(userId, requestData.QuestionId);
+            currentUserQuestionStatus ??= CreateNewUserQuestionStatus(userId, requestData.QuestionId);
+
+            UpdateUserQuestionStatusByAnswer(ref currentUserQuestionStatus, requestData.IsAnswerCorrect);
+
+            await _trainingRepository.UpdateQuestionStatusAsync(currentUserQuestionStatus);
+
+            return currentUserQuestionStatus;
+        }
+
+        private static UserQuestionStatus CreateNewUserQuestionStatus(Guid userId, Guid questionId)
+        {
+            return new UserQuestionStatus
+            {
+                QuestionId = questionId,
+                UserId = userId,
+                IsNew = true,
+                PenaltyPoints = 0,
+                Rating = Constants.InitialQuestionRating
+            };
+        }
+
+        private static void UpdateUserQuestionStatusByAnswer(ref UserQuestionStatus userQuestionStatus, bool isAnswerCorrect)
+        {
+            if (isAnswerCorrect)
+            {
+                if (userQuestionStatus.IsNew)
+                {
+                    userQuestionStatus.IsNew = false;
+                }
+                if (userQuestionStatus.PenaltyPoints > 0)
+                {
+                    userQuestionStatus.PenaltyPoints--;
+                }
+                else if (userQuestionStatus.Rating > Constants.MinQuestionRating)
+                {
+                    userQuestionStatus.Rating--;
+                }
+            }
+            else
+            {
+                if (!userQuestionStatus.IsNew)
+                {
+                    if (userQuestionStatus.PenaltyPoints < int.MaxValue)
+                    {
+                        userQuestionStatus.PenaltyPoints++;
+                    }
+                    userQuestionStatus.Rating = Constants.MaxQuestionRating;
+                }
+            }
         }
     }
 }

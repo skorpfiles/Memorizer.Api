@@ -50,5 +50,15 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                     throw new ObjectNotFoundException("There is no such training.");
             });
         }
+
+        public async Task<IActionResult> UpdateQuestionStatusAsync(Web.Models.Requests.Training.TrainingResultRequest request)
+        {
+            return await ExecuteActionToBusinessLogicAsync(async () =>
+            {
+                var userGuid = await GetCurrentUserGuidAsync();
+                var result = await _trainingLogic.UpdateQuestionStatusAsync(userGuid, _mapper.Map<Api.Models.RequestModels.TrainingResultRequest>(request));
+                return Ok();
+            });
+        }
     }
 }
