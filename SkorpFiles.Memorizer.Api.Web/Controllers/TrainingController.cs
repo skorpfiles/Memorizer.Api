@@ -51,6 +51,9 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             });
         }
 
+        [Route("UpdateQuestionStatus")]
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> UpdateQuestionStatusAsync(Web.Models.Requests.Training.TrainingResultRequest request)
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>

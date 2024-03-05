@@ -82,6 +82,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         private async Task UpdateNonExistingQuestionStatusAsync(UserQuestionStatus newQuestionStatus)
         {
             var question = await (from q in DbContext.Questions.Include(q => q.Questionnaire)
+                                  where q.QuestionId == newQuestionStatus.QuestionId
                                   select q).SingleOrDefaultAsync();
             if (question != null && !question.ObjectIsRemoved &&
                 question.Questionnaire != null && !question.Questionnaire.ObjectIsRemoved)
