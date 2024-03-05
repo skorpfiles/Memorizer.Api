@@ -2230,6 +2230,324 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             }
         }
 
+        public static IEnumerable<object[]> UpdateQuestionStatusAsync_CorrectData_CorrectResult
+        {
+            get
+            {
+                var faker = new Faker();
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    false, default(bool), default(int), default(int),
+                    false,
+                    true, Constants.MaxQuestionRating, 0
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    false, default(bool), default(int), default(int),
+                    true,
+                    false, Constants.InitialQuestionRating-1, 0
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, 0, 0,
+                    false,
+                    false, Constants.MaxQuestionRating, 1
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, 0, 0,
+                    true,
+                    false, 0, 0
+                };
+
+                var penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, 0, penaltyPoints,
+                    false,
+                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                };
+
+                penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, 0, penaltyPoints,
+                    true,
+                    false, 0, penaltyPoints-1
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, 0, int.MaxValue,
+                    false,
+                    false, Constants.MaxQuestionRating, int.MaxValue
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, 0, int.MaxValue,
+                    true,
+                    false, 0, int.MaxValue-1
+                };
+
+                //t f Constants.MinQuestionRating
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MinQuestionRating, 0,
+                    false,
+                    false, Constants.MaxQuestionRating, 1
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MinQuestionRating, 0,
+                    true,
+                    false, Constants.MinQuestionRating, 0
+                };
+
+                penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MinQuestionRating, penaltyPoints,
+                    false,
+                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                };
+
+                penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MinQuestionRating, penaltyPoints,
+                    true,
+                    false, Constants.MinQuestionRating, penaltyPoints-1
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MinQuestionRating, int.MaxValue,
+                    false,
+                    false, Constants.MaxQuestionRating, int.MaxValue
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MinQuestionRating, int.MaxValue,
+                    true,
+                    false, Constants.MinQuestionRating, int.MaxValue-1
+                };
+
+                //t f [Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1]
+                var rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, rating, 0,
+                    false,
+                    false, Constants.MaxQuestionRating, 1
+                };
+
+                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, rating, 0,
+                    true,
+                    false, rating-1, 0
+                };
+
+                penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
+                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, rating, penaltyPoints,
+                    false,
+                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                };
+
+                penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
+                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, rating, penaltyPoints,
+                    true,
+                    false, rating-1, penaltyPoints-1
+                };
+
+                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, rating, int.MaxValue,
+                    false,
+                    false, Constants.MaxQuestionRating, int.MaxValue
+                };
+
+                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, rating, int.MaxValue,
+                    true,
+                    false, rating-1, int.MaxValue-1
+                };
+
+                //t f Constants.MaxQuestionRating
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MaxQuestionRating, 0,
+                    false,
+                    false, Constants.MaxQuestionRating, 1
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MaxQuestionRating, 0,
+                    true,
+                    false, Constants.MaxQuestionRating-1, 0
+                };
+
+                penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MaxQuestionRating, penaltyPoints,
+                    false,
+                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                };
+
+                penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MaxQuestionRating, penaltyPoints,
+                    true,
+                    false, Constants.MaxQuestionRating-1, penaltyPoints-1
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MaxQuestionRating, int.MaxValue,
+                    false,
+                    false, Constants.MaxQuestionRating, int.MaxValue
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, false, Constants.MaxQuestionRating, int.MaxValue,
+                    true,
+                    false, Constants.MaxQuestionRating-1, int.MaxValue-1
+                };
+
+                //t f Constants.MaxQuestionRating
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, true, Constants.MaxQuestionRating, 0,
+                    true,
+                    false, Constants.MaxQuestionRating-1, 0
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
+                    true, true, Constants.MaxQuestionRating, 0,
+                    false,
+                    true, Constants.MaxQuestionRating, 0
+                };
+            }
+        }
+
+        public static IEnumerable<object[]> UpdateQuestionStatusAsync_IncorrectArguments_ArgumentException
+        {
+            get
+            {
+                var faker = new Faker();
+                yield return new object[]
+                {
+                    Guid.Empty,
+                    new TrainingResultRequest
+                    {
+                         AnswerTimeMilliseconds = faker.Random.Number(1,int.MaxValue),
+                         IsAnswerCorrect = faker.Random.Bool(),
+                         QuestionId = faker.Random.Guid(),
+                         TrainingStartTimeUtc = faker.Date.Past(1,DateTime.UtcNow)
+                    }
+                };
+                yield return new object[]
+                {
+                    faker.Random.Guid(),
+                    new TrainingResultRequest
+                    {
+                         AnswerTimeMilliseconds = 0,
+                         IsAnswerCorrect = faker.Random.Bool(),
+                         QuestionId = faker.Random.Guid(),
+                         TrainingStartTimeUtc = faker.Date.Past(1,DateTime.UtcNow)
+                    }
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(),
+                    new TrainingResultRequest
+                    {
+                         AnswerTimeMilliseconds = faker.Random.Int(int.MinValue,-1),
+                         IsAnswerCorrect = faker.Random.Bool(),
+                         QuestionId = faker.Random.Guid(),
+                         TrainingStartTimeUtc = faker.Date.Past(1,DateTime.UtcNow)
+                    }
+                };
+
+                yield return new object[]
+                {
+                    faker.Random.Guid(),
+                    new TrainingResultRequest
+                    {
+                         AnswerTimeMilliseconds = faker.Random.Number(1,int.MaxValue),
+                         IsAnswerCorrect = faker.Random.Bool(),
+                         QuestionId = Guid.Empty,
+                         TrainingStartTimeUtc = faker.Date.Past(1,DateTime.UtcNow)
+                    }
+                };
+            }
+        }
+
         private static List<Question> GenerateQuestionsUsingRules(Faker generalFaker, Faker<Question> questionFaker, List<CustomQuestionRule> rulesForNewQuestions, List<CustomQuestionRule> rulesForPenaltyQuestions, List<CustomQuestionRule> rulesForUsualQuestions, 
             List<CustomQuestionRule> expectedRules, out List<Guid> expectedQuestionsGuids)
         {

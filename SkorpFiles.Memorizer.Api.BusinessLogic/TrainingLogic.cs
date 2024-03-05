@@ -45,8 +45,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             if (requestData == null) 
                 throw new ArgumentNullException(nameof(requestData));
 
+            if (userId == Guid.Empty)
+                throw new ArgumentException("UserId cannot be empty.");
+
             if (requestData.QuestionId == Guid.Empty)
                 throw new ArgumentException("QuestionId cannot be empty.");
+
+            if (requestData.AnswerTimeMilliseconds <= 0)
+                throw new ArgumentException("AnswerTime must be positive.");
 
             var currentUserQuestionStatus = await _trainingRepository.GetUserQuestionStatusAsync(userId, requestData.QuestionId);
             currentUserQuestionStatus ??= CreateNewUserQuestionStatus(userId, requestData.QuestionId);
@@ -77,19 +83,28 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 if (userQuestionStatus.IsNew)
                 {
                     userQuestionStatus.IsNew = false;
+                    userQuestionStatus.PenaltyPoints = 0;
+                    userQuestionStatus.Rating = Constants.InitialQuestionRating;
                 }
+
                 if (userQuestionStatus.PenaltyPoints > 0)
                 {
                     userQuestionStatus.PenaltyPoints--;
                 }
-                else if (userQuestionStatus.Rating > Constants.MinQuestionRating)
+
+                if (userQuestionStatus.Rating > Constants.MinQuestionRating)
                 {
                     userQuestionStatus.Rating--;
                 }
             }
             else
             {
-                if (!userQuestionStatus.IsNew)
+                if (userQuestionStatus.IsNew)
+                {
+                    userQuestionStatus.PenaltyPoints = 0;
+                    userQuestionStatus.Rating = Constants.InitialQuestionRating;
+                }
+                else
                 {
                     if (userQuestionStatus.PenaltyPoints < int.MaxValue)
                     {
@@ -99,5 +114,6 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 }
             }
         }
+
     }
 }

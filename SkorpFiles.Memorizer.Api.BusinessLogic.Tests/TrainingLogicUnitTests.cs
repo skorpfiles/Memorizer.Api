@@ -296,6 +296,47 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             //Assert
             actualResult.Select(q => q.Id).ToList().Should().BeEquivalentTo(expectedQuestionIds);
         }
+
+        [TestMethod]
+        [DynamicData(nameof(TrainingLogicTestDataSource.UpdateQuestionStatusAsync_CorrectData_CorrectResult),typeof(TrainingLogicTestDataSource))]
+        public async Task UpdateQuestionStatusAsync_CorrectData_CorrectResult(Guid userId, Guid questionId, int answerTimeMilliseconds,
+            bool doesSourceStatusExist, bool sourceIsNewStatus, int sourceRating, int sourcePenaltyPoints,
+            bool isAnswerCorrect,
+            bool expectedIsNewStatus, int expectedRating, int expectedPenaltyPoints)
+        {
+            //Arrange
+            var trainingRepositoryMock = new Mock<ITrainingRepository>();
+            trainingRepositoryMock.Setup(x => x.GetUserQuestionStatusAsync(userId, questionId)).ReturnsAsync(
+                doesSourceStatusExist ?
+                new UserQuestionStatus { QuestionId = questionId, UserId = userId, IsNew = sourceIsNewStatus, Rating = sourceRating, PenaltyPoints = sourcePenaltyPoints } :
+                null);
+
+            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
+
+            //Act
+            var actualResult = await trainingLogic.UpdateQuestionStatusAsync(userId, new TrainingResultRequest { IsAnswerCorrect = isAnswerCorrect, QuestionId = questionId, AnswerTimeMilliseconds = answerTimeMilliseconds }).ConfigureAwait(false);
+
+            //Assert
+            actualResult.Should().NotBeNull();
+            actualResult.IsNew.Should().Be(expectedIsNewStatus);
+            actualResult.Rating.Should().Be(expectedRating);
+            actualResult.PenaltyPoints.Should().Be(expectedPenaltyPoints);
+        }
+
+        [TestMethod]
+        [DynamicData(nameof(TrainingLogicTestDataSource.UpdateQuestionStatusAsync_IncorrectArguments_ArgumentException), typeof(TrainingLogicTestDataSource))]
+        public async Task UpdateQuestionStatusAsync_IncorrectArguments_ArgumentException(Guid userId, TrainingResultRequest request)
+        {
+            //Arrange
+            var trainingRepositoryMock = new Mock<ITrainingRepository>();
+            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
+
+            //Act
+            Func<Task> act = async () => await trainingLogic.UpdateQuestionStatusAsync(userId, request).ConfigureAwait(false);
+
+            //Assert
+            await act.Should().ThrowAsync<ArgumentException>().ConfigureAwait(false);
+        }
     }
 
     class GuidComparer : IEqualityComparer<Models.Question>
