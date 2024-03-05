@@ -91,8 +91,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 {
                     userQuestionStatus.PenaltyPoints--;
                 }
-
-                if (userQuestionStatus.Rating > Constants.MinQuestionRating)
+                else if (userQuestionStatus.Rating > Constants.MinQuestionRating)
                 {
                     userQuestionStatus.Rating--;
                 }
