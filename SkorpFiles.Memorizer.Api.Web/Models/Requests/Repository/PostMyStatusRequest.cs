@@ -4,6 +4,6 @@ namespace SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository
 {
     public class PostMyStatusRequest
     {
-        public IEnumerable<UserQuestionStatus>? Items { get; set; }
+        public IEnumerable<UserQuestionStatusForUpdate>? Items { get; set; }
     }
 }

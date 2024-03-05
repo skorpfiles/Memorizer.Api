@@ -26,6 +26,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             string userIdString = userId.ToAspNetUserIdString();
 
             var query = await (from q in DbContext.Questions
+                               .Include(q => q.TypedAnswers)
+                               .Include(q=>q.Questionnaire)
+                               .ThenInclude(q=>q!.Owner)
                                where !q.ObjectIsRemoved && questionnairesIds.Contains(q.QuestionnaireId)
                                join qu in DbContext.QuestionsUsers
                                on q.QuestionId equals qu.QuestionId into quGroup
@@ -36,7 +39,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                                    Question = q,
                                    QuestionUser = quo
                                }).ToListAsync();
-
 
             return query.Select(queryRecord =>
             {

@@ -3,13 +3,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Razor.TagHelpers;
-using SkorpFiles.Memorizer.Api.BusinessLogic;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
 using SkorpFiles.Memorizer.Api.Web.Controllers.Abstract;
 using SkorpFiles.Memorizer.Api.Web.Exceptions;
+using SkorpFiles.Memorizer.Api.Web.Models.ApiEntities;
 using SkorpFiles.Memorizer.Api.Web.Models.Responses.Training;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
@@ -60,7 +59,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             {
                 var userGuid = await GetCurrentUserGuidAsync();
                 var result = await _trainingLogic.UpdateQuestionStatusAsync(userGuid, _mapper.Map<Api.Models.RequestModels.TrainingResultRequest>(request));
-                return Ok();
+                return Ok(_mapper.Map<UserQuestionStatus>(result));
             });
         }
     }

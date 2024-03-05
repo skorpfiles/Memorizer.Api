@@ -13,6 +13,7 @@ namespace SkorpFiles.Memorizer.Api.Models
         public QuestionType Type { get; set; }
         public string? Text { get; set; }
         public string? UntypedAnswer { get; set; }
+        public List<TypedAnswer>? TypedAnswers { get; set; }
         public bool IsEnabled { get; set; }
         public string? Reference { get; set; }
         public bool IsFixed { get; set; }
@@ -20,6 +21,6 @@ namespace SkorpFiles.Memorizer.Api.Models
         public Guid QuestionnaireId { get; set; }
         public int? CodeInQuestionnaire { get; set; }
         public UserQuestionStatus? MyStatus { get; set; }
-        public Questionnaire? ParentQuestionnaire { get; set; }
+        public Questionnaire? Questionnaire { get; set; }
     }
 }
