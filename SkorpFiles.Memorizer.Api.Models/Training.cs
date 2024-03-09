@@ -10,7 +10,6 @@ namespace SkorpFiles.Memorizer.Api.Models
 {
     public class Training : Entity
     {
-        public Guid Id { get; set; }
         public string? Name { get; set; }
         public DateTime LastTimeUtc { get; set; }
         public TrainingLengthType LengthType { get; set; }

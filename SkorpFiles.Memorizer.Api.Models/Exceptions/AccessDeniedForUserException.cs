@@ -13,8 +13,5 @@ namespace SkorpFiles.Memorizer.Api.Models.Exceptions
         public AccessDeniedForUserException() { }
         public AccessDeniedForUserException(string message) : base(message) { }
         public AccessDeniedForUserException(string message, Exception inner) : base(message, inner) { }
-        protected AccessDeniedForUserException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }

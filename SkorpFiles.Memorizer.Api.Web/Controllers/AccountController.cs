@@ -19,6 +19,7 @@ using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using System.Web;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
+using System.Text;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
@@ -54,6 +55,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             if (request.Login == null || request.Password == null)
                 return BadRequest(new { errorText = "Login and password cannot be null." });
 
+            var authenticationTokenCipherKey = _configuration["AuthenticationTokenCipherKey"] ?? throw new InternalAuthenticationErrorException("Configuration problem: unable to get cipher key.");
+
             var (status, user, identity) = await GetIdentityAsync(request.Login, request.Password);
             if (status == SignInStatus.Failure)
                 return Unauthorized(new { errorCode = "InvalidLoginPassword", errorText = "Invalid login or password." });
@@ -68,7 +71,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                         notBefore: now,
                         claims: identity.Claims,
                         expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LIFETIME)),
-                        signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(_configuration), SecurityAlgorithms.HmacSha256));
+                        signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(Encoding.ASCII.GetBytes(authenticationTokenCipherKey)), SecurityAlgorithms.HmacSha256));
                 var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
                 if (encodedJwt != null)
@@ -203,7 +206,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 
             const string unauthorizedErrorCode = "Unable to confirm the user by the code.";
 
-            var user = await _userManager.FindByIdAsync(request.UserId.ToAspNetUserIdString());
+            var user = await _userManager.FindByIdAsync(request.UserId.ToAspNetUserIdString()!);
 
             if (user == null)
                 return Unauthorized(new { errorCode = "NoConfirmation", errorText = unauthorizedErrorCode });
@@ -248,22 +251,22 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 
         private async Task<(SignInStatus status, ApplicationUser? user, ClaimsIdentity? claims)> GetIdentityAsync(string username, string password)
         {
-            var signInStatusData = await CheckUserCredentialsAsync(username, password);
+            var (status, user) = await CheckUserCredentialsAsync(username, password);
 
-            if (signInStatusData.status == SignInStatus.Success || signInStatusData.status == SignInStatus.EmailNotConfirmed)
+            if (status == SignInStatus.Success || status == SignInStatus.EmailNotConfirmed)
             {
                 var claims = new List<Claim>
                 {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, username),
-                    new Claim(ClaimsIdentity.DefaultRoleClaimType, "admin")
+                    new(ClaimsIdentity.DefaultNameClaimType, username),
+                    new(ClaimsIdentity.DefaultRoleClaimType, "admin")
                 };
                 ClaimsIdentity claimsIdentity =
-                new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
+                new(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
                     ClaimsIdentity.DefaultRoleClaimType);
-                return (signInStatusData.status, signInStatusData.user, claimsIdentity);
+                return (status, user, claimsIdentity);
             }
             else
-                return (signInStatusData.status, null, null);
+                return (status, null, null);
         }
 
         private async Task<(SignInStatus status, ApplicationUser? user)> CheckUserCredentialsAsync(string username, string password)

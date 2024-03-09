@@ -55,7 +55,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
         public async Task RegisterUserAsync()
         {
-            await DbContext.Users.AddAsync(new IdentityUser { Id= Constants.DefaultUserId.ToAspNetUserIdString(), UserName = "TestLogin" });
+            await DbContext.Users.AddAsync(new IdentityUser { Id= Constants.DefaultUserId.ToAspNetUserIdString()!, UserName = "TestLogin" });
             await DbContext.SaveChangesAsync();
         }
 
@@ -63,6 +63,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
         {
             DisposeDbContext();
             ResetDependencies();
+            GC.SuppressFinalize(this);
         }
 
         private void DisposeDbContext()

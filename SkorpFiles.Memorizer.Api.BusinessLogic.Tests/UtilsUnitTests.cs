@@ -29,7 +29,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         {
             //Arrange
             //Act
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             Action act = () => Utils.FindBestQuestionsTimesCombination(null, 5);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             //Assert
             act.Should().Throw<ArgumentNullException>().And.ParamName.Should().Be("questions");
         }

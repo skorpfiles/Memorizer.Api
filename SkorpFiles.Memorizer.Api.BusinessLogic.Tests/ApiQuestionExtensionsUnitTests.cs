@@ -27,9 +27,13 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         public void FullEstimatedTrainingTimeSeconds_NullQuestion_ArgumentNullException()
         {
             //Arrange
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
             Models.Question question = null;
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             //Act
+#pragma warning disable CS8604 // Possible null reference argument.
             Action act = () => { question.FullEstimatedTrainingTimeSeconds(); };
+#pragma warning restore CS8604 // Possible null reference argument.
             //Assert
             act.Should().Throw<ArgumentNullException>();
         }

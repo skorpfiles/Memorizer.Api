@@ -40,8 +40,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     GenerateQuestionsUsingRules(generalFaker,questionFaker,
-                        new List<CustomQuestionRule>{ new(30, 150) },
-                        new List<CustomQuestionRule>(),
+                        [new(30, 150)],
+                        [],
                         out _
                         ),
                     0,
@@ -51,8 +51,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     GenerateQuestionsUsingRules(generalFaker,questionFaker,
-                        new List<CustomQuestionRule>{ new(30, 150) },
-                        new List<CustomQuestionRule>(),
+                        [new(30, 150)],
+                        [],
                         out List<Guid> expectedQuestionsGuids
                         ),
                     5,
@@ -62,8 +62,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     GenerateQuestionsUsingRules(generalFaker,questionFaker,
-                        new List<CustomQuestionRule>{ new(30) },
-                        new List<CustomQuestionRule>{ new(30) },
+                        [new(30)],
+                        [new(30)],
                         out expectedQuestionsGuids
                         ),
                     30,
@@ -73,8 +73,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     GenerateQuestionsUsingRules(generalFaker,questionFaker,
-                        new List<CustomQuestionRule>{ new(30, 140) },
-                        new List<CustomQuestionRule>{ new(30, 140) },
+                        [new(30, 140)],
+                        [new(30, 140)],
                         out expectedQuestionsGuids
                         ),
                     150,
@@ -84,8 +84,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     GenerateQuestionsUsingRules(generalFaker,questionFaker,
-                        new List<CustomQuestionRule>{ new(1), new(2), new(120), new(121) },
-                        new List<CustomQuestionRule>{ new(1), new(2) },
+                        [new(1), new(2), new(120), new(121)],
+                        [new(1), new(2)],
                         out expectedQuestionsGuids
                         ),
                     100,
@@ -95,8 +95,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     GenerateQuestionsUsingRules(generalFaker,questionFaker,
-                        new List<CustomQuestionRule>{ new(1), new(2), new(3), new(6), new(7), new(120), new(121) },
-                        new List<CustomQuestionRule>{ new(2), new(3) },
+                        [new(1), new(2), new(3), new(6), new(7), new(120), new(121)],
+                        [new(2), new(3)],
                         out expectedQuestionsGuids
                         ),
                     5,
@@ -106,8 +106,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     GenerateQuestionsUsingRules(generalFaker,questionFaker,
-                        new List<CustomQuestionRule>{ new(1), new(2), new(3), new(6), new(120), new(121) },
-                        new List<CustomQuestionRule>{ new(1), new(6) },
+                        [new(1), new(2), new(3), new(6), new(120), new(121)],
+                        [new(1), new(6)],
                         out expectedQuestionsGuids
                         ),
                     7,
@@ -117,8 +117,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     GenerateQuestionsUsingRules(generalFaker,questionFaker,
-                        new List<CustomQuestionRule>{ new(1), new(3), new(6), new(120), new(121) },
-                        new List<CustomQuestionRule>{ new(1), new(6) },
+                        [new(1), new(3), new(6), new(120), new(121)],
+                        [new(1), new(6)],
                         out expectedQuestionsGuids
                         ),
                     8,
@@ -152,9 +152,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
         private static List<Question> GenerateQuestionsUsingRules(Faker generalFaker, Faker<Question> questionFaker, List<CustomQuestionRule> rulesForUsualQuestions,
             List<CustomQuestionRule> expectedRules, out List<Guid> expectedQuestionsGuids)
         {
-            List<Question> result = new List<Question>();
+            List<Question> result = [];
 
-            expectedQuestionsGuids = new();
+            expectedQuestionsGuids = [];
 
             foreach (var rule in rulesForUsualQuestions)
             {

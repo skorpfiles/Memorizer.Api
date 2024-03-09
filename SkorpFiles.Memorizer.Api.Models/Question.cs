@@ -13,7 +13,6 @@ namespace SkorpFiles.Memorizer.Api.Models
         public QuestionType Type { get; set; }
         public string? Text { get; set; }
         public string? UntypedAnswer { get; set; }
-        public List<TypedAnswer>? TypedAnswers { get; set; }
         public bool IsEnabled { get; set; }
         public string? Reference { get; set; }
         public bool IsFixed { get; set; }

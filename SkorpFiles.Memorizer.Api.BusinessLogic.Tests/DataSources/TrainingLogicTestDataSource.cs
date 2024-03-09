@@ -1709,520 +1709,520 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
 
                 var testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(30, 150) },
-                    new List<CustomQuestionRule> { new(30, 150) },
+                    [],
+                    [],
+                    [new(30, 150)],
+                    [new(30, 150)],
                     out List<Guid> expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(20, 29), new(30, 39), new(40, 49) },
-                    new List<CustomQuestionRule> { new(20, 29) },
+                    [],
+                    [],
+                    [new(20, 29), new(30, 39), new(40, 49)],
+                    [new(20, 29)],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(100), new(15), new(25) },
-                    new List<CustomQuestionRule> { new(25), new(15) },
+                    [],
+                    [],
+                    [new(100), new(15), new(25)],
+                    [new(25), new(15)],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(121), new(120), new(1), new(2) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [],
+                    [],
+                    [new(121), new(120), new(1), new(2)],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(30, 150) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(30, 150) },
+                    [],
+                    [new(30, 150)],
+                    [],
+                    [ new(30, 150) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(20, 29), new(30, 39), new(40, 49) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(20, 29) },
+                    [],
+                    [ new(20, 29), new(30, 39), new(40, 49) ],
+                    [],
+                    [ new(20, 29) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(30, 39), new(40, 49) },
-                    new List<CustomQuestionRule> { new(20, 29) },
-                    new List<CustomQuestionRule> { new(20, 29) },
+                    [],
+                    [ new(30, 39), new(40, 49) ],
+                    [ new(20, 29) ],
+                    [ new(20, 29) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(20, 29) },
-                    new List<CustomQuestionRule> { new(30, 39), new(40, 49) },
-                    new List<CustomQuestionRule> { new(20, 29) },
+                    [],
+                    [ new(20, 29) ],
+                    [ new(30, 39), new(40, 49) ],
+                    [ new(20, 29) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(100), new(15), new(25) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(15), new(25) },
+                    [],
+                    [ new(100), new(15), new(25) ],
+                    [],
+                    [ new(15), new(25) ],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(100) },
-                    new List<CustomQuestionRule> { new(15), new(25) },
-                    new List<CustomQuestionRule> { new(15), new(25) },
+                    [],
+                    [ new(100) ],
+                    [ new(15), new(25) ],
+                    [ new(15), new(25) ],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(15), new(25) },
-                    new List<CustomQuestionRule> { new(100) },
-                    new List<CustomQuestionRule> { new(15), new(25) },
+                    [],
+                    [ new(15), new(25) ],
+                    [ new(100) ],
+                    [ new(15), new(25) ],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(121), new(120), new(1), new(2) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [],
+                    [ new(121), new(120), new(1), new(2) ],
+                    [],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(120), new(1), new(2) },
-                    new List<CustomQuestionRule> { new(121) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [],
+                    [ new(120), new(1), new(2) ],
+                    [ new(121) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule> { new(121), new(120) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [],
+                    [ new(1), new(2) ],
+                    [ new(121), new(120) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(121) },
-                    new List<CustomQuestionRule> { new(120), new(1), new(2) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [],
+                    [ new(121) ],
+                    [ new(120), new(1), new(2) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(121), new(120) },
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [],
+                    [ new(121), new(120) ],
+                    [ new(1), new(2) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(15, 125) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(15, 125) },
+                    [ new(15, 125) ],
+                    [],
+                    [],
+                    [ new(15, 125) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(10, 14), new(15, 19), new(20, 25) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(10, 14) },
+                    [ new(10, 14), new(15, 19), new(20, 25) ],
+                    [],
+                    [],
+                    [ new(10, 14) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(15, 19), new(20, 24) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(20, 29) },
-                    new List<CustomQuestionRule> { new(20, 29) },
+                    [ new(15, 19), new(20, 24) ],
+                    [],
+                    [ new(20, 29) ],
+                    [ new(20, 29) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(10, 14) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(30, 39), new(40, 49) },
-                    new List<CustomQuestionRule> { new(10, 14) },
+                    [ new(10, 14) ],
+                    [],
+                    [ new(30, 39), new(40, 49) ],
+                    [ new(10, 14) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(15, 19), new(20, 24) },
-                    new List<CustomQuestionRule> { new(20, 29) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(20, 29) },
+                    [ new(15, 19), new(20, 24) ],
+                    [ new(20, 29) ],
+                    [],
+                    [ new(20, 29) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(10, 14) },
-                    new List<CustomQuestionRule> { new(30, 39), new(40, 49) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(10, 14) },
+                    [ new(10, 14) ],
+                    [ new(30, 39), new(40, 49) ],
+                    [],
+                    [ new(10, 14) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(15, 19) },
-                    new List<CustomQuestionRule> { new(20, 29) },
-                    new List<CustomQuestionRule> { new(40, 49) },
-                    new List<CustomQuestionRule> { new(20, 29) },
+                    [ new(15, 19) ],
+                    [ new(20, 29) ],
+                    [ new(40, 49) ],
+                    [ new(20, 29) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(15, 19) },
-                    new List<CustomQuestionRule> { new(40, 49) },
-                    new List<CustomQuestionRule> { new(20, 29) },
-                    new List<CustomQuestionRule> { new(20, 29) },
+                    [ new(15, 19) ],
+                    [ new(40, 49) ],
+                    [ new(20, 29) ],
+                    [ new(20, 29) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(10, 14) },
-                    new List<CustomQuestionRule> { new(30, 39) },
-                    new List<CustomQuestionRule> { new(40, 49) },
-                    new List<CustomQuestionRule> { new(10, 14) },
+                    [ new(10, 14) ],
+                    [ new(30, 39) ],
+                    [ new(40, 49) ],
+                    [ new(10, 14) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(50), new(7), new(12) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(12), new(7) },
+                    [ new(50), new(7), new(12) ],
+                    [],
+                    [],
+                    [ new(12), new(7) ],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(7), new(12) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(100) },
-                    new List<CustomQuestionRule> { new(12), new(7) },
+                    [ new(7), new(12) ],
+                    [],
+                    [ new(100) ],
+                    [ new(12), new(7) ],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(50) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(25), new(15) },
-                    new List<CustomQuestionRule> { new(25), new(15) },
+                    [ new(50) ],
+                    [],
+                    [ new(25), new(15) ],
+                    [ new(25), new(15) ],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(7), new(12) },
-                    new List<CustomQuestionRule> { new(100) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(12), new(7) },
+                    [ new(7), new(12) ],
+                    [ new(100) ],
+                    [],
+                    [ new(12), new(7) ],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(50) },
-                    new List<CustomQuestionRule> { new(15), new(25) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(15), new(25) },
+                    [ new(50) ],
+                    [ new(15), new(25) ],
+                    [],
+                    [ new(15), new(25) ],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(12) },
-                    new List<CustomQuestionRule> { new(15) },
-                    new List<CustomQuestionRule> { new(100) },
-                    new List<CustomQuestionRule> { new(12), new(15) },
+                    [ new(12) ],
+                    [ new(15) ],
+                    [ new(100) ],
+                    [ new(12), new(15) ],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(12) },
-                    new List<CustomQuestionRule> { new(100) },
-                    new List<CustomQuestionRule> { new(15) },
-                    new List<CustomQuestionRule> { new(12), new(15) },
+                    [ new(12) ],
+                    [ new(100) ],
+                    [ new(15) ],
+                    [ new(12), new(15) ],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(50) },
-                    new List<CustomQuestionRule> { new(25) },
-                    new List<CustomQuestionRule> { new(15) },
-                    new List<CustomQuestionRule> { new(25), new(15) },
+                    [ new(50) ],
+                    [ new(25) ],
+                    [ new(15) ],
+                    [ new(25), new(15) ],
                     out expectedQuestionsIds),
                     50,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(61), new(60), new(1), new(2) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120) */},
+                    [ new(61), new(60), new(1), new(2) ],
+                    [],
+                    [],
+                    [new(1), new(2), /*new(120) */],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(61), new(60) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(61), new(60) ],
+                    [],
+                    [ new(1), new(2) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(61) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(61) ],
+                    [],
+                    [ new(1), new(2), new(120) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(121), new(120) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(1), new(2) ],
+                    [],
+                    [ new(121), new(120) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(1), new(2), new(60) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(121) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(1), new(2), new(60) ],
+                    [],
+                    [ new(121) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(61), new(60) },
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(61), new(60) ],
+                    [ new(1), new(2) ],
+                    [],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(61) },
-                    new List<CustomQuestionRule> { new(1), new(2), new(120) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(61) ],
+                    [ new(1), new(2), new(120) ],
+                    [],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule> { new(121), new(120) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(1), new(2) ],
+                    [ new(121), new(120) ],
+                    [],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(1), new(2), new(60) },
-                    new List<CustomQuestionRule> { new(121) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(1), new(2), new(60) ],
+                    [ new(121) ],
+                    [],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(1) },
-                    new List<CustomQuestionRule> { new(2) },
-                    new List<CustomQuestionRule> { new(121),new(120)},
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(1) ],
+                    [ new(2) ],
+                    [ new(121),new(120)],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule> { new(121) },
-                    new List<CustomQuestionRule> { new(120) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(1), new(2) ],
+                    [ new(121) ],
+                    [ new(120) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule> { new(120) },
-                    new List<CustomQuestionRule> { new(121) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(1), new(2) ],
+                    [ new(120) ],
+                    [ new(121) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(61) },
-                    new List<CustomQuestionRule> { new(120) },
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(61) ],
+                    [ new(120) ],
+                    [ new(1), new(2) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(60) },
-                    new List<CustomQuestionRule> { new(121) },
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(60) ],
+                    [ new(121) ],
+                    [ new(1), new(2) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(60) },
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule> { new(121) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(60) ],
+                    [ new(1), new(2) ],
+                    [ new(121) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(61) },
-                    new List<CustomQuestionRule> { new(1), new(2) },
-                    new List<CustomQuestionRule> { new(120) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(61) ],
+                    [ new(1), new(2) ],
+                    [ new(120) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(1) },
-                    new List<CustomQuestionRule> { new(121), new(120) },
-                    new List<CustomQuestionRule> { new(2) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(1) ],
+                    [ new(121), new(120) ],
+                    [ new(2) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(61), new(60) },
-                    new List<CustomQuestionRule> { new(1) },
-                    new List<CustomQuestionRule> { new(2) },
-                    new List<CustomQuestionRule> { new(1), new(2), /*new(120)*/ },
+                    [ new(61), new(60) ],
+                    [ new(1) ],
+                    [ new(2) ],
+                    [new(1), new(2), /*new(120)*/],
                     out expectedQuestionsIds),
                     100,
                     expectedQuestionsIds);
                 foreach (var testCase in testCases) { yield return testCase; }
 
                 testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
-                    new List<CustomQuestionRule> { new(50) },
-                    new List<CustomQuestionRule>(),
-                    new List<CustomQuestionRule> { new(99) },
-                    new List<CustomQuestionRule> { new(99) },
+                    [ new(50) ],
+                    [],
+                    [ new(99) ],
+                    [ new(99) ],
                     out expectedQuestionsIds),
                     5,
                     expectedQuestionsIds);
@@ -2551,9 +2551,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
         private static List<Question> GenerateQuestionsUsingRules(Faker generalFaker, Faker<Question> questionFaker, List<CustomQuestionRule> rulesForNewQuestions, List<CustomQuestionRule> rulesForPenaltyQuestions, List<CustomQuestionRule> rulesForUsualQuestions, 
             List<CustomQuestionRule> expectedRules, out List<Guid> expectedQuestionsGuids)
         {
-            List<Question> result = new List<Question>();
+            List<Question> result = [];
 
-            expectedQuestionsGuids = new();
+            expectedQuestionsGuids = [];
 
             foreach(var rule in rulesForNewQuestions)
             {
@@ -2606,8 +2606,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
 
         private static List<(double newQuestionsFraction, double penaltyQuestionsFraction)> GetAllStandardFractions(Faker generalFaker)
         {
-            return new List<(double newQuestionsFraction, double penaltyQuestionsFraction)>
-            {
+            return
+            [
                 (0,0),
                 (0,generalFaker.Random.Double(0.1, 0.4)),
                 (0, generalFaker.Random.Double(0.6, 0.9)),
@@ -2618,12 +2618,12 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 (generalFaker.Random.Double(0.6, 0.9), 0),
                 (generalFaker.Random.Double(0.6, 0.7), generalFaker.Random.Double(0.1, 0.25)),
                 (1,0)
-            };
+            ];
         }
 
         private static IEnumerable<object[]> TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(Faker generalFaker, Faker<Question> questionFaker, Guid userId, int newCount, int penaltyCount, int usualCount, int lengthValue)
         {
-            List<TrainingLengthType> lengthTypes = new() { TrainingLengthType.QuestionsCount, TrainingLengthType.Time };
+            List<TrainingLengthType> lengthTypes = [TrainingLengthType.QuestionsCount, TrainingLengthType.Time];
             List<(double newQuestionsFraction, double penaltyQuestionsFraction)> allStandardFractions = GetAllStandardFractions(generalFaker);
 
             foreach(var lengthType in lengthTypes)
@@ -2672,8 +2672,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
 
             DataUtils.Shuffle(questions, generalFaker);
 
-            return new object[]
-            {
+            return
+            [
                 userId,
                 generalFaker.Make(generalFaker.Random.Number(1,10),generalFaker.Random.Guid),
                 lengthType,
@@ -2681,12 +2681,12 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 newQuestionsFraction,
                 penaltyQuestionsFraction,
                 questions
-            };
+            ];
         }
 
         private static List<Question> CreateQuestionsCollectionByTime(Faker generalFaker, Faker<Question> questionFaker, string ruleSet, int fullTime)
         {
-            List<Question> questions = new List<Question>();
+            List<Question> questions = [];
             const int recommendedMinimumCountOfQuestions = 50;
             int minimumCountOfQuestions = fullTime > recommendedMinimumCountOfQuestions ? recommendedMinimumCountOfQuestions : fullTime;
             int currentTimeLength = 0;

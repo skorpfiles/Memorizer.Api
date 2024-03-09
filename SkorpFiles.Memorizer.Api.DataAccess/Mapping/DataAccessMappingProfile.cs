@@ -65,7 +65,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.Questionnaire, opts => opts.MapFrom(src => src.Questionnaire))
                 .ForMember(dest => dest.EstimatedTrainingTimeSeconds, opts => opts.MapFrom(src => src.QuestionEstimatedTrainingTimeSeconds))
                 .ForMember(dest => dest.Text, opts => opts.MapFrom(src => src.QuestionText))
-                .ForMember(dest => dest.UntypedAnswer, opts => opts.MapFrom(src => src.QuestionUntypedAnswer));
+                .ForMember(dest => dest.UntypedAnswer, opts => opts.MapFrom(src => src.QuestionUntypedAnswer))
+                .IncludeAllDerived();
             CreateMap<Question, SkorpFiles.Memorizer.Api.Models.ExistingQuestion>()
                 .ForMember(dest=>dest.Labels, opts=>opts.MapFrom(src=>src.LabelsForQuestion));
             CreateMap<Question, SkorpFiles.Memorizer.Api.Models.QuestionToUpdate>()

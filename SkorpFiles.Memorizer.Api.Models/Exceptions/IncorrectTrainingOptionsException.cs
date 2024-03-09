@@ -13,8 +13,5 @@ namespace SkorpFiles.Memorizer.Api.Models.Exceptions
 		public IncorrectTrainingOptionsException() { }
 		public IncorrectTrainingOptionsException(string message) : base(message) { }
 		public IncorrectTrainingOptionsException(string message, Exception inner) : base(message, inner) { }
-		protected IncorrectTrainingOptionsException(
-		  System.Runtime.Serialization.SerializationInfo info,
-		  System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
 	}
 }
