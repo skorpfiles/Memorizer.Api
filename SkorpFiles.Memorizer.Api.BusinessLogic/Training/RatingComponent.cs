@@ -8,15 +8,9 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
-    internal class RatingComponent:EntitiesListForRandomChoice<Question>
+    internal class RatingComponent(int coordinate, int length) : EntitiesListForRandomChoice<ExistingQuestion>
     {
-        public int Coordinate { get; set; }
-        public int Length { get; set; }
-
-        public RatingComponent(int coordinate, int length) 
-        { 
-            Coordinate = coordinate;
-            Length = length; 
-        }
+        public int Coordinate { get; set; } = coordinate;
+        public int Length { get; set; } = length;
     }
 }

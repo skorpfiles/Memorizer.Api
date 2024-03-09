@@ -14,20 +14,20 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
     internal class TrainingBuilder
     {
-        private Random _random = new();
+        private readonly Random _random = new();
 
-        public List<Question> BasicQuestionsList { get; set; } = new List<Question>();
-        public EntitiesListForRandomChoice<Question> NewQuestionsList { get; set; } = new EntitiesListForRandomChoice<Question>();
-        public EntitiesListForRandomChoice<Question> PrioritizedPenaltyQuestionsList { get; set; } = new EntitiesListForRandomChoice<Question>();
+        public List<ExistingQuestion> BasicQuestionsList { get; set; } = [];
+        public EntitiesListForRandomChoice<ExistingQuestion> NewQuestionsList { get; set; } = [];
+        public EntitiesListForRandomChoice<ExistingQuestion> PrioritizedPenaltyQuestionsList { get; set; } = [];
 
-        public TrainingBuilder(IEnumerable<Question> initialQuestionsList)
+        public TrainingBuilder(IEnumerable<ExistingQuestion> initialQuestionsList)
         {
             FillQuestionsListsInitially(initialQuestionsList);
         }
 
-        private void FillQuestionsListsInitially(IEnumerable<Question> initialQuestionsList)
+        private void FillQuestionsListsInitially(IEnumerable<ExistingQuestion> initialQuestionsList)
         {
-            IEnumerator<Api.Models.Question> questionsEnumerator = initialQuestionsList.GetEnumerator();
+            IEnumerator<Api.Models.ExistingQuestion> questionsEnumerator = initialQuestionsList.GetEnumerator();
             while (questionsEnumerator.MoveNext())
             {
                 var currentQuestion = questionsEnumerator.Current;
@@ -46,7 +46,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             }
         }
 
-        public List<Question> MakeQuestionsListForTraining(TrainingOptions options)
+        public List<ExistingQuestion> MakeQuestionsListForTraining(TrainingOptions options)
         {
             if (options.NewQuestionsFraction < 0 || options.PrioritizedPenaltyQuestionsFraction < 0)
                 throw new IncorrectTrainingOptionsException(Constants.NegativeFractionsMessage);
@@ -57,7 +57,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             if (options.LengthValue <= 0)
                 throw new IncorrectTrainingOptionsException(Constants.NonPositiveLengthValueMessage);
 
-            List<Question> result = new();
+            List<ExistingQuestion> result = [];
 
             double expectedLengthForNewQuestionList = options.LengthValue * options.NewQuestionsFraction;
             double expectedLengthForPrioritizedPenaltyQuestionsList = options.LengthValue * options.PrioritizedPenaltyQuestionsFraction;
@@ -74,7 +74,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             if (expectedLengthForBasicQuestionList > 0)
             {
                 RatingTape ratingTape = InitializeRatingTape(BasicQuestionsList, result);
-                Dictionary<Guid, Question> questionsSelectedFromRatingTape = GetSelectedQuestionsFromGeneralList(ratingTape, options.LengthType, expectedLengthForBasicQuestionList, _random, out int resultBasicLength);
+                Dictionary<Guid, ExistingQuestion> questionsSelectedFromRatingTape = GetSelectedQuestionsFromGeneralList(ratingTape, options.LengthType, expectedLengthForBasicQuestionList, _random, out int resultBasicLength);
                 BasicQuestionsList.RemoveAll(q => questionsSelectedFromRatingTape.ContainsKey(q.Id!.Value));
                 result.AddRange(questionsSelectedFromRatingTape.Values);
 
@@ -87,14 +87,12 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                     //if there is lack of questions after all selections, search for questions to fill 
                     if (options.LengthType == Models.Enums.TrainingLengthType.Time && options.LengthValue - options.LengthValue * Constants.AllowableErrorFraction > resultNewLength+resultPenaltyLength+resultBasicLength+resultAdditionalNewLength)
                     {
-                        List<Question> remainingQuestions = new();
-                        remainingQuestions.AddRange(NewQuestionsList.ToList());
-                        remainingQuestions.AddRange(BasicQuestionsList.ToList());
+                        List<ExistingQuestion> remainingQuestions = [.. NewQuestionsList.ToList(), .. BasicQuestionsList.ToList()];
 
                         result.AddRange(Utils.FindBestQuestionsTimesCombination(remainingQuestions, options.LengthValue));
 
                         //if the list is empty, add one the cheapest question
-                        if (!result.Any() && remainingQuestions.Any())
+                        if (result.Count == 0 && remainingQuestions.Count != 0)
                         {
                             result.Add(GetQuestionWithMinimalCost(remainingQuestions)!);
                         }
@@ -107,11 +105,11 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             return result;
         }
 
-        private static Question? GetQuestionWithMinimalCost(IEnumerable<Question> questions)
+        private static ExistingQuestion? GetQuestionWithMinimalCost(IEnumerable<ExistingQuestion> questions)
         {
-            Question? result = null;
+            ExistingQuestion? result = null;
             int currentMinimum = -1;
-            foreach (Question question in questions)
+            foreach (ExistingQuestion question in questions)
             {
                 if (question.FullEstimatedTrainingTimeSeconds() < currentMinimum || currentMinimum == -1)
                 {
@@ -122,9 +120,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             return result;
         }
 
-        private static Dictionary<Guid, Question> GetSelectedQuestionsFromGeneralList(IPickable<Question> sourceList, Models.Enums.TrainingLengthType lengthType, double expectedLength, Random random, out int resultLength)
+        private static Dictionary<Guid, ExistingQuestion> GetSelectedQuestionsFromGeneralList(IPickable<ExistingQuestion> sourceList, Models.Enums.TrainingLengthType lengthType, double expectedLength, Random random, out int resultLength)
         {
-            Dictionary<Guid, Question> selectedQuestions = new();
+            Dictionary<Guid, ExistingQuestion> selectedQuestions = [];
 
             int consumedValue = 0;
             int tryingAttemptInARowWithoutResult = 0;
@@ -133,7 +131,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
             if (Math.Round(expectedLength) > 0 && !sourceList.Consumed)
             {
-                Question? selectedQuestion;
+                ExistingQuestion? selectedQuestion;
                 do
                 {
                     selectedQuestion = sourceList.PickAndDelete(random);
@@ -142,6 +140,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         throw new InvalidOperationException("Question cannot have null ID while creating training list.");
                     }
 
+#pragma warning disable CA1864 // Prefer the 'IDictionary.TryAdd(TKey, TValue)' method
                     if (!selectedQuestions.ContainsKey(selectedQuestion.Id.Value))
                     {
                         switch (lengthType)
@@ -185,6 +184,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                     {
                         throw new InvalidOperationException("Question with the same ID found the second time.");
                     }
+#pragma warning restore CA1864 // Prefer the 'IDictionary.TryAdd(TKey, TValue)' method
                 }
                 while (!sourceList.Consumed &&
                     ((lengthType == Models.Enums.TrainingLengthType.QuestionsCount && consumedValue < Math.Round(expectedLength)) ||
@@ -194,12 +194,12 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             return selectedQuestions;
         }
 
-        private static RatingTape InitializeRatingTape(List<Question> basicList, IEnumerable<Question> questionsToFilter)
+        private static RatingTape InitializeRatingTape(List<ExistingQuestion> basicList, IEnumerable<ExistingQuestion> questionsToFilter)
         {
             RatingTape result = new();
-            List<Question> questionsToRemoveFromBasicList = new List<Question>();
+            List<ExistingQuestion> questionsToRemoveFromBasicList = [];
 
-            foreach(Question question in basicList)
+            foreach(ExistingQuestion question in basicList)
             {
                 if (!questionsToFilter.Any(q => q.Id == question.Id))
                 {

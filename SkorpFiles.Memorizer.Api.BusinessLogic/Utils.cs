@@ -10,10 +10,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
 {
     public static class Utils
     {
-        public static List<Question> FindBestQuestionsTimesCombination(List<Question> questions, int target)
+        public static List<ExistingQuestion> FindBestQuestionsTimesCombination(List<ExistingQuestion> questions, int target)
         {
-            if (questions==null)
-                throw new ArgumentNullException(nameof(questions));
+            ArgumentNullException.ThrowIfNull(questions);
             if (target < 0)
                 throw new ArgumentException($"{nameof(target)} should be positive.");
 
@@ -33,7 +32,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 }
             }
 
-            List<Question> result = new();
+            List<ExistingQuestion> result = [];
             int res = target;
             for (int i = n; i > 0 && res > 0; i--)
             {

@@ -11,8 +11,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Extensions
     {
         public static int FullEstimatedTrainingTimeSeconds(this Question question)
         {
-            if (question == null)
-                throw new ArgumentNullException(nameof(question));
+            ArgumentNullException.ThrowIfNull(question);
 
             int result;
             if (!question.MyStatus!.IsNew)

@@ -36,9 +36,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     });
         }
 
-        public static Faker<Question> GetQuestionFaker(Faker<UserQuestionStatus> userQuestionStatusFaker)
+        public static Faker<ExistingQuestion> GetQuestionFaker(Faker<UserQuestionStatus> userQuestionStatusFaker)
         {
-            return new Faker<Question>()
+            return new Faker<ExistingQuestion>()
                     .RuleSet("default", rs =>
                     {
                         rs.RuleFor(q => q.Id, f => f.Random.Guid());

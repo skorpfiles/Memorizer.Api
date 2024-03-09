@@ -1,3 +1,4 @@
+using AutoMapper;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -57,7 +58,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
-            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(new List<Question>());
+            trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(new List<ExistingQuestion>());
 
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
@@ -76,7 +77,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData),typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_AllQuestionsAreDistinct(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionFraction, List<Models.Question> allQuestions)
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_AllQuestionsAreDistinct(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionFraction, List<Models.ExistingQuestion> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
@@ -101,7 +102,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData), typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectFullLengthDelta(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectFullLengthDelta(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.ExistingQuestion> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
@@ -148,7 +149,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData), typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectNewDeltas(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectNewDeltas(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.ExistingQuestion> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
@@ -169,7 +170,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             {
                 case Models.Enums.TrainingLengthType.QuestionsCount:
                     lengthOfAllNewQuestions = allQuestions.Where(q=>q.MyStatus!.IsNew).Count();
-                    lengthOfAllQuestionsExceptNew = allQuestions.Count() - lengthOfAllNewQuestions;
+                    lengthOfAllQuestionsExceptNew = allQuestions.Count - lengthOfAllNewQuestions;
                     lengthOfNewQuestionsInActualResult = actualResult.Where(q => q.MyStatus!.IsNew).Count();
                     expectedLengthValue = lengthValue < allQuestions.Count ? lengthValue : allQuestions.Count;
                     break;
@@ -207,7 +208,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             {
                 var expectedNewQuestions = allQuestions.Where(q => q.MyStatus!.IsNew).ToList();
                 var actualNewQuestions = actualResult.Where(q=>q.MyStatus!.IsNew).ToList();
-                if (expectedNewQuestions.Any())
+                if (expectedNewQuestions.Count != 0)
                 {
                     actualNewQuestions.Should().BeEquivalentTo(expectedNewQuestions);
                 }
@@ -219,7 +220,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         }
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectData), typeof(TrainingLogicTestDataSource))]
-        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectPenaltyDeltas(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions)
+        public async Task SelectQuestionsForTrainingAsync_CorrectData_CorrectPenaltyDeltas(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.ExistingQuestion> allQuestions)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
@@ -268,7 +269,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                 var expectedPenaltyQuestions = allQuestions.Where(q => q.MyStatus!.PenaltyPoints>0).ToList();
                 var actualPenaltyQuestions = actualResult.Where(q => q.MyStatus!.PenaltyPoints > 0).ToList();
 
-                if (expectedPenaltyQuestions.Any())
+                if (expectedPenaltyQuestions.Count != 0)
                 {
                     actualPenaltyQuestions.Should().BeEquivalentTo(expectedPenaltyQuestions);
                 }
@@ -282,7 +283,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_CorrectDataThatIsImpossibleToMatchLength_CorrectSelection),typeof(TrainingLogicTestDataSource))]
         public async Task SelectQuestionsForTrainingAsync_CorrectDataThatIsImpossibleToMatchLength_CorrectSelection(Guid userId, IEnumerable<Guid> questionnairesIds,
-            int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.Question> allQuestions, List<Guid> expectedQuestionIds)
+            int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction, List<Models.ExistingQuestion> allQuestions, List<Guid> expectedQuestionIds)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
@@ -314,7 +315,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
-            var actualResult = await trainingLogic.UpdateQuestionStatusAsync(userId, new TrainingResultRequest { IsAnswerCorrect = isAnswerCorrect, QuestionId = questionId, AnswerTimeMilliseconds = answerTimeMilliseconds }).ConfigureAwait(false);
+            var actualResult = await trainingLogic.UpdateQuestionStatusAsync(userId, new TrainingResult { IsAnswerCorrect = isAnswerCorrect, QuestionId = questionId, AnswerTimeMilliseconds = answerTimeMilliseconds }).ConfigureAwait(false);
 
             //Assert
             actualResult.Should().NotBeNull();
@@ -325,7 +326,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.UpdateQuestionStatusAsync_IncorrectArguments_ArgumentException), typeof(TrainingLogicTestDataSource))]
-        public async Task UpdateQuestionStatusAsync_IncorrectArguments_ArgumentException(Guid userId, TrainingResultRequest request)
+        public async Task UpdateQuestionStatusAsync_IncorrectArguments_ArgumentException(Guid userId, TrainingResult request)
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
@@ -339,9 +340,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         }
     }
 
-    class GuidComparer : IEqualityComparer<Models.Question>
+    class GuidComparer : IEqualityComparer<Models.ExistingQuestion>
     {
-        public bool Equals(Question? x, Question? y)
+        public bool Equals(ExistingQuestion? x, ExistingQuestion? y)
         {
             if (x == null && y == null)
                 return true;
@@ -350,7 +351,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             return x.Id.Equals(y.Id);
         }
 
-        public int GetHashCode([DisallowNull] Question obj)
+        public int GetHashCode([DisallowNull] ExistingQuestion obj)
         {
             return obj.GetHashCode();
         }

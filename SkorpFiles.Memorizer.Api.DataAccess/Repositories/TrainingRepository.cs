@@ -15,14 +15,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 {
     public class TrainingRepository(ApplicationDbContext dbContext, IMapper mapper) : RepositoryBase(dbContext), ITrainingRepository
     {
-        private readonly IMapper _mapper = mapper;
-
-        public async Task<IEnumerable<Api.Models.Question>> GetQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds)
+        public async Task<IEnumerable<Api.Models.ExistingQuestion>> GetQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds)
         {
             if (userId == Guid.Empty)
                 throw new ArgumentException("UserId must not be empty.");
 
-            ArgumentNullException.ThrowIfNull(nameof(questionnairesIds));
+            ArgumentNullException.ThrowIfNull(questionnairesIds);
 
             if (!questionnairesIds.Any())
                 throw new ArgumentException("QuestionnairesIds must not be empty.");
@@ -46,14 +44,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             return query.Select(queryRecord =>
             {
-                var resultQuestion = _mapper.Map<Api.Models.Question>(queryRecord.Question);
+                var resultQuestion = mapper.Map<Api.Models.ExistingQuestion>(queryRecord.Question);
                 if (queryRecord.QuestionUser != null)
-                    resultQuestion.MyStatus = _mapper.Map<UserQuestionStatus>(queryRecord.QuestionUser);
+                    resultQuestion.MyStatus = mapper.Map<UserQuestionStatus>(queryRecord.QuestionUser);
                 return resultQuestion;
             }).ToList();
         }
 
-        public async Task UpdateQuestionStatusAsync(UserQuestionStatus newQuestionStatus)
+        public async Task UpdateQuestionStatusAsync(UserQuestionStatus newQuestionStatus, Api.Models.TrainingResult trainingResult, Api.Models.QuestionStatus defaultQuestionStatus)
         {
             ArgumentNullException.ThrowIfNull(newQuestionStatus);
 
@@ -70,12 +68,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                                       select uq).SingleOrDefaultAsync();
             if (questionUser == null)
             {
-                await UpdateNonExistingQuestionStatusAsync(newQuestionStatus);
+                await UpdateNonExistingQuestionStatusAsync(newQuestionStatus, trainingResult, defaultQuestionStatus);
             }
             else
             {
-                await UpdateExistingQuestionStatusAsync(questionUser, newQuestionStatus);
+                await UpdateExistingQuestionStatusAsync(questionUser, newQuestionStatus, trainingResult);
             }
+            await DbContext.SaveChangesAsync();
         }
 
         public async Task<UserQuestionStatus?> GetUserQuestionStatusAsync(Guid userId, Guid questionId)
@@ -91,10 +90,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                                where uq.UserId == userIdString &&
                                uq.QuestionId == questionId
                                select uq).SingleOrDefaultAsync();
-            return questionUser != null ? _mapper.Map<UserQuestionStatus>(questionUser) : null;
+            return questionUser != null ? mapper.Map<UserQuestionStatus>(questionUser) : null;
         }
 
-        private async Task UpdateNonExistingQuestionStatusAsync(UserQuestionStatus newQuestionStatus)
+        private async Task UpdateNonExistingQuestionStatusAsync(UserQuestionStatus newQuestionStatus, Api.Models.TrainingResult trainingResult, Api.Models.QuestionStatus defaultQuestionStatus)
         {
             var question = await (from q in DbContext.Questions.Include(q => q.Questionnaire)
                                   where q.QuestionId == newQuestionStatus.QuestionId
@@ -104,10 +103,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             {
                 Utils.CheckQuestionnaireAvailabilityForUser(newQuestionStatus.UserId,
                     Guid.Parse(question.Questionnaire.OwnerId), question.Questionnaire.QuestionnaireAvailability);
-                var questionUser = _mapper.Map<QuestionUser>(newQuestionStatus);
+                var questionUser = mapper.Map<QuestionUser>(newQuestionStatus);
                 questionUser.ObjectCreationTimeUtc = DateTime.UtcNow;
                 await DbContext.QuestionsUsers.AddAsync(questionUser);
-                await DbContext.SaveChangesAsync();
+                trainingResult.InitialQuestionStatus = defaultQuestionStatus;
+                await LogTrainingResultAsync(trainingResult);
             }
             else
             {
@@ -115,22 +115,43 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             }
         }
 
-        private async Task UpdateExistingQuestionStatusAsync(QuestionUser questionUser, UserQuestionStatus newQuestionStatus)
+        private async Task UpdateExistingQuestionStatusAsync(QuestionUser questionUser, UserQuestionStatus newQuestionStatus, Api.Models.TrainingResult trainingResult)
         {
             if (questionUser.Question != null && !questionUser.Question.ObjectIsRemoved &&
                     questionUser.Question.Questionnaire != null && !questionUser.Question.Questionnaire.ObjectIsRemoved)
             {
                 Utils.CheckQuestionnaireAvailabilityForUser(newQuestionStatus.UserId,
                     Guid.Parse(questionUser.Question.Questionnaire.OwnerId), questionUser.Question.Questionnaire.QuestionnaireAvailability);
+
+                trainingResult.InitialQuestionStatus = new QuestionStatus
+                {
+                    IsNew = questionUser.QuestionUserIsNew,
+                    Rating = questionUser.QuestionUserRating,
+                    PenaltyPoints = questionUser.QuestionUserPenaltyPoints
+                };
+
                 questionUser.QuestionUserIsNew = newQuestionStatus.IsNew;
                 questionUser.QuestionUserRating = newQuestionStatus.Rating;
                 questionUser.QuestionUserPenaltyPoints = newQuestionStatus.PenaltyPoints;
-                await DbContext.SaveChangesAsync();
+
+                await LogTrainingResultAsync(trainingResult);
             }
             else
             {
                 throw new ObjectNotFoundException("Question with such ID is not found.");
             }
+        }
+
+        private async Task LogTrainingResultAsync(Api.Models.TrainingResult trainingResult)
+        {
+            ArgumentNullException.ThrowIfNull(trainingResult);
+
+            if (trainingResult.QuestionId == Guid.Empty)
+                throw new ArgumentException($"QuestionId must not be null.");
+            if (trainingResult.UserId == Guid.Empty)
+                throw new ArgumentException($"UserId must not be null.");
+
+            await DbContext.TrainingResults.AddAsync(mapper.Map<Models.TrainingResult>(trainingResult));
         }
     }
 }

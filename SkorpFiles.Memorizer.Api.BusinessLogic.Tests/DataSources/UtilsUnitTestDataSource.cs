@@ -25,14 +25,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
 
                 yield return new object[]
                 {
-                    new List<Question>(),
+                    new List<ExistingQuestion>(),
                     0,
                     new List<Guid>()
                 };
 
                 yield return new object[]
                 {
-                    new List<Question>(),
+                    new List<ExistingQuestion>(),
                     generalFaker.Random.Number(1,int.MaxValue),
                     new List<Guid>()
                 };
@@ -137,7 +137,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
 
                 yield return new object[]
                 {
-                    new List<Question>(),
+                    new List<ExistingQuestion>(),
                     generalFaker.Random.Number(int.MinValue, -1)
                 };
 
@@ -149,16 +149,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             }
         }
 
-        private static List<Question> GenerateQuestionsUsingRules(Faker generalFaker, Faker<Question> questionFaker, List<CustomQuestionRule> rulesForUsualQuestions,
+        private static List<ExistingQuestion> GenerateQuestionsUsingRules(Faker generalFaker, Faker<ExistingQuestion> questionFaker, List<CustomQuestionRule> rulesForUsualQuestions,
             List<CustomQuestionRule> expectedRules, out List<Guid> expectedQuestionsGuids)
         {
-            List<Question> result = [];
+            List<ExistingQuestion> result = [];
 
             expectedQuestionsGuids = [];
 
             foreach (var rule in rulesForUsualQuestions)
             {
-                Question question = GenerateQuestion(generalFaker, questionFaker, "default,usual", rule);
+                ExistingQuestion question = GenerateQuestion(generalFaker, questionFaker, "default,usual", rule);
                 if (question.Id != null && expectedRules.Any(rule.Equals))
                 {
                     expectedQuestionsGuids.Add(question.Id.Value);
@@ -171,9 +171,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             return result;
         }
 
-        private static Question GenerateQuestion(Faker generalFaker, Faker<Question> questionFaker, string fakerRuleSet, CustomQuestionRule questionRule)
+        private static ExistingQuestion GenerateQuestion(Faker generalFaker, Faker<ExistingQuestion> questionFaker, string fakerRuleSet, CustomQuestionRule questionRule)
         {
-            Question question = questionFaker.Generate(fakerRuleSet);
+            ExistingQuestion question = questionFaker.Generate(fakerRuleSet);
             if (questionRule.IsExactValue)
             {
                 question.EstimatedTrainingTimeSeconds = questionRule.ExactValue;

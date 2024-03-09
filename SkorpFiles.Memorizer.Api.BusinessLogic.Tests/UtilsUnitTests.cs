@@ -14,7 +14,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
     {
         [TestMethod]
         [DynamicData(nameof(UtilsUnitTestDataSource.FindBestQuestionsTimesCombination_CorrectParameters_CorrectResult), typeof(UtilsUnitTestDataSource))]
-        public void FindBestQuestionsTimesCombination_CorrectParameters_CorrectResult(List<Question> sourceList, int target, List<Guid> expectedGuids)
+        public void FindBestQuestionsTimesCombination_CorrectParameters_CorrectResult(List<ExistingQuestion> sourceList, int target, List<Guid> expectedGuids)
         {
             //Arrange
             //Act
@@ -38,7 +38,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         [TestMethod]
         [DynamicData(nameof(UtilsUnitTestDataSource.FindBestQuestionsTimesCombination_IncorrectTarget_ThrowArgumentExceptionOnTarget), typeof(UtilsUnitTestDataSource))]
-        public void FindBestQuestionsTimesCombination_IncorrectTarget_ThrowArgumentExceptionOnTarget(List<Question> sourceList, int target)
+        public void FindBestQuestionsTimesCombination_IncorrectTarget_ThrowArgumentExceptionOnTarget(List<ExistingQuestion> sourceList, int target)
         {
             //Arrange
             //Act

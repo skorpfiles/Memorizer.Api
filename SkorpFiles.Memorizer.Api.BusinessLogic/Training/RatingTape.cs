@@ -7,19 +7,19 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
-    internal class RatingTape:IPickable<Question>
+    internal class RatingTape:IPickable<ExistingQuestion>
     {
         private int _nextCoordinate = 1;
 
-        public SortedDictionary<int, RatingComponent> CoordinatesAndComponents { get; private set; } = new SortedDictionary<int, RatingComponent>();
-        public SortedSet<int> Coordinates { get; private set; } = new SortedSet<int>();
-        public Dictionary<int, RatingComponent> RatingsAndComponents { get; private set; } = new Dictionary<int, RatingComponent>();
+        public SortedDictionary<int, RatingComponent> CoordinatesAndComponents { get; private set; } = [];
+        public SortedSet<int> Coordinates { get; private set; } = [];
+        public Dictionary<int, RatingComponent> RatingsAndComponents { get; private set; } = [];
 
         public int Length => _nextCoordinate - 1;
 
         public bool Consumed => Length == 0;
 
-        public void Add(Question question)
+        public void Add(ExistingQuestion question)
         {
             int rating = question.MyStatus?.Rating ?? Constants.InitialQuestionRating;
 
@@ -34,9 +34,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             }
         }
 
-        public void AddRange(IEnumerable<Question> items)
+        public void AddRange(IEnumerable<ExistingQuestion> items)
         {
-            foreach(Question item in items)
+            foreach(ExistingQuestion item in items)
             {
                 Add(item);
             }
@@ -54,22 +54,22 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                 throw new InvalidOperationException("No rating component with such rating.");
         }
 
-        public Question Pick(Random random)
+        public ExistingQuestion Pick(Random random)
         {
             RatingComponent foundRatingComponent = PickRatingComponent(random);
             return foundRatingComponent.Pick(random);
         }
 
-        public Question PickAndDelete(Random random)
+        public ExistingQuestion PickAndDelete(Random random)
         {
             RatingComponent foundRatingComponent = PickRatingComponent(random);
-            Question foundQuestion = foundRatingComponent.PickAndDelete(random);
+            ExistingQuestion foundQuestion = foundRatingComponent.PickAndDelete(random);
             if (foundRatingComponent.Consumed)
                 DeleteRatingComponent(foundRatingComponent);
             return foundQuestion;
         }
 
-        public bool Return(Question question)
+        public bool Return(ExistingQuestion question)
         {
             bool result;
 
@@ -118,8 +118,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
         {
             if (_nextCoordinate - lengthOfDeletedElement > coordinateOfDeletedElement)
             {
-                SortedDictionary<int, RatingComponent> newCoordinatesAndComponents = new SortedDictionary<int, RatingComponent>();
-                SortedSet<int> newCoordinates = new SortedSet<int>();
+                SortedDictionary<int, RatingComponent> newCoordinatesAndComponents = [];
+                SortedSet<int> newCoordinates = [];
                 foreach (var key in CoordinatesAndComponents.Keys)
                 {
                     if (key == coordinateOfDeletedElement)

@@ -73,8 +73,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                     opts.MapFrom(src => src.LengthType == TrainingLengthType.QuestionsCount ? src.QuestionsCount : src.TimeMinutes * Constants.SecondsInMinute);
                 })
                 .ForMember(dest => dest.PrioritizedPenaltyQuestionsFraction, opts => opts.MapFrom(src => src.PenaltyQuestionsFraction));
-            CreateMap<Web.Models.Requests.Training.TrainingResultRequest, Api.Models.RequestModels.TrainingResultRequest>()
-                .ForMember(dest => dest.TrainingStartTimeUtc, opts => opts.MapFrom(src => src.TrainingStartTime));
+            CreateMap<Web.Models.Requests.Training.TrainingResultRequest, Api.Models.TrainingResult>();
+            CreateMap<Web.Models.ApiEntities.GivenTypedAnswer, Api.Models.GivenTypedAnswer>();
         }
     }
 }

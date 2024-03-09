@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore.Design;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using System;
 using System.Collections.Generic;
@@ -115,7 +116,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.ObjectCreationTimeUtc, opts => opts.MapFrom(src => src.CreationTimeUtc))
                 .ForMember(dest => dest.ObjectIsRemoved, opts => opts.MapFrom(src => src.IsRemoved))
                 .ForMember(dest => dest.ObjectRemovalTimeUtc, opts => opts.MapFrom(src => src.RemovalTimeUtc));
-                
             CreateMap<Training, SkorpFiles.Memorizer.Api.Models.Training>()
                 .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.TrainingId))
                 .ForMember(dest => dest.Name, opts => opts.MapFrom(src => src.TrainingName))
@@ -133,6 +133,49 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
                 .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.ObjectIsRemoved))
                 .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc));
+            CreateMap<TrainingResultTypedAnswer, SkorpFiles.Memorizer.Api.Models.GivenTypedAnswer>()
+                .ForMember(dest => dest.Text, opts => opts.MapFrom(src => src.TrtaAnswer))
+                .ForMember(dest => dest.IsCorrect, opts => opts.MapFrom(src => src.TrtaIsCorrect));
+            CreateMap<SkorpFiles.Memorizer.Api.Models.GivenTypedAnswer, TrainingResultTypedAnswer>()
+                .ForMember(dest => dest.TrtaAnswer, opts => opts.MapFrom(src => src.Text))
+                .ForMember(dest => dest.TrtaIsCorrect, opts => opts.MapFrom(src => src.IsCorrect));
+            CreateMap<SkorpFiles.Memorizer.Api.Models.TrainingResult, TrainingResult>()
+                .ForMember(dest => dest.TrainingResultRating, opts =>
+                {
+                    opts.Condition(src => src.ResultQuestionStatus != null);
+                    opts.MapFrom(src => src.ResultQuestionStatus!.Rating);
+                })
+                .ForMember(dest => dest.TrainingResultIsNew, opts =>
+                {
+                    opts.Condition(src => src.ResultQuestionStatus != null);
+                    opts.MapFrom(src => src.ResultQuestionStatus!.IsNew);
+                })
+                .ForMember(dest => dest.TrainingResultPenaltyPoints, opts =>
+                {
+                    opts.Condition(src => src.ResultQuestionStatus != null);
+                    opts.MapFrom(src => src.ResultQuestionStatus!.PenaltyPoints);
+                })
+                .ForMember(dest => dest.TrainingResultInitialRating, opts =>
+                {
+                    opts.Condition(src => src.InitialQuestionStatus != null);
+                    opts.MapFrom(src => src.InitialQuestionStatus!.Rating);
+                })
+                .ForMember(dest => dest.TrainingResultInitialNewStatus, opts =>
+                {
+                    opts.Condition(src => src.InitialQuestionStatus != null);
+                    opts.MapFrom(src => src.InitialQuestionStatus!.IsNew);
+                })
+                .ForMember(dest => dest.TrainingResultInitialPenaltyPoints, opts =>
+                {
+                    opts.Condition(src => src.InitialQuestionStatus != null);
+                    opts.MapFrom(src => src.InitialQuestionStatus!.PenaltyPoints);
+                })
+                .ForMember(dest => dest.TrainingResultQuestionId, opts => opts.MapFrom(src => src.QuestionId))
+                .ForMember(dest => dest.TrainingResultAnswerIsCorrect, opts => opts.MapFrom(src => src.IsAnswerCorrect))
+                .ForMember(dest => dest.TrainingResultRecordingTime, opts => opts.MapFrom(src => src.RecordingTime))
+                .ForMember(dest => dest.TrainingResultTimeSeconds, opts => opts.MapFrom(src => (int)Math.Round((double)(src.AnswerTimeMilliseconds / 1000))))
+                .ForMember(dest => dest.TrainingResultUserId, opts => opts.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.TypedAnswers, opts => opts.MapFrom(src => src.GivenTypedAnswers));
         }
     }
 }

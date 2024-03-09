@@ -1,28 +1,16 @@
-﻿using SkorpFiles.Memorizer.Api.BusinessLogic.Training;
-using SkorpFiles.Memorizer.Api.DataAccess.Repositories;
+﻿using AutoMapper;
+using SkorpFiles.Memorizer.Api.BusinessLogic.Training;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic
 {
-    public class TrainingLogic:ITrainingLogic
+    public class TrainingLogic(ITrainingRepository trainingRepository) : ITrainingLogic
     {
-        private readonly ITrainingRepository _trainingRepository;
-
-        public TrainingLogic(ITrainingRepository trainingRepository)
-        {
-            _trainingRepository = trainingRepository;
-        }
-
-        public async Task<IEnumerable<Api.Models.Question>> SelectQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingOptions options)
+        public async Task<IEnumerable<Api.Models.ExistingQuestion>> SelectQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingOptions options)
         {
             if (options.NewQuestionsFraction < 0 || options.PrioritizedPenaltyQuestionsFraction < 0)
                 throw new IncorrectTrainingOptionsException(Constants.NegativeFractionsMessage);
@@ -33,33 +21,36 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             if (options.LengthValue <= 0)
                 throw new IncorrectTrainingOptionsException(Constants.NonPositiveLengthValueMessage);
 
-            var allQuestions = (await _trainingRepository.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ToList();
+            var allQuestions = (await trainingRepository.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ToList();
             var questionsListsCollection = new TrainingBuilder(allQuestions);
             var questionsList = questionsListsCollection.MakeQuestionsListForTraining(options);
 
             return questionsList;
         }
 
-        public async Task<UserQuestionStatus> UpdateQuestionStatusAsync(Guid userId, TrainingResultRequest requestData)
+        public async Task<UserQuestionStatus> UpdateQuestionStatusAsync(Guid userId, TrainingResult trainingResult)
         {
-            if (requestData == null) 
-                throw new ArgumentNullException(nameof(requestData));
+            ArgumentNullException.ThrowIfNull(trainingResult);
 
             if (userId == Guid.Empty)
                 throw new ArgumentException("UserId cannot be empty.");
 
-            if (requestData.QuestionId == Guid.Empty)
+            if (trainingResult.QuestionId == Guid.Empty)
                 throw new ArgumentException("QuestionId cannot be empty.");
 
-            if (requestData.AnswerTimeMilliseconds <= 0)
+            if (trainingResult.AnswerTimeMilliseconds <= 0)
                 throw new ArgumentException("AnswerTime must be positive.");
 
-            var currentUserQuestionStatus = await _trainingRepository.GetUserQuestionStatusAsync(userId, requestData.QuestionId);
-            currentUserQuestionStatus ??= CreateNewUserQuestionStatus(userId, requestData.QuestionId);
+            var currentUserQuestionStatus = await trainingRepository.GetUserQuestionStatusAsync(userId, trainingResult.QuestionId);
+            currentUserQuestionStatus ??= CreateNewUserQuestionStatus(userId, trainingResult.QuestionId);
 
-            UpdateUserQuestionStatusByAnswer(ref currentUserQuestionStatus, requestData.IsAnswerCorrect);
+            UpdateUserQuestionStatusByAnswer(ref currentUserQuestionStatus, trainingResult.IsAnswerCorrect);
 
-            await _trainingRepository.UpdateQuestionStatusAsync(currentUserQuestionStatus);
+            trainingResult.ResultQuestionStatus = new QuestionStatus { IsNew = currentUserQuestionStatus.IsNew, Rating = currentUserQuestionStatus.Rating, PenaltyPoints = currentUserQuestionStatus.PenaltyPoints };
+            trainingResult.RecordingTime = DateTime.UtcNow;
+            trainingResult.UserId = userId;
+
+            await trainingRepository.UpdateQuestionStatusAsync(currentUserQuestionStatus, trainingResult, CreateNewQuestionStatus());
 
             return currentUserQuestionStatus;
         }
@@ -75,6 +66,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 Rating = Constants.InitialQuestionRating
             };
         }
+
+        private static QuestionStatus CreateNewQuestionStatus() => new() { IsNew = true, PenaltyPoints = 0, Rating = Constants.InitialQuestionRating };
 
         private static void UpdateUserQuestionStatusByAnswer(ref UserQuestionStatus userQuestionStatus, bool isAnswerCorrect)
         {
