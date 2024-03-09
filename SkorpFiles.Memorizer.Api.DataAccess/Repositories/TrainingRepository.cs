@@ -13,17 +13,21 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 {
-    public class TrainingRepository:RepositoryBase, ITrainingRepository
+    public class TrainingRepository(ApplicationDbContext dbContext, IMapper mapper) : RepositoryBase(dbContext), ITrainingRepository
     {
-        private readonly IMapper _mapper;
-        public TrainingRepository(ApplicationDbContext dbContext, IMapper mapper) : base(dbContext)
-        {
-            _mapper = mapper;
-        }
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IEnumerable<Api.Models.Question>> GetQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds)
         {
-            string userIdString = userId.ToAspNetUserIdString();
+            if (userId == Guid.Empty)
+                throw new ArgumentException("UserId must not be empty.");
+
+            ArgumentNullException.ThrowIfNull(nameof(questionnairesIds));
+
+            if (!questionnairesIds.Any())
+                throw new ArgumentException("QuestionnairesIds must not be empty.");
+
+            string userIdString = userId.ToAspNetUserIdString()!;
 
             var query = await (from q in DbContext.Questions
                                .Include(q => q.TypedAnswers)
@@ -51,9 +55,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task UpdateQuestionStatusAsync(UserQuestionStatus newQuestionStatus)
         {
-            if (newQuestionStatus == null)
-                throw new ArgumentNullException(nameof(newQuestionStatus));
-            string userIdString = newQuestionStatus.UserId.ToAspNetUserIdString();
+            ArgumentNullException.ThrowIfNull(newQuestionStatus);
+
+            if (newQuestionStatus.UserId == Guid.Empty)
+                throw new ArgumentException("UserId must not be empty.");
+
+            string userIdString = newQuestionStatus.UserId.ToAspNetUserIdString()!;
 
             var questionUser = await (from uq in DbContext.QuestionsUsers
                                .Include(uq => uq.Question)
@@ -73,7 +80,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task<UserQuestionStatus?> GetUserQuestionStatusAsync(Guid userId, Guid questionId)
         {
-            string userIdString = userId.ToAspNetUserIdString();
+            if (userId == Guid.Empty)
+                throw new ArgumentException("UserId must not be empty.");
+
+            if (questionId == Guid.Empty)
+                throw new ArgumentException("QuestionId must not be empty.");
+
+            string userIdString = userId.ToAspNetUserIdString()!;
             var questionUser = await (from uq in DbContext.QuestionsUsers
                                where uq.UserId == userIdString &&
                                uq.QuestionId == questionId

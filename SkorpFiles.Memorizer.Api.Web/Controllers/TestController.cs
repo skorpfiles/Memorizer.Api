@@ -14,11 +14,10 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class TestController(ITokenCache tokenCache, IAccountLogic accountLogic, ILogger<TestController> logger) : Controller
+    public class TestController(ITokenCache tokenCache, IAccountLogic accountLogic) : Controller
     {
         private readonly ITokenCache _tokenCache = tokenCache;
         private readonly IAccountLogic _accountLogic = accountLogic;
-        private readonly ILogger<TestController> _logger = logger;
 
         [Route("AuthorizedTest")]
         [HttpGet]
