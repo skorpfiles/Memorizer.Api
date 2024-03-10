@@ -33,7 +33,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     new List<ExistingQuestion>(),
-                    generalFaker.Random.Number(1,int.MaxValue),
+                    generalFaker.Random.Number(1,10000),
                     new List<Guid>()
                 };
 
