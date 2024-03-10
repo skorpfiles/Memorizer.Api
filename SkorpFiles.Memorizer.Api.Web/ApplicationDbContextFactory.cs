@@ -1,5 +1,4 @@
-﻿#if !DEBUG
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using SkorpFiles.Memorizer.Api.DataAccess;
 
@@ -16,4 +15,3 @@ namespace SkorpFiles.Memorizer.Api.Web
         }
     }
 }
-#endif
