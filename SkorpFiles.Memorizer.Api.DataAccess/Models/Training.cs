@@ -15,7 +15,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
     {
         [Key]
         public Guid TrainingId { get; set; }
-        public string OwnerId { get; set; }
+        public string OwnerId { get; set; } = null!;
         public string TrainingName { get; set; } = null!;
 
         [Column("TrainingLastTime")]
@@ -23,6 +23,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public TrainingLengthType TrainingLengthType { get; set; }
         public int TrainingQuestionsCount { get; set; }
         public int TrainingTimeMinutes { get; set; }
+
+        [Column(TypeName = "decimal(4,3)")]
+        public decimal TrainingNewQuestionsFraction {  get; set; }
+
+        [Column(TypeName = "decimal(4,3)")]
+        public decimal TrainingPenaltyQuestionsFraction {  get; set; }
 
         [ForeignKey(nameof(OwnerId))]
         public ApplicationUser? Owner { get; set; }

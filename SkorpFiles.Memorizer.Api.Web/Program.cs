@@ -16,6 +16,7 @@ using StackExchange.Redis;
 using Autofac.Core;
 using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,23 +34,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             options.RequireHttpsMetadata = false;
             options.TokenValidationParameters = new TokenValidationParameters
             {
-                // укзывает, будет ли валидироваться издатель при валидации токена
                 ValidateIssuer = true,
-                // строка, представляющая издателя
                 ValidIssuer = AuthOptions.ISSUER,
-
-                // будет ли валидироваться потребитель токена
                 ValidateAudience = true,
-                // установка потребителя токена
                 ValidAudience = AuthOptions.AUDIENCE,
-                // будет ли валидироваться время существования
                 ValidateLifetime = true,
-
-                // установка ключа безопасности
-                IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(builder.Configuration),
-                // валидация ключа безопасности
                 ValidateIssuerSigningKey = true,
             };
+
+            var authenticationTokenCipherKey = builder.Configuration["AuthenticationTokenCipherKey"];
+            if (authenticationTokenCipherKey != null)
+            {
+                options.TokenValidationParameters.IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(Encoding.ASCII.GetBytes(authenticationTokenCipherKey));
+            }    
         });
 
 string connectionString = builder.Configuration["DatabaseConnectionString"]!;
@@ -60,12 +57,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-ITokenCache? tokenCache=null;
 var cacheType = builder.Configuration["AuthorizationCacheType"];
 switch (cacheType)
 {
     case "redis":
-        tokenCache = new RedisTokenCache();
+        RedisTokenCache? tokenCache = new();
         tokenCache.Initialize(builder.Configuration["RedisConnectionString"]!);
         builder.Services.AddSingleton(tokenCache);
         break;

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using SkorpFiles.Memorizer.Api.Web.Models.Responses;
+using SkorpFiles.Memorizer.Api.Web.Models.Responses.Repository;
+using SkorpFiles.Memorizer.Api.Web.Models.Responses.Training;
 
 namespace SkorpFiles.Memorizer.Api.Web.Mapping
 {
@@ -17,6 +18,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                 .ForMember(dest => dest.Labels, opts => opts.MapFrom(src => src.Items.ToList()));
             CreateMap<SkorpFiles.Memorizer.Api.Models.PaginatedCollection<SkorpFiles.Memorizer.Api.Models.Training>, GetTrainingsResponse>()
                 .ForMember(dest => dest.Trainings, opts => opts.MapFrom(src => src.Items.ToList()));
+            CreateMap<IEnumerable<Api.Models.ExistingQuestion>, StartTrainingResponse>()
+                .ForMember(dest => dest.Questions, opts => opts.MapFrom(src => src.ToList()));
         }
     }
 }

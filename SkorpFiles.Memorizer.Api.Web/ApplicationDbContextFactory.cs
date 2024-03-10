@@ -4,6 +4,7 @@ using SkorpFiles.Memorizer.Api.DataAccess;
 
 namespace SkorpFiles.Memorizer.Api.Web
 {
+
     public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {
         public ApplicationDbContext CreateDbContext(string[] args)

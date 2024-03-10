@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkorpFiles.Memorizer.Api.Mo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkorpFiles.Memorizer.Api.Web", "SkorpFiles.Memorizer.Api.Web\SkorpFiles.Memorizer.Api.Web.csproj", "{9517C0A8-BFA2-4E69-8062-416F6BC9EBC9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkorpFiles.Memorizer.Api.DataAccess.Tests", "SkorpFiles.Memorizer.Api.DataAccess.Tests\SkorpFiles.Memorizer.Api.DataAccess.Tests.csproj", "{AC0C86BB-A659-4CB5-98C2-91C778BE91E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SkorpFiles.Memorizer.Api.DataAccess.Tests", "SkorpFiles.Memorizer.Api.DataAccess.Tests\SkorpFiles.Memorizer.Api.DataAccess.Tests.csproj", "{AC0C86BB-A659-4CB5-98C2-91C778BE91E3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkorpFiles.Memorizer.Api.BusinessLogic.Tests", "SkorpFiles.Memorizer.Api.BusinessLogic.Tests\SkorpFiles.Memorizer.Api.BusinessLogic.Tests.csproj", "{C016CB05-7191-49F3-92CB-9D8F4EC67BB5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{AC0C86BB-A659-4CB5-98C2-91C778BE91E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC0C86BB-A659-4CB5-98C2-91C778BE91E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC0C86BB-A659-4CB5-98C2-91C778BE91E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C016CB05-7191-49F3-92CB-9D8F4EC67BB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C016CB05-7191-49F3-92CB-9D8F4EC67BB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C016CB05-7191-49F3-92CB-9D8F4EC67BB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C016CB05-7191-49F3-92CB-9D8F4EC67BB5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

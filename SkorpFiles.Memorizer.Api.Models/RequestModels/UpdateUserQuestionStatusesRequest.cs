@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.Models.RequestModels
 {
-    public class UpdateUserQuestionStatusRequest
+    public class UpdateUserQuestionStatusesRequest
     {
         public IEnumerable<UserQuestionStatus>? Items { get; set; }
     }

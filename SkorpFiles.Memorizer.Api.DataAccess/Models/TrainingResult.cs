@@ -14,23 +14,20 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         [Key]
         public Guid TrainingResultId { get; set; }
         public DateTime TrainingResultRecordingTime { get; set; }
-        public string TrainingResultUserId { get; set; }
+        public string TrainingResultUserId { get; set; } = null!;
         public Guid TrainingResultQuestionId { get; set; }
-        public bool TrainingResultQuestionHasBeenNew { get; set; }
-        public string? TrainingResultUntypedAnswer { get; set; }
+        public bool TrainingResultInitialNewStatus { get; set; }
+        public int TrainingResultInitialRating { get; set; }
+        public int TrainingResultInitialPenaltyPoints {  get; set; }
         public bool TrainingResultAnswerIsCorrect { get; set; }
+        public bool TrainingResultIsNew {  get; set; }
         public int TrainingResultRating { get; set; }
         public int TrainingResultPenaltyPoints { get; set; }
-        public int TrainingResultTimeMilliseconds { get; set; }
+        public int TrainingResultTimeSeconds { get; set; }
 
         public ApplicationUser? TrainingResultUser { get; set; }
         public Question? TrainingResultQuestion { get; set; }
 
         public List<TrainingResultTypedAnswer>? TypedAnswers { get; set; }
-
-        public TrainingResult(string trainingResultUserId)
-        {
-            TrainingResultUserId = trainingResultUserId;
-        }
     }
 }

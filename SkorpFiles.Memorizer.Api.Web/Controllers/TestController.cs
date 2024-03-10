@@ -14,18 +14,10 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class TestController:Controller
+    public class TestController(ITokenCache tokenCache, IAccountLogic accountLogic) : Controller
     {
-        private readonly ITokenCache _tokenCache;
-        private readonly IAccountLogic _accountLogic;
-        private readonly ILogger<TestController> _logger;
-
-        public TestController(ITokenCache tokenCache, IAccountLogic accountLogic, ILogger<TestController> logger)
-        {
-            _tokenCache = tokenCache;
-            _accountLogic = accountLogic;
-            _logger = logger;
-        }
+        private readonly ITokenCache _tokenCache = tokenCache;
+        private readonly IAccountLogic _accountLogic = accountLogic;
 
         [Route("AuthorizedTest")]
         [HttpGet]
@@ -75,7 +67,6 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         public IActionResult TestAzureInsights()
         {
             throw new Exception("Test exception");
-            return Ok();
         }
     }
 }

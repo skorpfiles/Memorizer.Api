@@ -11,6 +11,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.DependencyInjection
         {
             builder.RegisterType<AccountLogic>().As<IAccountLogic>();
             builder.RegisterType<EditingLogic>().As<IEditingLogic>();
+            builder.RegisterType<TrainingLogic>().As<ITrainingLogic>();
 
             base.Load(builder);
         }

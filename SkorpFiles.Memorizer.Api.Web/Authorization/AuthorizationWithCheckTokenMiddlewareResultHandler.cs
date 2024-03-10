@@ -6,15 +6,9 @@ using StackExchange.Redis;
 
 namespace SkorpFiles.Memorizer.Api.Web.Authorization
 {
-    public class AuthorizationWithCheckTokenMiddlewareResultHandler : IAuthorizationMiddlewareResultHandler
+    public class AuthorizationWithCheckTokenMiddlewareResultHandler(ITokenCache tokenCache) : IAuthorizationMiddlewareResultHandler
     {
-        private readonly ITokenCache _tokenCache;
         private readonly AuthorizationMiddlewareResultHandler defaultHandler = new();
-
-        public AuthorizationWithCheckTokenMiddlewareResultHandler(ITokenCache tokenCache)
-        {
-            _tokenCache = tokenCache;
-        }
 
         public async Task HandleAsync(RequestDelegate next, HttpContext context, AuthorizationPolicy policy, PolicyAuthorizationResult authorizeResult)
         {
@@ -22,7 +16,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Authorization
             {
                 var accessToken = context.Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
 
-                var cacheData = await _tokenCache.GetAsync(accessToken);
+                var cacheData = await tokenCache.GetAsync(accessToken);
                 if (cacheData != null)
                 {
                     if (cacheData!=Constants.DisabledManuallyName)

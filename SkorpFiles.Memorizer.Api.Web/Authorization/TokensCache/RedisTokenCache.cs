@@ -4,8 +4,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache
 {
     public class RedisTokenCache : ITokenCache
     {
-        private IConnectionMultiplexer? _redis;
-        public async Task<string> GetAsync(string key)
+        private ConnectionMultiplexer? _redis;
+        public async Task<string?> GetAsync(string key)
         {
             var database = _redis!.GetDatabase();
             return await database.StringGetAsync(new RedisKey(key));

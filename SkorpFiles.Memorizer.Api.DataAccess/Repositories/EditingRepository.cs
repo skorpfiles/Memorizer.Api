@@ -9,6 +9,7 @@ using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -17,19 +18,14 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 {
-    public class EditingRepository : RepositoryBase, IEditingRepository
+    public class EditingRepository(ApplicationDbContext dbContext, IMapper mapper) : RepositoryBase(dbContext), IEditingRepository
     {
-        private readonly IMapper _mapper;
-        public EditingRepository(ApplicationDbContext dbContext, IMapper mapper) : base(dbContext) 
-        {
-            _mapper = mapper;
-        }
+        private readonly IMapper _mapper = mapper;
 
         public async Task<Api.Models.PaginatedCollection<Api.Models.Questionnaire>> GetQuestionnairesAsync(Guid userId,
             GetQuestionnairesRequest request)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+            ArgumentNullException.ThrowIfNull(request);
 
             var userIdString = userId.ToAspNetUserIdString();
             var ownerIdString = request.OwnerId?.ToAspNetUserIdString();
@@ -78,7 +74,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     ((request.Availability == null) ||
                     (request.Availability == questionnaire.QuestionnaireAvailability)) &&
 
-                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName.ToLower())) &&
+                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName.ToLower(),StringComparison.InvariantCulture)) &&
 
                     //If the questionnaire is private, return only own questionnaires! Edit carefully!
                     ((questionnaire.QuestionnaireAvailability == Availability.Private && questionnaire.OwnerId == userIdString) ||
@@ -97,8 +93,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 case QuestionnaireSortField.OwnerName:
                     switch (request.SortDirection)
                     {
-                        case SortDirection.Ascending: foundQuestionnaires = foundQuestionnaires.OrderBy(p => p.Owner.UserName); break;
-                        case SortDirection.Descending: foundQuestionnaires = foundQuestionnaires.OrderByDescending(p => p.Owner.UserName); break;
+                        case SortDirection.Ascending: foundQuestionnaires = foundQuestionnaires.OrderBy(p => p.Owner!.UserName); break;
+                        case SortDirection.Descending: foundQuestionnaires = foundQuestionnaires.OrderByDescending(p => p.Owner!.UserName); break;
                     }
                     break;
             }
@@ -124,16 +120,16 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var questionnairesIds = foundGroupsResult.Select(g => g.Questionnaire.QuestionnaireId).ToList();
 
-            var questionnairesWithRelations = foundGroupsResult.Any() ? (await (from questionnaire in DbContext.Questionnaires.Include(q => q.Owner)
+            var questionnairesWithRelations = foundGroupsResult.Count != 0 ? (await (from questionnaire in DbContext.Questionnaires.Include(q => q.Owner)
                                                                                   where questionnairesIds.Contains(questionnaire.QuestionnaireId)
                                                                                   select questionnaire).ToListAsync()) : null;
 
-            List<Api.Models.Questionnaire> resultList = new();
+            List<Api.Models.Questionnaire> resultList = [];
 
             foreach (var group in foundGroupsResult)
             {
                 if (group.Questionnaire.LabelsForQuestionnaire != null)
-                    group.Questionnaire.LabelsForQuestionnaire = group.Questionnaire.LabelsForQuestionnaire.OrderBy(l => l.LabelNumber).ToList();
+                    group.Questionnaire.LabelsForQuestionnaire = [.. group.Questionnaire.LabelsForQuestionnaire.OrderBy(l => l.LabelNumber)];
                 Api.Models.Questionnaire questionnaire = _mapper.Map<Api.Models.Questionnaire>(group.Questionnaire);
                 questionnaire.CountsOfQuestions = new QuestionsCounts
                 {
@@ -168,8 +164,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task<Api.Models.PaginatedCollection<Api.Models.ExistingQuestion>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+            ArgumentNullException.ThrowIfNull(request);
 
             CheckIdAndCodeDefinitionRule(request.QuestionnaireId, request.QuestionnaireCode,
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
@@ -184,7 +179,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 select questionnaire).SingleOrDefaultAsync();
 
             if (questionnaireResult != null)
-                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
+                Utils.CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
             else
                 throw new ObjectNotFoundException("No questionnaire with such ID or code.");
 
@@ -267,7 +262,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     questionnaire.Question.TypedAnswers = questionnaire.Question.TypedAnswers.Where(a => !a.ObjectIsRemoved).ToList();
 
                 if (questionnaire?.Question.LabelsForQuestion != null)
-                    questionnaire.Question.LabelsForQuestion = questionnaire.Question.LabelsForQuestion.OrderBy(l => l.LabelNumber).ToList();
+                    questionnaire.Question.LabelsForQuestion = [.. questionnaire.Question.LabelsForQuestion.OrderBy(l => l.LabelNumber)];
             }
 
             var foundQuestions = foundQuestionsAndStatusesResult.Select(questionAndStatus =>
@@ -282,8 +277,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task UpdateQuestionsAsync(Guid userId, UpdateQuestionsRequest request)
         {
-            if (request==null)
-                throw new ArgumentNullException(nameof(request));
+            ArgumentNullException.ThrowIfNull(request);
 
             CheckIdAndCodeDefinitionRule(request.QuestionnaireId, request.QuestionnaireCode,
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
@@ -384,11 +378,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                                                     questionQuery.QuestionnaireId == questionnaireResult.QuestionnaireId &&
                                                     (question.Id == null || questionQuery.QuestionId == question.Id) &&
                                                     (question.CodeInQuestionnaire == null || questionQuery.QuestionQuestionnaireCode == question.CodeInQuestionnaire)
-                                                    select questionQuery).SingleOrDefaultAsync();
-
-                        if (questionFromDb == null)
-                            throw new ObjectNotFoundException("One of the updated questions doesn't exist.");
-
+                                                    select questionQuery).SingleOrDefaultAsync() ?? throw new ObjectNotFoundException("One of the updated questions doesn't exist.");
                         if (question.LabelsIds != null)
                         {
                             var currentLabelsIds = questionFromDb.LabelsForQuestion!.Select(l => l.LabelId).ToList();
@@ -479,21 +469,23 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task<Api.Models.Questionnaire> CreateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+            ArgumentNullException.ThrowIfNull(request);
 
             if (string.IsNullOrEmpty(request.Name))
                 throw new ArgumentException($"{request.Name} cannot be null.");
+
+            if (userId == Guid.Empty)
+                throw new ArgumentException($"{userId} cannot be empty.");
 
             var labelsList = request.Labels?.ToList();
 
             if (labelsList!=null)
                 await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsList.Select(l=>l.Id).ToList());
 
-            Models.Questionnaire newQuestionnaire = new Models.Questionnaire
+            Models.Questionnaire newQuestionnaire = new()
             {
                 QuestionnaireName = request.Name,
-                OwnerId = userId.ToAspNetUserIdString(),
+                OwnerId = userId.ToAspNetUserIdString()!,
                 QuestionnaireAvailability = request.Availability!.Value,
                 ObjectCreationTimeUtc = DateTime.UtcNow,
                 ObjectIsRemoved = false
@@ -523,8 +515,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task<Api.Models.Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+            ArgumentNullException.ThrowIfNull(request);
 
             var questionnaireResult = await GetSpecialQuestionnaireInfoAsync(userId,request.Id,request.Code);
 
@@ -586,10 +577,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         public async Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)=>
             await DeleteQuestionnaireAsync(userId,null,questionnaireCode);
 
-        public async Task UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusRequest request)
+        public async Task UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusesRequest request)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+            if (userId == Guid.Empty)
+                throw new ArgumentException($"{userId} cannot be empty.");
+
+            ArgumentNullException.ThrowIfNull(request);
             if (request.Items == null || !request.Items.Any())
                 throw new ArgumentException("Items should not be null or empty.");
             
@@ -598,7 +591,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var questionsUsersToUpdate = await (from questionUser in DbContext.QuestionsUsers
                                                 .Include(q=>q.Question)
-                                                .ThenInclude(q=>q.Questionnaire)
+                                                .ThenInclude(q=>q!.Questionnaire)
                                          where questionUser.UserId == userId.ToAspNetUserIdString() &&
                                          !questionUser.Question!.ObjectIsRemoved &&
                                          requestItemsIds.Contains(questionUser.QuestionId)
@@ -610,7 +603,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 if (questionUserToUpdate==null)
                 {
                     questionUserToUpdate = _mapper.Map<QuestionUser>(requestItem);
-                    questionUserToUpdate.UserId = userId.ToAspNetUserIdString();
+                    questionUserToUpdate.UserId = userId.ToAspNetUserIdString()!;
                     questionUserToUpdate.ObjectCreationTimeUtc = DateTime.UtcNow;
                     DbContext.Add(questionUserToUpdate);
                 }
@@ -627,8 +620,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task<Api.Models.PaginatedCollection<Api.Models.Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
         {
-            if (request==null)
-                throw new ArgumentNullException(nameof(request));
+            ArgumentNullException.ThrowIfNull(request);
 
             var userIdString = userId.ToAspNetUserIdString();
 
@@ -637,7 +629,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                               (request.Origin == null ||
                               (request.Origin == Origin.Own && label.OwnerId == userIdString) ||
                               (request.Origin == Origin.Foreign && label.OwnerId != userIdString)) &&
-                              (request.PartOfName == null || label.LabelName.ToLower().Contains(request.PartOfName.ToLower()))
+                              (request.PartOfName == null || label.LabelName.ToLower().Contains(request.PartOfName.ToLower(), StringComparison.InvariantCulture))
                               select label;
 
             var totalCount = await foundLabels.CountAsync();
@@ -657,13 +649,16 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task<Api.Models.Label> CreateLabelAsync(Guid userId, string labelName)
         {
+            if (userId == Guid.Empty)
+                throw new ArgumentException($"{userId} cannot be empty.");
+
             if (string.IsNullOrEmpty(labelName))
                 throw new ArgumentNullException(nameof(labelName));
 
-            Models.Label newLabel = new Models.Label()
+            Models.Label newLabel = new()
             {
                 LabelName = labelName,
-                OwnerId = userId.ToAspNetUserIdString(),
+                OwnerId = userId.ToAspNetUserIdString()!,
                 ObjectCreationTimeUtc = DateTime.UtcNow
             };
 
@@ -683,8 +678,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task<PaginatedCollection<Api.Models.Training>> GetTrainingsForUserAsync(Guid userId, GetCollectionRequest request)
         {
-            if (request==null)
-                throw new ArgumentNullException(nameof(request));
+            ArgumentNullException.ThrowIfNull(request);
 
             var userIdString = userId.ToAspNetUserIdString();
 
@@ -714,7 +708,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                                                      ).SingleOrDefaultAsync();
             if (trainingResult!=null)
             {
-                CheckAvailabilityForUser(userId, Guid.Parse(trainingResult.OwnerId), "The user doesn't own the training.");
+                Utils.CheckAvailabilityForUser(userId, Guid.Parse(trainingResult.OwnerId), "The user doesn't own the training.");
                 return _mapper.Map<Api.Models.Training>(trainingResult);
             }
             else
@@ -723,8 +717,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task<Api.Models.Training> CreateTrainingAsync(Guid userId, UpdateTrainingRequest request)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+            if (userId == Guid.Empty)
+                throw new ArgumentException($"{userId} cannot be empty.");
+
+            ArgumentNullException.ThrowIfNull(request);
 
             const string errorMessageTemplate = "{0} cannot be null.";
 
@@ -742,14 +738,16 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (questionnairesIdsList != null)
                 await CheckQuestionnairesAvailabilityForManagingTrainingsAsync(userId, questionnairesIdsList);
 
-            Models.Training newTraining = new Models.Training
+            Models.Training newTraining = new()
             {
                 TrainingName = request!.Name,
                 TrainingLastTimeUtc = DateTime.UtcNow,
                 TrainingLengthType = request.LengthType.Value,
                 TrainingQuestionsCount = request.QuestionsCount.Value,
                 TrainingTimeMinutes = request.TimeMinutes.Value,
-                OwnerId = userId.ToAspNetUserIdString(),
+                TrainingNewQuestionsFraction = request.NewQuestionsFraction,
+                TrainingPenaltyQuestionsFraction = request.PenaltyQuestionsFraction,
+                OwnerId = userId.ToAspNetUserIdString()!,
                 ObjectCreationTimeUtc = DateTime.UtcNow,
             };
 
@@ -774,17 +772,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         public async Task<Api.Models.Training> UpdateTrainingAsync(Guid userId, UpdateTrainingRequest request)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+            ArgumentNullException.ThrowIfNull(request);
 
             var trainingResult = await (from training in DbContext.Trainings
                                         .Include(t => t.QuestionnairesForTraining)
                                         where !training.ObjectIsRemoved && training.TrainingId == request.Id
-                                        select training).SingleOrDefaultAsync();
-
-            if (trainingResult == null)
-                throw new ObjectNotFoundException("Training with such ID is not found.");
-
+                                        select training).SingleOrDefaultAsync() ?? throw new ObjectNotFoundException("Training with such ID is not found.");
             if (trainingResult.OwnerId != userId.ToAspNetUserIdString())
                     throw new AccessDeniedForUserException(Constants.ExceptionMessages.UserCannotChangeQuestionnaire);
 
@@ -856,7 +849,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                        select training).SingleOrDefaultAsync();
             if (trainingDetails != null)
             {
-                CheckAvailabilityForUser(userId, Guid.Parse(trainingDetails.OwnerId), "The user doesn't have rights to delete the training.");
+                Utils.CheckAvailabilityForUser(userId, Guid.Parse(trainingDetails.OwnerId), "The user doesn't have rights to delete the training.");
                 trainingDetails.ObjectIsRemoved = true;
                 trainingDetails.ObjectRemovalTimeUtc = DateTime.UtcNow;
                 await DbContext.SaveChangesAsync();
@@ -887,7 +880,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             if (questionnaireResult != null)
             {
-                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
+                Utils.CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
                 return questionnaireResult;
             }
             else
@@ -916,7 +909,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             if (groupResult != null)
             {
-                CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(groupResult.Questionnaire.OwnerId), groupResult.Questionnaire.QuestionnaireAvailability);
+                Utils.CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(groupResult.Questionnaire.OwnerId), groupResult.Questionnaire.QuestionnaireAvailability);
 
                 Api.Models.Questionnaire result = _mapper.Map<Api.Models.Questionnaire>(groupResult.Questionnaire);
                 result.CountsOfQuestions = new QuestionsCounts
@@ -961,25 +954,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw new ObjectNotFoundException("Questionnaire with such ID or Code doesn't exist.");
         }
 
-        private static void CheckQuestionnaireAvailabilityForUser(Guid currentUserId, Guid ownerId, Availability availability)
-        {
-            CheckAvailabilityForUser(currentUserId, ownerId, "Unable to get details about a private questionnaire to a foreign user.", availability);
-        }
-
-        private static void CheckAvailabilityForUser(Guid currentUserId, Guid ownerId, string errorMessage, Availability? availability = null)
-        {
-            if (availability != null)
-            {
-                if (availability == Availability.Private && ownerId != currentUserId)
-                    throw new AccessDeniedForUserException(errorMessage);
-            }
-            else
-            {
-                if (ownerId != currentUserId)
-                    throw new AccessDeniedForUserException(errorMessage);
-            }
-        }
-
         private static void CheckIdAndCodeDefinitionRule(Guid? id, int? code, Exception exceptionWhenBothNull, Exception exceptionWhenBothNotNull)
         {
             if (id == null && code == null)
@@ -1002,7 +976,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     var labelFromDb = labelsFromDb.SingleOrDefault(l => l.LabelId == labelIdFromRequest);
                     if (labelFromDb != null)
                     {
-                        CheckAvailabilityForUser(userId, Guid.Parse(labelFromDb.OwnerId), $"The user '{userId}' doesn't have a managing access to the label '{labelIdFromRequest}'.");
+                        Utils.CheckAvailabilityForUser(userId, Guid.Parse(labelFromDb.OwnerId), $"The user '{userId}' doesn't have a managing access to the label '{labelIdFromRequest}'.");
                     }
                     else
                     {
@@ -1026,7 +1000,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     var questionnaireFromDb = questionnairesFromDb.SingleOrDefault(q => q.QuestionnaireId == questionnaireIdFromRequest);
                     if (questionnaireFromDb != null)
                     {
-                        CheckAvailabilityForUser(userId, Guid.Parse(questionnaireFromDb.OwnerId), $"The user '{userId}' doesn't have a managing access to the questionnaire '{questionnaireIdFromRequest}'.");
+                        Utils.CheckAvailabilityForUser(userId,
+                            Guid.Parse(questionnaireFromDb.OwnerId),
+                            $"The user '{userId}' doesn't have a managing access to the questionnaire '{questionnaireIdFromRequest}'.",
+                            questionnaireFromDb.QuestionnaireAvailability);
                     }
                     else
                     {
@@ -1056,6 +1033,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             if (labelResult!=null)
             {
+                Utils.CheckAvailabilityForUser(userId, Guid.Parse(labelResult.OwnerId), $"The user '{userId}' doesn't have a managing access to the label '{labelResult.OwnerId}'.");
                 return labelResult;
             }
             else

@@ -20,5 +20,6 @@ namespace SkorpFiles.Memorizer.Api.Models
         public Guid QuestionnaireId { get; set; }
         public int? CodeInQuestionnaire { get; set; }
         public UserQuestionStatus? MyStatus { get; set; }
+        public Questionnaire? Questionnaire { get; set; }
     }
 }

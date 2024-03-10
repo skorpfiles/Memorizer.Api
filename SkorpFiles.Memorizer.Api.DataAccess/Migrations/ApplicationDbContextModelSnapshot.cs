@@ -175,10 +175,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -215,10 +217,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -496,6 +500,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("TrainingNewQuestionsFraction")
+                        .HasColumnType("decimal(4,3)");
+
+                    b.Property<decimal>("TrainingPenaltyQuestionsFraction")
+                        .HasColumnType("decimal(4,3)");
+
                     b.Property<int>("TrainingQuestionsCount")
                         .HasColumnType("int");
 
@@ -543,11 +553,20 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Property<bool>("TrainingResultAnswerIsCorrect")
                         .HasColumnType("bit");
 
-                    b.Property<int>("TrainingResultPenaltyPoints")
+                    b.Property<bool>("TrainingResultInitialNewStatus")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("TrainingResultInitialPenaltyPoints")
                         .HasColumnType("int");
 
-                    b.Property<bool>("TrainingResultQuestionHasBeenNew")
+                    b.Property<int>("TrainingResultInitialRating")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("TrainingResultIsNew")
                         .HasColumnType("bit");
+
+                    b.Property<int>("TrainingResultPenaltyPoints")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("TrainingResultQuestionId")
                         .HasColumnType("uniqueidentifier");
@@ -558,11 +577,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Property<DateTime>("TrainingResultRecordingTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("TrainingResultTimeMilliseconds")
+                    b.Property<int>("TrainingResultTimeSeconds")
                         .HasColumnType("int");
-
-                    b.Property<string>("TrainingResultUntypedAnswer")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TrainingResultUserId")
                         .IsRequired()

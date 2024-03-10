@@ -44,8 +44,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                 .ForMember(dest=>dest.IsEnabled, opts=>opts.MapFrom(src=>src.Enabled));
             CreateMap<SkorpFiles.Memorizer.Api.Models.ExistingQuestion, ExistingQuestion>();
             CreateMap<ExistingQuestion, SkorpFiles.Memorizer.Api.Models.ExistingQuestion>();
-            CreateMap<UserQuestionStatus, SkorpFiles.Memorizer.Api.Models.UserQuestionStatus>()
-                .ForMember(dest => dest.QuestionId, opts => opts.MapFrom(src => src.Id));
+            CreateMap<UserQuestionStatus, SkorpFiles.Memorizer.Api.Models.UserQuestionStatus>();
+            CreateMap<UserQuestionStatusForUpdate, SkorpFiles.Memorizer.Api.Models.UserQuestionStatus>();
             CreateMap<Training, SkorpFiles.Memorizer.Api.Models.Training>()
                 .ForMember(dest => dest.LengthType, opts =>
                 {
@@ -58,6 +58,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
                 .ForMember(dest => dest.LastTime, opts => opts.MapFrom(src => src.LastTimeUtc));
             CreateMap<SkorpFiles.Memorizer.Api.Models.Questionnaire, QuestionnaireForTraining>();
             CreateMap<SkorpFiles.Memorizer.Api.Models.QuestionsCounts, QuestionsCounts>();
+            CreateMap<Api.Models.ExistingQuestion, QuestionForTraining>();
         }
     }
 }

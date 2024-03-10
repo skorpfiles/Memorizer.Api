@@ -5,7 +5,7 @@ using SkorpFiles.Memorizer.Api.Web.Exceptions;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers.Abstract
 {
-    public abstract class ControllerWithUserInfo : Controller
+    public abstract class ControllerWithUserInfo : ControllerWithActionsToBusinessLogic
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserStore<ApplicationUser> _userStore;
@@ -18,11 +18,16 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers.Abstract
 
         protected internal async Task<ApplicationUser> GetCurrentUserAsync()
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            if (user != null)
-                return user;
+            if (User?.Identity?.Name != null)
+            {
+                var user = await _userStore.FindByNameAsync(User.Identity.Name, new CancellationToken());
+                if (user != null)
+                    return user;
+                else
+                    throw new IncorrectUserException("Unable to find the user by name.");
+            }
             else
-                throw new IncorrectUserException("Unable to find the user by name.");
+                throw new InternalAuthenticationErrorException("User?.Identity?.Name is null.");
         }
 
         protected internal async Task<string> GetCurrentUserIdAsync()

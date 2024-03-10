@@ -19,6 +19,7 @@ using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using System.Web;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
+using System.Text;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
@@ -54,10 +55,12 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             if (request.Login == null || request.Password == null)
                 return BadRequest(new { errorText = "Login and password cannot be null." });
 
-            var (status, identity) = await GetIdentityAsync(request.Login, request.Password);
+            var authenticationTokenCipherKey = _configuration["AuthenticationTokenCipherKey"] ?? throw new InternalAuthenticationErrorException("Configuration problem: unable to get cipher key.");
+
+            var (status, user, identity) = await GetIdentityAsync(request.Login, request.Password);
             if (status == SignInStatus.Failure)
                 return Unauthorized(new { errorCode = "InvalidLoginPassword", errorText = "Invalid login or password." });
-            else if (status == SignInStatus.Success || status == SignInStatus.EmailNotConfirmed)
+            else if ((status == SignInStatus.Success || status == SignInStatus.EmailNotConfirmed) && identity!=null && user!=null)
             {
 
                 var now = DateTime.UtcNow;
@@ -68,7 +71,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                         notBefore: now,
                         claims: identity.Claims,
                         expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LIFETIME)),
-                        signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(_configuration), SecurityAlgorithms.HmacSha256));
+                        signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(Encoding.ASCII.GetBytes(authenticationTokenCipherKey)), SecurityAlgorithms.HmacSha256));
                 var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
                 if (encodedJwt != null)
@@ -79,6 +82,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                         {
                             AccessToken = encodedJwt,
                             Login = identity.Name,
+                            UserId = user.Id,
                             IsEmailConfirmed = status != SignInStatus.EmailNotConfirmed
                         });
                     }
@@ -202,7 +206,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 
             const string unauthorizedErrorCode = "Unable to confirm the user by the code.";
 
-            var user = await _userManager.FindByIdAsync(request.UserId.ToAspNetUserIdString());
+            var user = await _userManager.FindByIdAsync(request.UserId.ToAspNetUserIdString()!);
 
             if (user == null)
                 return Unauthorized(new { errorCode = "NoConfirmation", errorText = unauthorizedErrorCode });
@@ -245,57 +249,57 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             throw new NotImplementedException();
         }
 
-        private async Task<(SignInStatus status, ClaimsIdentity? claims)> GetIdentityAsync(string username, string password)
+        private async Task<(SignInStatus status, ApplicationUser? user, ClaimsIdentity? claims)> GetIdentityAsync(string username, string password)
         {
-            var signInStatus = await CheckUserCredentialsAsync(username, password);
+            var (status, user) = await CheckUserCredentialsAsync(username, password);
 
-            if (signInStatus == SignInStatus.Success || signInStatus == SignInStatus.EmailNotConfirmed)
+            if (status == SignInStatus.Success || status == SignInStatus.EmailNotConfirmed)
             {
                 var claims = new List<Claim>
                 {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, username),
-                    new Claim(ClaimsIdentity.DefaultRoleClaimType, "admin")
+                    new(ClaimsIdentity.DefaultNameClaimType, username),
+                    new(ClaimsIdentity.DefaultRoleClaimType, "admin")
                 };
                 ClaimsIdentity claimsIdentity =
-                new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
+                new(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
                     ClaimsIdentity.DefaultRoleClaimType);
-                return (signInStatus, claimsIdentity);
+                return (status, user, claimsIdentity);
             }
             else
-                return (signInStatus, null);
+                return (status, null, null);
         }
 
-        private async Task<SignInStatus> CheckUserCredentialsAsync(string username, string password)
+        private async Task<(SignInStatus status, ApplicationUser? user)> CheckUserCredentialsAsync(string username, string password)
         {
             if (_userManager == null)
             {
-                return SignInStatus.Failure;
+                return (SignInStatus.Failure, null);
             }
             else
             {
                 var user = await _userManager.FindByNameAsync(username);
                 if (user == null)
                 {
-                    return SignInStatus.Failure;
+                    return (SignInStatus.Failure, null);
                 }
                 else if (await _userManager.IsLockedOutAsync(user))
                 {
-                    return SignInStatus.LockedOut;
+                    return (SignInStatus.LockedOut, null);
                 }
                 else if (await _userManager.CheckPasswordAsync(user, password))
                 {
                     if (user.EmailConfirmed)
                     {
-                        return SignInStatus.Success;
+                        return (SignInStatus.Success, user);
                     }
                     else
                     {
-                        return SignInStatus.EmailNotConfirmed;
+                        return (SignInStatus.EmailNotConfirmed, user);
                     }    
                 }
                 else
                 {
-                    return SignInStatus.Failure;
+                    return (SignInStatus.Failure, null);
                 }
             }
         }

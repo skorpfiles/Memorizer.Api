@@ -14,14 +14,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         [Key]
         public Guid TrtaId { get; set; }
         public Guid TrainingResultId { get; set; }
-        public string TrtaAnswer { get; set; }
+        public string TrtaAnswer { get; set; } = null!;
         public bool TrtaIsCorrect { get; set; }
 
         public TrainingResult? TrainingResult { get; set; }
-
-        public TrainingResultTypedAnswer(string trtaAnswer)
-        {
-            TrtaAnswer = trtaAnswer;
-        }
     }
 }
