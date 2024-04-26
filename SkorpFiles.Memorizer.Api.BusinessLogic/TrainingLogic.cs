@@ -25,6 +25,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             var questionsListsCollection = new TrainingBuilder(allQuestions);
             var questionsList = questionsListsCollection.MakeQuestionsListForTraining(options);
 
+            foreach(var question in questionsList)
+            {
+                question.MyStatus ??= new UserQuestionStatus
+                {
+                    IsNew = true,
+                    PenaltyPoints = 0,
+                    Rating = Constants.InitialQuestionRating
+                };
+            }
+
             return questionsList;
         }
 
