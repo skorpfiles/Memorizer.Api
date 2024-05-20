@@ -14,7 +14,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Extensions
             ArgumentNullException.ThrowIfNull(question);
 
             int result;
-            if (!question.MyStatus!.IsNew)
+            if (!question.MyStatus?.IsNew ?? true)
             {
                 result = question.EstimatedTrainingTimeSeconds;
             }

@@ -32,7 +32,11 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 {
                     var result = (await trainingLogic.SelectQuestionsForTrainingAsync(userGuid, training.Questionnaires.Select(q => q.Id!.Value).ToList(), mapper.Map<TrainingOptions>(training))).ToList();
                     if (result != null)
-                        return Ok(mapper.Map<StartTrainingResponse>(result));
+                    {
+                        StartTrainingResponse response = mapper.Map<StartTrainingResponse>(result);
+                        response.Name = training.Name;
+                        return Ok(response);
+                    }
                     else
                         throw new InternalErrorException("The database hasn't returned questions for training.");
                 }
@@ -48,6 +52,11 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
+                if (request.QuestionId == Guid.Empty)
+                    throw new BadRequestException("QuestionId mustn't be empty.");
+                if (request.AnswerTimeMilliseconds <= 0)
+                    throw new BadRequestException("Answer Time must be positive.");
+
                 var userGuid = await GetCurrentUserGuidAsync();
                 var result = await trainingLogic.UpdateQuestionStatusAsync(userGuid, mapper.Map<Api.Models.TrainingResult>(request));
                 return Ok(mapper.Map<UserQuestionStatus>(result));
