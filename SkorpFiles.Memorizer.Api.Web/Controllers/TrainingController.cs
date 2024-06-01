@@ -27,7 +27,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
                 var userGuid = await GetCurrentUserGuidAsync();
-                var training = await editingLogic.GetTrainingAsync(userGuid, id);
+                var training = await editingLogic.GetTrainingAsync(userGuid, id, false);
                 if (training?.Questionnaires != null)
                 {
                     var result = (await trainingLogic.SelectQuestionsForTrainingAsync(userGuid, training.Questionnaires.Select(q => q.Id!.Value).ToList(), mapper.Map<TrainingOptions>(training))).ToList();

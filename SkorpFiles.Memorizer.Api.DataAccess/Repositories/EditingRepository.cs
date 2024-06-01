@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
+using SkorpFiles.Memorizer.Api.DataAccess.Migrations;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
@@ -103,26 +104,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             foundQuestionnaires = foundQuestionnaires.Page(request.PageNumber, request.PageSize);
 
-            var foundGroups = from questionnaire in foundQuestionnaires.Include(q=>q.Owner)
-                              from question in DbContext.Questions.Where(q => q.QuestionnaireId == questionnaire.QuestionnaireId).DefaultIfEmpty()
-                              from questionUser in DbContext.QuestionsUsers.Where(qu => qu.QuestionId == question.QuestionId && qu.UserId == userIdString).DefaultIfEmpty()
-                              from user in DbContext.Users.Where(u=>u.Id==questionnaire.OwnerId).DefaultIfEmpty()
-                              group new { question, questionUser } by questionnaire into questionnaireGroup
-                              select new
-                              {
-                                  Questionnaire = questionnaireGroup.Key,
-                                  QuestionsTotalCount = questionnaireGroup.Count(q => q.question != null),
-                                  QuestionsNewCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserIsNew),
-                                  QuestionsRecheckCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserPenaltyPoints > 0)
-                              };
+            var foundGroups = GetQuestionnairesAndCountsOfQuestionsQuery(foundQuestionnaires, userIdString);
 
             var foundGroupsResult = await foundGroups.ToListAsync();
 
             var questionnairesIds = foundGroupsResult.Select(g => g.Questionnaire.QuestionnaireId).ToList();
 
-            var questionnairesWithRelations = foundGroupsResult.Count != 0 ? (await (from questionnaire in DbContext.Questionnaires.Include(q => q.Owner)
-                                                                                  where questionnairesIds.Contains(questionnaire.QuestionnaireId)
-                                                                                  select questionnaire).ToListAsync()) : null;
+            var questionnairesWithRelations = await GetQuestionnairesByIdsAsync(questionnairesIds);
 
             List<Api.Models.Questionnaire> resultList = [];
 
@@ -130,19 +118,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             {
                 if (group.Questionnaire.LabelsForQuestionnaire != null)
                     group.Questionnaire.LabelsForQuestionnaire = [.. group.Questionnaire.LabelsForQuestionnaire.OrderBy(l => l.LabelNumber)];
-                Api.Models.Questionnaire questionnaire = _mapper.Map<Api.Models.Questionnaire>(group.Questionnaire);
-                questionnaire.CountsOfQuestions = new QuestionsCounts
-                {
-                    Total = group.QuestionsTotalCount,
-                    New = group.QuestionsNewCount,
-                    Rechecked = group.QuestionsRecheckCount
-                };
 
-                var questionnaireWithRelations = questionnairesWithRelations?.FirstOrDefault(q => group.Questionnaire.QuestionnaireId == q.QuestionnaireId);
-                if (questionnaireWithRelations != null)
-                {
-                    questionnaire.OwnerName = questionnaireWithRelations.Owner?.UserName;
-                }
+                var questionnaire = MapQuestionnaireWithCounts(group, questionnairesWithRelations ?? []);
 
                 resultList.Add(questionnaire);
             }
@@ -697,19 +674,63 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return new PaginatedCollection<Api.Models.Training>(_mapper.Map<IEnumerable<Api.Models.Training>>(foundTrainingsResult), totalCount, request.PageNumber, request.PageSize);
         }
 
-        public async Task<Api.Models.Training> GetTrainingAsync(Guid userId, Guid trainingId)
+        public async Task<Api.Models.Training> GetTrainingAsync(Guid userId, Guid trainingId, bool calculateTime)
         {
-            Models.Training? trainingResult = await (from training in DbContext.Trainings
-                                                     .Include(t=>t.QuestionnairesForTraining!)
-                                                     .ThenInclude(qt=>qt.Questionnaire)
-                                                     where !training.ObjectIsRemoved &&
-                                                     training.TrainingId == trainingId
-                                                     select training
-                                                     ).SingleOrDefaultAsync();
+            Models.Training? trainingResult = null;
+            List<QuestionnaireAndCountsOfQuestions> foundGroupsResult = [];
+            IEnumerable<Models.Questionnaire>? questionnairesWithRelations = null;
+
+            using (var transaction = await DbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable))
+            {
+                try
+                {
+                    trainingResult = await (from training in DbContext.Trainings
+                                            where !training.ObjectIsRemoved &&
+                                            training.TrainingId == trainingId
+                                            select training).SingleOrDefaultAsync();
+
+                    if (trainingResult != null)
+                    {
+                        var userIdString = userId.ToAspNetUserIdString();
+
+                        var questionnairesQuery = from questionnaire in DbContext.Questionnaires
+                                                  from questionnaireForTraining in DbContext.TrainingsQuestionnaires
+                                                  where questionnaireForTraining.TrainingId == trainingResult.TrainingId &&
+                                                  questionnaireForTraining.QuestionnaireId == questionnaire.QuestionnaireId &&
+                                                  !questionnaire.ObjectIsRemoved
+                                                  select questionnaire;
+
+                        var questionnairesAndCountsOfQuestions = GetQuestionnairesAndCountsOfQuestionsQuery(questionnairesQuery, userIdString);
+
+                        foundGroupsResult = await questionnairesAndCountsOfQuestions.ToListAsync();
+
+                        var questionnairesIds = foundGroupsResult.Select(g => g.Questionnaire.QuestionnaireId).ToList();
+
+                        questionnairesWithRelations = await GetQuestionnairesByIdsAsync(questionnairesIds);
+                    }
+                    transaction.Commit();
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+                
             if (trainingResult!=null)
             {
                 Utils.CheckAvailabilityForUser(userId, Guid.Parse(trainingResult.OwnerId), "The user doesn't own the training.");
-                return _mapper.Map<Api.Models.Training>(trainingResult);
+
+                List<Api.Models.Questionnaire> resultQuestionnairesList = [];
+
+                foreach (var group in foundGroupsResult)
+                {
+                    var mappedQuestionnaire = MapQuestionnaireWithCounts(group, questionnairesWithRelations ?? []);
+                    resultQuestionnairesList.Add(mappedQuestionnaire);
+                }
+                Api.Models.Training resultTraining = _mapper.Map<Api.Models.Training>(trainingResult);
+                resultTraining.Questionnaires = resultQuestionnairesList;
+                return resultTraining;
             }
             else
                 throw new ObjectNotFoundException("Training with such ID is not found.");
@@ -1067,6 +1088,55 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             }
             else
                 throw new ObjectNotFoundException("Questionnaire with such ID or Code doesn't exist.");
+        }
+
+        private struct QuestionnaireAndCountsOfQuestions
+        {
+            public Models.Questionnaire Questionnaire { get; set; }
+            public int QuestionsTotalCount { get; set; }
+            public int QuestionsNewCount { get; set; }
+            public int QuestionsRecheckCount { get; set; }
+        }
+
+        private IQueryable<QuestionnaireAndCountsOfQuestions> GetQuestionnairesAndCountsOfQuestionsQuery(IQueryable<Models.Questionnaire> questionnairesQuery, string? userIdString)
+        {
+            return from questionnaire in questionnairesQuery.Include(q => q.Owner)
+                   from question in DbContext.Questions.Where(q => q.QuestionnaireId == questionnaire.QuestionnaireId).DefaultIfEmpty()
+                   from questionUser in DbContext.QuestionsUsers.Where(qu => qu.QuestionId == question.QuestionId && qu.UserId == userIdString).DefaultIfEmpty()
+                   from user in DbContext.Users.Where(u => u.Id == questionnaire.OwnerId).DefaultIfEmpty()
+                   group new { question, questionUser } by questionnaire into questionnaireGroup
+                   select new QuestionnaireAndCountsOfQuestions
+                   {
+                       Questionnaire = questionnaireGroup.Key,
+                       QuestionsTotalCount = questionnaireGroup.Count(q => q.question != null),
+                       QuestionsNewCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserIsNew),
+                       QuestionsRecheckCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserPenaltyPoints > 0)
+                   };
+        }
+
+        private async Task<IEnumerable<Models.Questionnaire>?> GetQuestionnairesByIdsAsync(List<Guid> questionnairesIds)
+        {
+            return questionnairesIds.Count > 0 ? (await (from questionnaire in DbContext.Questionnaires.Include(q => q.Owner)
+                                                         where questionnairesIds.Contains(questionnaire.QuestionnaireId)
+                                                         select questionnaire).ToListAsync()) : null;
+        }
+
+        private Api.Models.Questionnaire MapQuestionnaireWithCounts(QuestionnaireAndCountsOfQuestions questionnaireAndCountsOfQuestions, IEnumerable<Models.Questionnaire> sourceQuestionnaires)
+        {
+            Api.Models.Questionnaire questionnaire = _mapper.Map<Api.Models.Questionnaire>(questionnaireAndCountsOfQuestions.Questionnaire);
+            questionnaire.CountsOfQuestions = new QuestionsCounts
+            {
+                Total = questionnaireAndCountsOfQuestions.QuestionsTotalCount,
+                New = questionnaireAndCountsOfQuestions.QuestionsNewCount,
+                Rechecked = questionnaireAndCountsOfQuestions.QuestionsRecheckCount
+            };
+
+            var questionnaireWithRelations = sourceQuestionnaires?.FirstOrDefault(q => questionnaireAndCountsOfQuestions.Questionnaire.QuestionnaireId == q.QuestionnaireId);
+            if (questionnaireWithRelations != null)
+            {
+                questionnaire.OwnerName = questionnaireWithRelations.Owner?.UserName;
+            }
+            return questionnaire;
         }
     }
 }
