@@ -20,6 +20,9 @@ using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using System.Web;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using System.Text;
+using SkorpFiles.Memorizer.Api.Web.Helpers.SendingEmails;
+using SkorpFiles.Memorizer.Api.Web.Interfaces;
+using SkorpFiles.Memorizer.Api.Web.Models.Helpers;
 
 namespace SkorpFiles.Memorizer.Api.Web.Controllers
 {
@@ -34,9 +37,10 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         private readonly IConfiguration _configuration;
         private readonly IAccountLogic _accountLogic;
         private readonly ITokenCache _tokenCache;
+        private readonly IEmailSender _emailSender;
 
-        public AccountController( 
-            ITokenCache tokenCache, IConfiguration configuration, IAccountLogic accountLogic, IUserStore<ApplicationUser> userStore, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        public AccountController(ITokenCache tokenCache, IConfiguration configuration, IAccountLogic accountLogic, IUserStore<ApplicationUser> userStore, 
+            UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IEmailSender emailSender)
         {
             _tokenCache = tokenCache;
             _configuration = configuration;
@@ -46,6 +50,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             _userManager = userManager;
             _signInManager = signInManager;
             _emailStore = GetEmailStore();
+            _emailSender = emailSender;
         }
 
         [Route("Token")]
@@ -158,15 +163,19 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
 
         private async Task<bool> SendUserConfirmationEmailAsync(string userId, string email, string? login, string confirmationCode)
         {
-            return await SendGridUtils.SendEmailAsync(
-                    _configuration["EmailConfirmation_ApiKey"]!,
-                    _configuration["EmailConfirmation_EmailFrom"]!,
-                    _configuration["EmailConfirmation_EmailFromName"]!,
-                    email,
-                    login ?? "New User",
-                    _configuration["AuthenticationConfirmation:Subject"]!,
-                    string.Format(_configuration["AuthenticationConfirmation:BodyTemplate"]!, string.Format(_configuration["EmailConfirmation_FrontendLinkTemplate"]!, userId, HttpUtility.UrlEncode(confirmationCode)))
-                    );
+            var emailParameters = new EmailParameters
+            {
+                ApiKey = _configuration["EmailConfirmation_ApiKey"],
+                FromAddress = _configuration["EmailConfirmation_EmailFrom"]!,
+                FromName = _configuration["EmailConfirmation_EmailFromName"]!,
+                ToAddress = email,
+                ToName = login ?? "New User",
+                Subject = _configuration["AuthenticationConfirmation:Subject"]!,
+                Content = string.Format(_configuration["AuthenticationConfirmation:BodyTemplate"]!,
+                    string.Format(_configuration["EmailConfirmation_FrontendLinkTemplate"]!, userId, HttpUtility.UrlEncode(confirmationCode))
+            };
+
+            return await _emailSender.SendEmailAsync(emailParameters);
         }
 
         [Route("RepeatEmailConfirmation")]
