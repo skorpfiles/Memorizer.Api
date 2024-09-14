@@ -886,8 +886,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                        .ThenInclude(el => el.Label)
                    where
                        !questionnaire.ObjectIsRemoved &&
-                       (questionnaireId == null || questionnaire.QuestionnaireId == questionnaireId) &&
-                       (questionnaireCode == null || questionnaire.QuestionnaireCode == questionnaireCode)
+                       (questionnaire.QuestionnaireId == questionnaireId || questionnaire.QuestionnaireCode == questionnaireCode)
                    select questionnaire;
         }
 
@@ -897,7 +896,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
 
-            var questionnaireResult = await GetBasicQuestionnaireQuery().SingleOrDefaultAsync();
+            var questionnaireResult = await GetBasicQuestionnaireQuery(questionnaireId, questionnaireCode).SingleOrDefaultAsync();
 
             if (questionnaireResult != null)
             {
