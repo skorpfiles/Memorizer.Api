@@ -10,6 +10,6 @@
         public int TimeMinutes { get;set; }
         public decimal? NewQuestionsFraction {  get; set; }
         public decimal? PenaltyQuestionsFraction {  get; set; }
-        public List<QuestionnaireForTraining>? Questionnaires { get; set; }
+        public List<Questionnaire>? Questionnaires { get; set; }
     }
 }

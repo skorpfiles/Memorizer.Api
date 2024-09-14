@@ -104,9 +104,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             return await _editingRepository.GetTrainingsForUserAsync(userId, request);
         }
 
-        public async Task<Models.Training> GetTrainingAsync(Guid userId, Guid trainingId)
+        public async Task<Models.Training> GetTrainingAsync(Guid userId, Guid trainingId, bool calculateTime)
         {
-            return await _editingRepository.GetTrainingAsync(userId, trainingId);
+            return await _editingRepository.GetTrainingAsync(userId, trainingId, calculateTime);
         }
 
         public async Task<Models.Training> CreateTrainingAsync(Guid userId, UpdateTrainingRequest request)

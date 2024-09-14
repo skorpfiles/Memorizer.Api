@@ -224,12 +224,12 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [Route("Training/{id}", Name = "GetTraining")]
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> GetTrainingAsync(Guid id)
+        public async Task<IActionResult> GetTrainingAsync(Guid id, [FromQuery]bool calculateTime)
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
                 var userGuid = await GetCurrentUserGuidAsync();
-                var result = await _editingLogic.GetTrainingAsync(userGuid, id);
+                var result = await _editingLogic.GetTrainingAsync(userGuid, id, calculateTime);
                 return Ok(_mapper.Map<Training>(result));
             });
         }
@@ -279,7 +279,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             });
         }
 
-        private void RestoreDefaultPageValues(CollectionRequest request, int? defaultPageSize=null)
+        private static void RestoreDefaultPageValues(CollectionRequest request, int? defaultPageSize=null)
         {
             if (request.PageNumber == 0)
                 request.PageNumber = 1;
