@@ -196,7 +196,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
         private static RatingTape InitializeRatingTape(List<ExistingQuestion> basicList, IEnumerable<ExistingQuestion> questionsToFilter)
         {
-            RatingTape result = new();
+            RatingTape result = new(RatingToWeight);
             List<ExistingQuestion> questionsToRemoveFromBasicList = [];
 
             foreach(ExistingQuestion question in basicList)
@@ -209,6 +209,11 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             }
             
             return result;
+        }
+
+        private static int RatingToWeight(int rating)
+        {
+            return (int)Math.Round(10000 / ((51 - rating) * Math.Exp(-0.1081 * (rating - 1)) * 200));
         }
     }
 }

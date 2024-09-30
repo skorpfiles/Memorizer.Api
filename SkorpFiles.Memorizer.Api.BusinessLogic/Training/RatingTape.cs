@@ -1,15 +1,12 @@
 ﻿using SkorpFiles.Memorizer.Api.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
     internal class RatingTape:IPickable<ExistingQuestion>
     {
         private int _nextCoordinate = 1;
+
+        private readonly Func<int, int> _ratingToWeightConversion;
 
         public SortedDictionary<int, RatingComponent> CoordinatesAndComponents { get; private set; } = [];
         public SortedSet<int> Coordinates { get; private set; } = [];
@@ -18,6 +15,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
         public int Length => _nextCoordinate - 1;
 
         public bool Consumed => Length == 0;
+
+        public RatingTape()
+        {
+            _ratingToWeightConversion = (rating) => rating;
+        }
+
+        public RatingTape(Func<int, int> ratingToWeightConversion)
+        {
+            _ratingToWeightConversion = ratingToWeightConversion;
+        }
 
         public void Add(ExistingQuestion question)
         {
@@ -96,11 +103,12 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
         private RatingComponent CreateRatingComponent(int rating)
         {
-            RatingComponent ratingComponent = new(_nextCoordinate, rating);
+            int weight = _ratingToWeightConversion(rating);
+            RatingComponent ratingComponent = new(_nextCoordinate, weight);
             RatingsAndComponents.Add(rating, ratingComponent);
             Coordinates.Add(_nextCoordinate);
             CoordinatesAndComponents.Add(_nextCoordinate, ratingComponent);
-            _nextCoordinate += rating;
+            _nextCoordinate += weight;
             return ratingComponent;
         }
 
