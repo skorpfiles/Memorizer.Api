@@ -1,22 +1,28 @@
-﻿using AutoMapper;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SkorpFiles.Memorizer.Api.Web.Authorization;
+using SkorpFiles.Memorizer.Api.BusinessLogic.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess;
+using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
 using SkorpFiles.Memorizer.Api.Web.Mapping;
+using StackExchange.Redis;
+using Autofac.Core;
 using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using System.Text;
-using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
-using SkorpFiles.Memorizer.Api.BusinessLogic.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -60,7 +66,7 @@ switch (cacheType)
         builder.Services.AddSingleton(tokenCache);
         break;
     case "db":
-        builder.Services.AddScoped<ITokenCache, DbTokenCache>();
+        builder.Services.AddSingleton<ITokenCache, DbTokenCache>();
         break;
 }
 
@@ -85,7 +91,7 @@ builder.Services.ConfigureApplicationCookie(options => {
     };
 });
 
-builder.Services.AddScoped<IAuthorizationMiddlewareResultHandler, AuthorizationWithCheckTokenMiddlewareResultHandler>();
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationWithCheckTokenMiddlewareResultHandler>();
 
 var mapperConfig = new MapperConfiguration(mc =>
 {
@@ -96,10 +102,20 @@ var mapperConfig = new MapperConfiguration(mc =>
     mc.AddProfile(new DataAccessMappingProfile());
 });
 
-builder.Services.AddScoped(services => mapperConfig.CreateMapper());
+IMapper mapper = mapperConfig.CreateMapper();
+builder.Services.AddSingleton(mapper);
 
-builder.Services.AddRepositories();
-builder.Services.AddBusinessLogic();
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
+    .ConfigureContainer<ContainerBuilder>(containerBuilder =>
+    {
+        var opt = new DbContextOptionsBuilder<ApplicationDbContext>();
+        opt.UseSqlServer(connectionString);
+        containerBuilder.RegisterInstance(new ApplicationDbContext(opt.Options)).Keyed<ApplicationDbContext>("DbContext");
+        containerBuilder.RegisterModule(new DataAccessModule());
+        containerBuilder.RegisterModule(new BusinessLogicModule());
+    });
+
+builder.Logging.ClearProviders().AddApplicationInsights();
 
 var app = builder.Build();
 
