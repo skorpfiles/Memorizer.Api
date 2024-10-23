@@ -1,5 +1,4 @@
-﻿using Autofac;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,9 +12,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
     public abstract class IntegrationTestsBase : IDisposable
     {
         protected ApplicationDbContext DbContext { get; private set; }
-        protected ILifetimeScope Container { get; private set; }
-
         protected IMapper Mapper { get; private set; }
+        protected IServiceProvider ServiceProvider { get; private set; }
 
         public IntegrationTestsBase()
         {
@@ -35,11 +33,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             DbContext.Database.EnsureDeleted();
             DbContext.Database.Migrate();
 
-            var containerBuilder = new ContainerBuilder();
-            containerBuilder.RegisterModule(new DataAccessModule());
+            var services = new ServiceCollection();
+            services.AddRepositories();
+
             var opt = new DbContextOptionsBuilder<ApplicationDbContext>();
             opt.UseSqlServer(configuration["DatabaseConnectionString"]);
-            containerBuilder.RegisterInstance(new ApplicationDbContext(opt.Options)).Keyed<ApplicationDbContext>("DbContext");
 
             var mapperConfig = new MapperConfiguration(mc =>
             {
@@ -48,32 +46,26 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
             Mapper = mapperConfig.CreateMapper();
 
-            containerBuilder.RegisterInstance(Mapper);
+            services.AddScoped(services => mapperConfig.CreateMapper());
 
-            Container = containerBuilder.Build();
+            ServiceProvider = services.BuildServiceProvider();
         }
 
         public async Task RegisterUserAsync()
         {
-            await DbContext.Users.AddAsync(new IdentityUser { Id= Constants.DefaultUserId.ToAspNetUserIdString()!, UserName = "TestLogin" });
+            await DbContext.Users.AddAsync(new IdentityUser { Id = Constants.DefaultUserId.ToAspNetUserIdString()!, UserName = "TestLogin" });
             await DbContext.SaveChangesAsync();
         }
 
         public void Dispose()
         {
             DisposeDbContext();
-            ResetDependencies();
             GC.SuppressFinalize(this);
         }
 
         private void DisposeDbContext()
         {
             DbContext.Database.EnsureDeleted();
-        }
-
-        private void ResetDependencies()
-        {
-            Container?.Dispose();
         }
     }
 }
