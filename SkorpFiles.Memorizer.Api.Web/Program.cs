@@ -98,6 +98,8 @@ var mapperConfig = new MapperConfiguration(mc =>
 
 builder.Services.AddScoped(services => mapperConfig.CreateMapper());
 
+builder.Logging.ClearProviders().AddApplicationInsights();
+
 builder.Services.AddRepositories();
 builder.Services.AddBusinessLogic();
 
