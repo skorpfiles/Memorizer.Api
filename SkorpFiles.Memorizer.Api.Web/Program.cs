@@ -1,9 +1,6 @@
-﻿using Autofac;
-using Autofac.Extensions.DependencyInjection;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SkorpFiles.Memorizer.Api.Web.Authorization;
@@ -12,8 +9,6 @@ using SkorpFiles.Memorizer.Api.DataAccess;
 using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
 using SkorpFiles.Memorizer.Api.Web.Mapping;
-using StackExchange.Redis;
-using Autofac.Core;
 using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using System.Text;
@@ -66,7 +61,7 @@ switch (cacheType)
         builder.Services.AddSingleton(tokenCache);
         break;
     case "db":
-        builder.Services.AddSingleton<ITokenCache, DbTokenCache>();
+        builder.Services.AddScoped<ITokenCache, DbTokenCache>();
         break;
 }
 
@@ -91,7 +86,7 @@ builder.Services.ConfigureApplicationCookie(options => {
     };
 });
 
-builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationWithCheckTokenMiddlewareResultHandler>();
+builder.Services.AddScoped<IAuthorizationMiddlewareResultHandler, AuthorizationWithCheckTokenMiddlewareResultHandler>();
 
 var mapperConfig = new MapperConfiguration(mc =>
 {
@@ -103,19 +98,12 @@ var mapperConfig = new MapperConfiguration(mc =>
 });
 
 IMapper mapper = mapperConfig.CreateMapper();
-builder.Services.AddSingleton(mapper);
-
-builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
-    .ConfigureContainer<ContainerBuilder>(containerBuilder =>
-    {
-        var opt = new DbContextOptionsBuilder<ApplicationDbContext>();
-        opt.UseSqlServer(connectionString);
-        containerBuilder.RegisterInstance(new ApplicationDbContext(opt.Options)).Keyed<ApplicationDbContext>("DbContext");
-        containerBuilder.RegisterModule(new DataAccessModule());
-        containerBuilder.RegisterModule(new BusinessLogicModule());
-    });
+builder.Services.AddScoped(services => mapperConfig.CreateMapper());
 
 builder.Logging.ClearProviders().AddApplicationInsights();
+
+builder.Services.AddRepositories();
+builder.Services.AddBusinessLogic();
 
 var app = builder.Build();
 
