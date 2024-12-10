@@ -10,8 +10,8 @@ namespace SkorpFiles.Memorizer.Api.Models.RequestModels
         public TrainingLengthType? LengthType { get; set; }
         public int? QuestionsCount { get; set; }
         public int? TimeMinutes { get; set; }
-        public decimal NewQuestionsFraction { get; set; }
-        public decimal PenaltyQuestionsFraction { get; set; }
+        public decimal? NewQuestionsFraction { get; set; }
+        public decimal? PenaltyQuestionsFraction { get; set; }
         public IEnumerable<Guid>? QuestionnairesIds { get; set; }
     }
 }
