@@ -62,9 +62,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Mapping
             CreateMap<PostMyStatusRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.UpdateUserQuestionStatusesRequest>();
             CreateMap<GetLabelsRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.GetLabelsRequest>();
             CreateMap<PostTrainingRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.UpdateTrainingRequest>()
-                .ForMember(dest => dest.RefreshLastTime, opts => opts.MapFrom(src => src.RefreshLastTime ?? false))
-                .ForMember(dest => dest.NewQuestionsFraction, opts => opts.MapFrom(src => src.NewQuestionsFraction ?? Constants.StandardNewQuestionsFraction))
-                .ForMember(dest => dest.PenaltyQuestionsFraction, opts => opts.MapFrom(src => src.PenaltyQuestionsFraction ?? Constants.StandardPenaltyQuestionsFraction));
+                .ForMember(dest => dest.RefreshLastTime, opts => opts.MapFrom(src => src.RefreshLastTime ?? false));
             CreateMap<CollectionRequest, SkorpFiles.Memorizer.Api.Models.RequestModels.GetCollectionRequest>();
             CreateMap<Api.Models.Training, Api.Models.RequestModels.TrainingOptions>()
                 .ForMember(dest => dest.LengthValue, opts =>

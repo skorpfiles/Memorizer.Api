@@ -1,21 +1,13 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
-using SkorpFiles.Memorizer.Api.DataAccess.Migrations;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 {
@@ -753,6 +745,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw new ArgumentException(string.Format(errorMessageTemplate, nameof(request.QuestionsCount)));
             if (request.TimeMinutes == null)
                 throw new ArgumentException(string.Format(errorMessageTemplate, nameof(request.TimeMinutes)));
+            if (request.NewQuestionsFraction == null)
+                throw new ArgumentException(string.Format(errorMessageTemplate, nameof(request.NewQuestionsFraction)));
+            if (request.PenaltyQuestionsFraction == null)
+                throw new ArgumentException(string.Format(errorMessageTemplate, nameof(request.PenaltyQuestionsFraction)));
+
+            CheckFractions(request.NewQuestionsFraction.Value, request.PenaltyQuestionsFraction.Value);
 
             var questionnairesIdsList = request?.QuestionnairesIds?.ToList();
 
@@ -766,8 +764,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 TrainingLengthType = request.LengthType.Value,
                 TrainingQuestionsCount = request.QuestionsCount.Value,
                 TrainingTimeMinutes = request.TimeMinutes.Value,
-                TrainingNewQuestionsFraction = request.NewQuestionsFraction,
-                TrainingPenaltyQuestionsFraction = request.PenaltyQuestionsFraction,
+                TrainingNewQuestionsFraction = request.NewQuestionsFraction.Value,
+                TrainingPenaltyQuestionsFraction = request.PenaltyQuestionsFraction.Value,
                 OwnerId = userId.ToAspNetUserIdString()!,
                 ObjectCreationTimeUtc = DateTime.UtcNow,
             };
@@ -802,6 +800,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (trainingResult.OwnerId != userId.ToAspNetUserIdString())
                     throw new AccessDeniedForUserException(Constants.ExceptionMessages.UserCannotChangeQuestionnaire);
 
+            if (request.NewQuestionsFraction != null || request.PenaltyQuestionsFraction != null)
+            {
+                CheckFractions(request.NewQuestionsFraction ?? trainingResult.TrainingNewQuestionsFraction,
+                    request.PenaltyQuestionsFraction ?? trainingResult.TrainingPenaltyQuestionsFraction);
+            }
+
             bool changed = false;
 
             if (!string.IsNullOrEmpty(request.Name))
@@ -825,6 +829,18 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (request.TimeMinutes != null)
             {
                 trainingResult.TrainingTimeMinutes = request.TimeMinutes.Value;
+                changed = true;
+            }
+
+            if (request.NewQuestionsFraction != null)
+            {
+                trainingResult.TrainingNewQuestionsFraction = request.NewQuestionsFraction.Value;
+                changed = true;
+            }
+
+            if (request.PenaltyQuestionsFraction != null)
+            {
+                trainingResult.TrainingPenaltyQuestionsFraction = request.PenaltyQuestionsFraction.Value;
                 changed = true;
             }
 
@@ -1039,6 +1055,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw new ArgumentException("All questions should have text.");
         }
 
+        private static void CheckFractions(decimal newQuestionsFraction, decimal penaltyQuestionsFraction)
+        {
+            if (newQuestionsFraction + penaltyQuestionsFraction < 0 || newQuestionsFraction + penaltyQuestionsFraction > 1)
+                throw new ArgumentException("Sum of new questions fraction and penalty questions fraction cannot be less than 0 or more than 1.");
+        }
         private async Task<Models.Label> GetLabelAsync(Guid userId, Guid? labelId = null, int? labelCode = null)
         {
             CheckIdAndCodeDefinitionRule(labelId, labelCode,
