@@ -938,7 +938,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                        {
                            Questionnaire = questionnaireGroup.Key,
                            QuestionsTotalCount = questionnaireGroup.Count(q => q.question != null),
-                           QuestionsNewCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserIsNew),
+                           QuestionsNewCount = questionnaireGroup.Count(q => q.question != null && ((q.questionUser != null && q.questionUser.QuestionUserIsNew) || q.questionUser == null)),
                            QuestionsRecheckCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserPenaltyPoints > 0),
                            TotalTrainingTimeSeconds = questionnaireGroup.Where(q=>q.question!=null).Sum(q=>q.question.QuestionEstimatedTrainingTimeSeconds)
                        }).SingleOrDefaultAsync();
@@ -1129,7 +1129,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                    {
                        Questionnaire = questionnaireGroup.Key,
                        QuestionsTotalCount = questionnaireGroup.Count(q => q.question != null),
-                       QuestionsNewCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserIsNew),
+                       QuestionsNewCount = questionnaireGroup.Count(q => q.question != null && ((q.questionUser != null && q.questionUser.QuestionUserIsNew) || q.questionUser == null)),
                        QuestionsRecheckCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserPenaltyPoints > 0)
                    };
         }
