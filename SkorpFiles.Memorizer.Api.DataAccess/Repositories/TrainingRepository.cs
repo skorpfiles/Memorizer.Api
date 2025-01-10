@@ -32,10 +32,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                                .Include(q=>q.Questionnaire)
                                .ThenInclude(q=>q!.Owner)
                                where !q.ObjectIsRemoved && questionnairesIds.Contains(q.QuestionnaireId)
-                               join qu in DbContext.QuestionsUsers
+                               join qu in DbContext.QuestionsUsers.Where(qu=>qu.UserId == userIdString)
                                on q.QuestionId equals qu.QuestionId into quGroup
                                from quo in quGroup.DefaultIfEmpty()
-                               where quo == null || quo.UserId == userIdString
                                select new
                                {
                                    Question = q,
