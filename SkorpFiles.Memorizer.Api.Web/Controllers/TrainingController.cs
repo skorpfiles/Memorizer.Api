@@ -35,6 +35,9 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                     {
                         StartTrainingResponse response = mapper.Map<StartTrainingResponse>(result);
                         response.Name = training.Name;
+
+                        await editingLogic.UpdateTrainingAsync(userGuid, new UpdateTrainingRequest { Id = training.Id, RefreshLastTime = true });
+
                         return Ok(response);
                     }
                     else
