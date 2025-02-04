@@ -1,10 +1,12 @@
-﻿using SkorpFiles.Memorizer.Api.DataAccess.Models.Abstract;
+﻿using Microsoft.EntityFrameworkCore;
+using SkorpFiles.Memorizer.Api.DataAccess.Models.Abstract;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Models
 {
     [Table("nnQuestionUser", Schema = Constants.MemorizerSchemaName)]
+    [Index(nameof(UserId), nameof(QuestionId), IsUnique = true)] //to forbid adding more than one unique combinations of user ID and question ID.
     public class QuestionUser:ObjectWithCreationTime
     {
         [Key]
