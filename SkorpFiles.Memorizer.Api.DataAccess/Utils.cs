@@ -1,4 +1,6 @@
-﻿using SkorpFiles.Memorizer.Api.Models.Enums;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using SkorpFiles.Memorizer.Api.Models.Enums;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using System;
 using System.Collections.Generic;
@@ -26,6 +28,27 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
             {
                 if (ownerId != currentUserId)
                     throw new AccessDeniedForUserException(errorMessage);
+            }
+        }
+
+        public static async Task<bool> ExecuteInDangerOfMultipleAddUniqueRecordsAsync(Func<Task> asyncAction)
+        {
+            try
+            {
+                await asyncAction();
+                return true;
+            }
+            catch (DbUpdateException ex)
+            {
+                if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 2601) //already exists by index constraint
+                {
+                    //TODO add logging an attempt to add a duplicated record
+                    return false;
+                }
+                else
+                {
+                    throw;
+                }
             }
         }
     }

@@ -65,15 +65,16 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                                       where uq.UserId == userIdString &&
                                       uq.QuestionId == newQuestionStatus.QuestionId
                                       select uq).SingleOrDefaultAsync();
+
             if (questionUser == null)
             {
-                await UpdateNonExistingQuestionStatusAsync(newQuestionStatus, trainingResult, defaultQuestionStatus);
+                await UpdateNonExistingQuestionStatusAndSaveChangesAsync(newQuestionStatus, trainingResult, defaultQuestionStatus);
             }
             else
             {
                 await UpdateExistingQuestionStatusAsync(questionUser, newQuestionStatus, trainingResult);
+                await DbContext.SaveChangesAsync();
             }
-            await DbContext.SaveChangesAsync();
         }
 
         public async Task<UserQuestionStatus?> GetUserQuestionStatusAsync(Guid userId, Guid questionId)
@@ -92,7 +93,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return questionUser != null ? mapper.Map<UserQuestionStatus>(questionUser) : null;
         }
 
-        private async Task UpdateNonExistingQuestionStatusAsync(UserQuestionStatus newQuestionStatus, Api.Models.TrainingResult trainingResult, Api.Models.QuestionStatus defaultQuestionStatus)
+        private async Task<bool> UpdateNonExistingQuestionStatusAndSaveChangesAsync(UserQuestionStatus newQuestionStatus, Api.Models.TrainingResult trainingResult, Api.Models.QuestionStatus defaultQuestionStatus)
         {
             var question = await (from q in DbContext.Questions.Include(q => q.Questionnaire)
                                   where q.QuestionId == newQuestionStatus.QuestionId
@@ -104,9 +105,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     Guid.Parse(question.Questionnaire.OwnerId), question.Questionnaire.QuestionnaireAvailability);
                 var questionUser = mapper.Map<QuestionUser>(newQuestionStatus);
                 questionUser.ObjectCreationTimeUtc = DateTime.UtcNow;
+
                 await DbContext.QuestionsUsers.AddAsync(questionUser);
+
                 trainingResult.InitialQuestionStatus = defaultQuestionStatus;
                 await LogTrainingResultAsync(trainingResult);
+
+                return await Utils.ExecuteInDangerOfMultipleAddUniqueRecordsAsync(async () => await DbContext.SaveChangesAsync());
             }
             else
             {
