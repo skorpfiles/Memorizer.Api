@@ -108,6 +108,9 @@ builder.Services.AddBusinessLogic();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+app.UseCors();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -115,15 +118,13 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler();
+    app.UseExceptionHandler("/error");
 }
 
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseCors();
 
 app.MapControllers();
 
