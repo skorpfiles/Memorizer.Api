@@ -68,5 +68,12 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         {
             throw new Exception("Test exception");
         }
+
+        [Route("Error500")]
+        [HttpGet]
+        public IActionResult Error500()
+        {
+            throw new Exception();
+        }
     }
 }

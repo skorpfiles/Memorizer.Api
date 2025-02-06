@@ -115,7 +115,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/error");
+    app.UseExceptionHandler();
 }
 
 app.UseHttpsRedirection();
