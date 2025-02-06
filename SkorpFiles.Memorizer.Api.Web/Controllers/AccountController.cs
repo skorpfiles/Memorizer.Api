@@ -258,7 +258,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 var claims = new List<Claim>
                 {
                     new(ClaimsIdentity.DefaultNameClaimType, username),
-                    new(ClaimsIdentity.DefaultRoleClaimType, "admin")
+                    new(ClaimsIdentity.DefaultRoleClaimType, "admin"),
+                    new("TokenPurpose", "General")
                 };
                 ClaimsIdentity claimsIdentity =
                 new(claims, "Token", ClaimsIdentity.DefaultNameClaimType,

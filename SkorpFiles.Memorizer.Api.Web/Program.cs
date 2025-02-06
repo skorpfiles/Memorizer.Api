@@ -22,6 +22,13 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("GeneralUser", policy =>
+        policy.RequireClaim("TokenPurpose", "General"))
+    .AddPolicy("Training", policy =>
+        policy.RequireClaim("TokenPurpose", "Training"));
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(
         options =>
