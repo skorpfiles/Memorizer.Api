@@ -1121,7 +1121,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         private IQueryable<QuestionnaireAndCountsOfQuestions> GetQuestionnairesAndCountsOfQuestionsQuery(IQueryable<Models.Questionnaire> questionnairesQuery, string? userIdString)
         {
             return from questionnaire in questionnairesQuery.Include(q => q.Owner)
-                   from question in DbContext.Questions.Where(q => q.QuestionnaireId == questionnaire.QuestionnaireId).DefaultIfEmpty()
+                   from question in DbContext.Questions.Where(q => q.QuestionnaireId == questionnaire.QuestionnaireId && !q.ObjectIsRemoved).DefaultIfEmpty()
                    from questionUser in DbContext.QuestionsUsers.Where(qu => qu.QuestionId == question.QuestionId && qu.UserId == userIdString).DefaultIfEmpty()
                    from user in DbContext.Users.Where(u => u.Id == questionnaire.OwnerId).DefaultIfEmpty()
                    group new { question, questionUser } by questionnaire into questionnaireGroup
