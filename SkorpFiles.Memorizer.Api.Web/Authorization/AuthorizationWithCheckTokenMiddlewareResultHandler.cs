@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.Net.Http.Headers;
 using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
-using StackExchange.Redis;
 
 namespace SkorpFiles.Memorizer.Api.Web.Authorization
 {

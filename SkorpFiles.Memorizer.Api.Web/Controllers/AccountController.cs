@@ -34,9 +34,16 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         private readonly IConfiguration _configuration;
         private readonly IAccountLogic _accountLogic;
         private readonly ITokenCache _tokenCache;
+        private readonly ITokenHelper _tokenHelper;
 
         public AccountController( 
-            ITokenCache tokenCache, IConfiguration configuration, IAccountLogic accountLogic, IUserStore<ApplicationUser> userStore, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+            ITokenCache tokenCache,
+            IConfiguration configuration,
+            IAccountLogic accountLogic,
+            IUserStore<ApplicationUser> userStore,
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            ITokenHelper tokenHelper)
         {
             _tokenCache = tokenCache;
             _configuration = configuration;
@@ -46,6 +53,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             _userManager = userManager;
             _signInManager = signInManager;
             _emailStore = GetEmailStore();
+            _tokenHelper = tokenHelper;
         }
 
         [Route("Token")]
@@ -62,17 +70,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 return Unauthorized(new { errorCode = "InvalidLoginPassword", errorText = "Invalid login or password." });
             else if ((status == SignInStatus.Success || status == SignInStatus.EmailNotConfirmed) && identity!=null && user!=null)
             {
-
-                var now = DateTime.UtcNow;
-
-                var jwt = new JwtSecurityToken(
-                        issuer: AuthOptions.ISSUER,
-                        audience: AuthOptions.AUDIENCE,
-                        notBefore: now,
-                        claims: identity.Claims,
-                        expires: now.Add(TimeSpan.FromMinutes(AuthOptions.LIFETIME)),
-                        signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(Encoding.ASCII.GetBytes(authenticationTokenCipherKey)), SecurityAlgorithms.HmacSha256));
-                var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+                var encodedJwt = _tokenHelper.GenerateAccessToken(identity.Claims);
 
                 if (encodedJwt != null)
                 {
@@ -258,7 +256,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                 var claims = new List<Claim>
                 {
                     new(ClaimsIdentity.DefaultNameClaimType, username),
-                    new(ClaimsIdentity.DefaultRoleClaimType, "admin")
+                    new(ClaimsIdentity.DefaultRoleClaimType, "user")
                 };
                 ClaimsIdentity claimsIdentity =
                 new(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
