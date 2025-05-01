@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
@@ -8,6 +9,7 @@ using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,7 +17,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 {
     public class TrainingRepository(ApplicationDbContext dbContext, IMapper mapper) : RepositoryBase(dbContext), ITrainingRepository
     {
-        public async Task<IEnumerable<Api.Models.ExistingQuestion>> GetQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds)
+        public async Task<IEnumerable<GetQuestionsForTrainingResult>> GetQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds)
         {
             if (userId == Guid.Empty)
                 throw new ArgumentException("UserId must not be empty.");
@@ -27,27 +29,18 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             string userIdString = userId.ToAspNetUserIdString()!;
 
-            var query = await (from q in DbContext.Questions
-                               .Include(q => q.TypedAnswers)
-                               .Include(q=>q.Questionnaire)
-                               .ThenInclude(q=>q!.Owner)
-                               where !q.ObjectIsRemoved && questionnairesIds.Contains(q.QuestionnaireId)
-                               join qu in DbContext.QuestionsUsers.Where(qu=>qu.UserId == userIdString)
-                               on q.QuestionId equals qu.QuestionId into quGroup
-                               from quo in quGroup.DefaultIfEmpty()
-                               select new
-                               {
-                                   Question = q,
-                                   QuestionUser = quo
-                               }).ToListAsync();
+            var inClause = string.Join(", ", questionnairesIds.Select((_, i) => $"@id{i}"));
+            var sql = Utils.ReadEmbeddedTextFile("Resources.GetQuestionsForTrainingQueryTemplate.sql").Replace("{inClause}", inClause);
+            var parameters = questionnairesIds.Select((id, i) =>
+                new SqlParameter($"@id{i}", id)).Cast<object>().ToList();
+            parameters.Add(new SqlParameter("@ownerId", userIdString));
 
-            return query.Select(queryRecord =>
-            {
-                var resultQuestion = mapper.Map<Api.Models.ExistingQuestion>(queryRecord.Question);
-                if (queryRecord.QuestionUser != null)
-                    resultQuestion.MyStatus = mapper.Map<UserQuestionStatus>(queryRecord.QuestionUser);
-                return resultQuestion;
-            }).ToList();
+            var results = await DbContext.Set<GetQuestionsForTrainingResult>()
+                .FromSqlRaw(sql, parameters.ToArray())
+                .ToListAsync();
+
+            return results;
+
         }
 
         public async Task UpdateQuestionStatusAsync(UserQuestionStatus newQuestionStatus, Api.Models.TrainingResult trainingResult, Api.Models.QuestionStatus defaultQuestionStatus)

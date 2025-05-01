@@ -8,7 +8,7 @@ using SkorpFiles.Memorizer.Api.Models.RequestModels;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic
 {
-    public class TrainingLogic(ITrainingRepository trainingRepository) : ITrainingLogic
+    public class TrainingLogic(ITrainingRepository trainingRepository, IMapper mapper) : ITrainingLogic
     {
         public async Task<IEnumerable<Api.Models.ExistingQuestion>> SelectQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingOptions options)
         {
@@ -23,7 +23,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
 
             var allQuestions = (await trainingRepository.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ToList();
             var questionsListsCollection = new TrainingBuilder(allQuestions);
-            var questionsList = questionsListsCollection.MakeQuestionsListForTraining(options);
+            var questionsList = questionsListsCollection.MakeQuestionsListForTraining(options, mapper);
 
             foreach(var question in questionsList)
             {
@@ -31,7 +31,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 {
                     IsNew = true,
                     PenaltyPoints = 0,
-                    Rating = Constants.InitialQuestionRating
+                    Rating = Constants.InitialQuestionRating,
+                    AverageTrainingTimeSeconds = question.EstimatedTrainingTimeSeconds
                 };
             }
 

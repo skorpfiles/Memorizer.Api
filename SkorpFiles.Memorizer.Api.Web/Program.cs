@@ -12,6 +12,7 @@ using SkorpFiles.Memorizer.Api.Web.Mapping;
 using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using System.Text;
+using SkorpFiles.Memorizer.Api.BusinessLogic.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,6 +96,7 @@ var mapperConfig = new MapperConfiguration(mc =>
     mc.AddProfile(new ApiEntitiesMappingProfile());
 
     mc.AddProfile(new DataAccessMappingProfile());
+    mc.AddProfile(new BusinessLogicMappingProfile());
 });
 
 IMapper mapper = mapperConfig.CreateMapper();
