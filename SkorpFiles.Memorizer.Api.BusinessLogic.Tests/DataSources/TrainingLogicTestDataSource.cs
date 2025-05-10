@@ -445,8 +445,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             {
                 var generalFaker = new Faker();
                 var userId = generalFaker.Random.Guid();
-                var userQuestionStatusFaker = DataUtils.GetUserQuestionStatusFaker(generalFaker);
-                var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
+                var questionFaker = DataUtils.GetQuestionFaker(generalFaker);
 
                 // test cases
 
@@ -1705,8 +1704,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 var generalFaker = new Faker();
                 var userId = generalFaker.Random.Guid();
                 var trainingId = generalFaker.Random.Guid();
-                var userQuestionStatusFaker = DataUtils.GetUserQuestionStatusFaker(generalFaker);
-                var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
+                var questionFaker = DataUtils.GetQuestionFaker(generalFaker);
 
                 var testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
                     [],
@@ -2544,16 +2542,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             }
         }
 
-        private static List<ExistingQuestion> GenerateQuestionsUsingRules(Faker generalFaker, Faker<ExistingQuestion> questionFaker, List<CustomQuestionRule> rulesForNewQuestions, List<CustomQuestionRule> rulesForPenaltyQuestions, List<CustomQuestionRule> rulesForUsualQuestions, 
+        private static List<GetQuestionsForTrainingResult> GenerateQuestionsUsingRules(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, List<CustomQuestionRule> rulesForNewQuestions, List<CustomQuestionRule> rulesForPenaltyQuestions, List<CustomQuestionRule> rulesForUsualQuestions, 
             List<CustomQuestionRule> expectedRules, out List<Guid> expectedQuestionsGuids)
         {
-            List<ExistingQuestion> result = [];
+            List<GetQuestionsForTrainingResult> result = [];
 
             expectedQuestionsGuids = [];
 
             foreach(var rule in rulesForNewQuestions)
             {
-                ExistingQuestion question = GenerateQuestion(generalFaker, questionFaker, "default,new", rule);
+                GetQuestionsForTrainingResult question = GenerateQuestion(generalFaker, questionFaker, "default,new", rule);
                 if (question.Id!=null && expectedRules.Any(rule.Equals))
                 {
                     expectedQuestionsGuids.Add(question.Id.Value);
@@ -2563,7 +2561,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
 
             foreach (var rule in rulesForPenaltyQuestions)
             {
-                ExistingQuestion question = GenerateQuestion(generalFaker, questionFaker, "default,penalty", rule);
+                GetQuestionsForTrainingResult question = GenerateQuestion(generalFaker, questionFaker, "default,penalty", rule);
                 if (question.Id != null && expectedRules.Any(rule.Equals))
                 {
                     expectedQuestionsGuids.Add(question.Id.Value);
@@ -2573,7 +2571,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
 
             foreach (var rule in rulesForUsualQuestions)
             {
-                ExistingQuestion question = GenerateQuestion(generalFaker, questionFaker, "default,usual", rule);
+                GetQuestionsForTrainingResult question = GenerateQuestion(generalFaker, questionFaker, "default,usual", rule);
                 if (question.Id != null && expectedRules.Any(rule.Equals))
                 {
                     expectedQuestionsGuids.Add(question.Id.Value);
@@ -2586,16 +2584,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             return result;
         }
 
-        private static ExistingQuestion GenerateQuestion(Faker generalFaker, Faker<ExistingQuestion> questionFaker, string fakerRuleSet, CustomQuestionRule questionRule)
+        private static GetQuestionsForTrainingResult GenerateQuestion(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, string fakerRuleSet, CustomQuestionRule questionRule)
         {
-            ExistingQuestion question = questionFaker.Generate(fakerRuleSet);
+            GetQuestionsForTrainingResult question = questionFaker.Generate(fakerRuleSet);
             if (questionRule.IsExactValue)
             {
-                question.EstimatedTrainingTimeSeconds = questionRule.ExactValue;
+                question.QuestionActualTrainingTimeSeconds = questionRule.ExactValue;
             }
             else
             {
-                question.EstimatedTrainingTimeSeconds = generalFaker.Random.Number(questionRule.MinValue, questionRule.MaxValue);
+                question.QuestionActualTrainingTimeSeconds = generalFaker.Random.Number(questionRule.MinValue, questionRule.MaxValue);
             } 
             return question;
         }
@@ -2617,7 +2615,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             ];
         }
 
-        private static IEnumerable<object[]> TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(Faker generalFaker, Faker<ExistingQuestion> questionFaker, Guid userId, int newCount, int penaltyCount, int usualCount, int lengthValue)
+        private static IEnumerable<object[]> TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, Guid userId, int newCount, int penaltyCount, int usualCount, int lengthValue)
         {
             List<TrainingLengthType> lengthTypes = [TrainingLengthType.QuestionsCount, TrainingLengthType.Time];
             List<(double newQuestionsFraction, double penaltyQuestionsFraction)> allStandardFractions = GetAllStandardFractions(generalFaker);
@@ -2632,7 +2630,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
         }
 
         private static IEnumerable<object[]> TestCustomQuestionCollectionWithAllStandardFractions(Faker generalFaker, Guid userId,
-            List<ExistingQuestion> questions, int lengthValue, List<Guid> expectedQuestionsGuids)
+            List<GetQuestionsForTrainingResult> questions, int lengthValue, List<Guid> expectedQuestionsGuids)
         {
             List<(double newQuestionsFraction, double penaltyQuestionsFraction)> allStandardFractions = GetAllStandardFractions(generalFaker);
             foreach (var (newQuestionsFraction, penaltyQuestionsFraction) in allStandardFractions)
@@ -2650,9 +2648,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             }
         }
 
-        private static object[] GenerateQuestionData(Faker generalFaker, Faker<ExistingQuestion> questionFaker, Guid userId, int newCount, int penaltyCount, int usualCount, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction)
+        private static object[] GenerateQuestionData(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, Guid userId, int newCount, int penaltyCount, int usualCount, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction)
         {
-            var questions = new List<ExistingQuestion>();
+            var questions = new List<GetQuestionsForTrainingResult>();
             if (lengthType == TrainingLengthType.QuestionsCount)
             {
                 questions.AddRange(questionFaker.Generate(newCount, "default,new"));
@@ -2680,9 +2678,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             ];
         }
 
-        private static List<ExistingQuestion> CreateQuestionsCollectionByTime(Faker generalFaker, Faker<ExistingQuestion> questionFaker, string ruleSet, int fullTime)
+        private static List<GetQuestionsForTrainingResult> CreateQuestionsCollectionByTime(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, string ruleSet, int fullTime)
         {
-            List<ExistingQuestion> questions = [];
+            List<GetQuestionsForTrainingResult> questions = [];
             const int recommendedMinimumCountOfQuestions = 50;
             int minimumCountOfQuestions = fullTime > recommendedMinimumCountOfQuestions ? recommendedMinimumCountOfQuestions : fullTime;
             int currentTimeLength = 0;
@@ -2692,7 +2690,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 var nextTime = generalFaker.Random.Number(1, fullTime / minimumCountOfQuestions);
                 if (nextTime + currentTimeLength > fullTime)
                     nextTime = fullTime - currentTimeLength;
-                question.EstimatedTrainingTimeSeconds = nextTime;
+                question.QuestionActualTrainingTimeSeconds = nextTime;
                 questions.Add(question);
                 currentTimeLength += nextTime;
             }

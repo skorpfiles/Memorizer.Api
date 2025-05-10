@@ -25,8 +25,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 {
                     if (i == 0 || j == 0)
                         dp[i, j] = 0;
-                    else if (questions[i - 1].QuestionActualTrainingTimeSeconds <= j)
-                        dp[i, j] = Math.Max(dp[i - 1, j], dp[i - 1, j - questions[i - 1].QuestionActualTrainingTimeSeconds] + questions[i - 1].QuestionActualTrainingTimeSeconds);
+                    else if (questions[i - 1].FullActualTrainingTimeSeconds() <= j)
+                        dp[i, j] = Math.Max(dp[i - 1, j], dp[i - 1, j - questions[i - 1].FullActualTrainingTimeSeconds()] + questions[i - 1].FullActualTrainingTimeSeconds());
                     else
                         dp[i, j] = dp[i - 1, j];
                 }
@@ -39,7 +39,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 if (dp[i, res] != dp[i - 1, res])
                 {
                     result.Add(questions[i - 1]);
-                    res -= questions[i - 1].QuestionActualTrainingTimeSeconds;
+                    res -= questions[i - 1].FullActualTrainingTimeSeconds();
                 }
             }
 

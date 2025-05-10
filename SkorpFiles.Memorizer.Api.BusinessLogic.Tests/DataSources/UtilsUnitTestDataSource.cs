@@ -20,19 +20,18 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             get
             {
                 var generalFaker = new Faker();
-                var userQuestionStatusFaker = DataUtils.GetUserQuestionStatusFaker(generalFaker);
-                var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
+                var questionFaker = DataUtils.GetQuestionFaker(generalFaker);
 
                 yield return new object[]
                 {
-                    new List<ExistingQuestion>(),
+                    new List<GetQuestionsForTrainingResult>(),
                     0,
                     new List<Guid>()
                 };
 
                 yield return new object[]
                 {
-                    new List<ExistingQuestion>(),
+                    new List<GetQuestionsForTrainingResult>(),
                     generalFaker.Random.Number(1,10000),
                     new List<Guid>()
                 };
@@ -132,12 +131,11 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             get
             {
                 var generalFaker = new Faker();
-                var userQuestionStatusFaker = DataUtils.GetUserQuestionStatusFaker(generalFaker);
-                var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
+                var questionFaker = DataUtils.GetQuestionFaker(generalFaker);
 
                 yield return new object[]
                 {
-                    new List<ExistingQuestion>(),
+                    new List<GetQuestionsForTrainingResult>(),
                     generalFaker.Random.Number(int.MinValue, -1)
                 };
 
@@ -149,16 +147,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             }
         }
 
-        private static List<ExistingQuestion> GenerateQuestionsUsingRules(Faker generalFaker, Faker<ExistingQuestion> questionFaker, List<CustomQuestionRule> rulesForUsualQuestions,
+        private static List<GetQuestionsForTrainingResult> GenerateQuestionsUsingRules(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, List<CustomQuestionRule> rulesForUsualQuestions,
             List<CustomQuestionRule> expectedRules, out List<Guid> expectedQuestionsGuids)
         {
-            List<ExistingQuestion> result = [];
+            List<GetQuestionsForTrainingResult> result = [];
 
             expectedQuestionsGuids = [];
 
             foreach (var rule in rulesForUsualQuestions)
             {
-                ExistingQuestion question = GenerateQuestion(generalFaker, questionFaker, "default,usual", rule);
+                GetQuestionsForTrainingResult question = GenerateQuestion(generalFaker, questionFaker, "default,usual", rule);
                 if (question.Id != null && expectedRules.Any(rule.Equals))
                 {
                     expectedQuestionsGuids.Add(question.Id.Value);
@@ -171,16 +169,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             return result;
         }
 
-        private static ExistingQuestion GenerateQuestion(Faker generalFaker, Faker<ExistingQuestion> questionFaker, string fakerRuleSet, CustomQuestionRule questionRule)
+        private static GetQuestionsForTrainingResult GenerateQuestion(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, string fakerRuleSet, CustomQuestionRule questionRule)
         {
-            ExistingQuestion question = questionFaker.Generate(fakerRuleSet);
+            GetQuestionsForTrainingResult question = questionFaker.Generate(fakerRuleSet);
             if (questionRule.IsExactValue)
             {
-                question.EstimatedTrainingTimeSeconds = questionRule.ExactValue;
+                question.QuestionActualTrainingTimeSeconds = questionRule.ExactValue;
             }
             else
             {
-                question.EstimatedTrainingTimeSeconds = generalFaker.Random.Number(questionRule.MinValue, questionRule.MaxValue);
+                question.QuestionActualTrainingTimeSeconds = generalFaker.Random.Number(questionRule.MinValue, questionRule.MaxValue);
             }
             return question;
         }

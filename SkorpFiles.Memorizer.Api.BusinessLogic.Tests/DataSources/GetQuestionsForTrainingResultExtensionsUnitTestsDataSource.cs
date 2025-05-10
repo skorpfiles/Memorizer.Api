@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
 {
-    public static class ApiQuestionExtensionsUnitTestsDataSource
+    public static class GetQuestionsForTrainingResultExtensionsUnitTestsDataSource
     {
-        static ApiQuestionExtensionsUnitTestsDataSource()
+        static GetQuestionsForTrainingResultExtensionsUnitTestsDataSource()
         {
             Randomizer.Seed = new Random(44472138);
         }
@@ -19,11 +19,10 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             get
             {
                 var generalFaker = new Faker();
-                var userQuestionStatusFaker = DataUtils.GetUserQuestionStatusFaker(generalFaker);
-                var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
+                var questionFaker = DataUtils.GetQuestionFaker(generalFaker);
 
                 var question = questionFaker.Generate("default,usual");
-                var expectedResult = (int)question.MyStatus!.AverageTrainingTimeSeconds!;
+                var expectedResult = question.QuestionActualTrainingTimeSeconds;
 
                 yield return new object[]
                 {
@@ -32,7 +31,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 };
 
                 question = questionFaker.Generate("default,penalty");
-                expectedResult = (int)question.MyStatus!.AverageTrainingTimeSeconds!;
+                expectedResult = question.QuestionActualTrainingTimeSeconds;
 
                 yield return new object[]
                 {
@@ -41,7 +40,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 };
 
                 question = questionFaker.Generate("default,new");
-                expectedResult = (int)Math.Round((int)question.MyStatus!.AverageTrainingTimeSeconds! * Constants.NewQuestionsLearningTimeMultiplicator);
+                expectedResult = (int)Math.Round(question.QuestionActualTrainingTimeSeconds * Constants.NewQuestionsLearningTimeMultiplicator);
 
                 yield return new object[]
                 {

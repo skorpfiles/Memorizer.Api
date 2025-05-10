@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using SkorpFiles.Memorizer.Api.BusinessLogic.Extensions;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Abstract;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
@@ -105,9 +106,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             int currentMinimum = -1;
             foreach (GetQuestionsForTrainingResult question in questions)
             {
-                if (Math.Round((double)question.QuestionActualTrainingTimeSeconds) < currentMinimum || currentMinimum == -1)
+                if (Math.Round((double)question.FullActualTrainingTimeSeconds()) < currentMinimum || currentMinimum == -1)
                 {
-                    currentMinimum = question.QuestionActualTrainingTimeSeconds;
+                    currentMinimum = question.FullActualTrainingTimeSeconds();
                     result = question;
                 }
             }
@@ -140,7 +141,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         switch (lengthType)
                         {
                             case Models.Enums.TrainingLengthType.Time:
-                                int lengthValue = selectedQuestion.QuestionActualTrainingTimeSeconds;
+                                int lengthValue = selectedQuestion.FullActualTrainingTimeSeconds();
 
                                 if (consumedValue <= Math.Round(expectedLength))
                                 {
