@@ -1,4 +1,5 @@
 ﻿using SkorpFiles.Memorizer.Api.Models;
+using SkorpFiles.Memorizer.Api.Models.Utils;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
@@ -28,7 +29,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
         public void Add(GetQuestionsForTrainingResult question)
         {
-            int rating = question.QuestionUserRating ?? Constants.InitialQuestionRating;
+            int rating = question.QuestionUserRating ?? Restrictions.InitialQuestionRating;
 
             if (RatingsAndComponents.TryGetValue(rating, out RatingComponent? ratingComponent))
             {
@@ -80,7 +81,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
         {
             bool result;
 
-            int rating = question.QuestionUserRating ?? Constants.InitialQuestionRating;
+            int rating = question.QuestionUserRating ?? Restrictions.InitialQuestionRating;
 
             if (RatingsAndComponents.TryGetValue(rating, out RatingComponent? ratingComponent))
             {

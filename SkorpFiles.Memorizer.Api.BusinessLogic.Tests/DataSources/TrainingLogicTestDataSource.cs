@@ -2239,7 +2239,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     false, default(bool), default(int), default(int),
                     false,
-                    true, Constants.MaxQuestionRating, 0
+                    true, Restrictions.MaxQuestionRating, 0
                 };
 
                 yield return new object[]
@@ -2247,7 +2247,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     false, default(bool), default(int), default(int),
                     true,
-                    false, Constants.InitialQuestionRating-1, 0
+                    false, Restrictions.InitialQuestionRating-1, 0
                 };
 
                 yield return new object[]
@@ -2255,7 +2255,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, 0, 0,
                     false,
-                    false, Constants.MaxQuestionRating, 1
+                    false, Restrictions.MaxQuestionRating, 1
                 };
 
                 yield return new object[]
@@ -2273,7 +2273,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, 0, penaltyPoints,
                     false,
-                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                    false, Restrictions.MaxQuestionRating, penaltyPoints+1
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
@@ -2291,7 +2291,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, 0, int.MaxValue,
                     false,
-                    false, Constants.MaxQuestionRating, int.MaxValue
+                    false, Restrictions.MaxQuestionRating, int.MaxValue
                 };
 
                 yield return new object[]
@@ -2306,17 +2306,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, 0,
+                    true, false, Restrictions.MinQuestionRating, 0,
                     false,
-                    false, Constants.MaxQuestionRating, 1
+                    false, Restrictions.MaxQuestionRating, 1
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, 0,
+                    true, false, Restrictions.MinQuestionRating, 0,
                     true,
-                    false, Constants.MinQuestionRating, 0
+                    false, Restrictions.MinQuestionRating, 0
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
@@ -2324,9 +2324,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, penaltyPoints,
+                    true, false, Restrictions.MinQuestionRating, penaltyPoints,
                     false,
-                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                    false, Restrictions.MaxQuestionRating, penaltyPoints+1
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
@@ -2334,39 +2334,39 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, penaltyPoints,
+                    true, false, Restrictions.MinQuestionRating, penaltyPoints,
                     true,
-                    false, Constants.MinQuestionRating, penaltyPoints-1
+                    false, Restrictions.MinQuestionRating, penaltyPoints-1
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, int.MaxValue,
+                    true, false, Restrictions.MinQuestionRating, int.MaxValue,
                     false,
-                    false, Constants.MaxQuestionRating, int.MaxValue
+                    false, Restrictions.MaxQuestionRating, int.MaxValue
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, int.MaxValue,
+                    true, false, Restrictions.MinQuestionRating, int.MaxValue,
                     true,
-                    false, Constants.MinQuestionRating, int.MaxValue-1
+                    false, Restrictions.MinQuestionRating, int.MaxValue-1
                 };
 
                 //t f [Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1]
-                var rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                var rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, rating, 0,
                     false,
-                    false, Constants.MaxQuestionRating, 1
+                    false, Restrictions.MaxQuestionRating, 1
                 };
 
-                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
@@ -2377,18 +2377,18 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
-                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, rating, penaltyPoints,
                     false,
-                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                    false, Restrictions.MaxQuestionRating, penaltyPoints+1
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
-                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
@@ -2398,17 +2398,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     false, rating, penaltyPoints-1
                 };
 
-                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, rating, int.MaxValue,
                     false,
-                    false, Constants.MaxQuestionRating, int.MaxValue
+                    false, Restrictions.MaxQuestionRating, int.MaxValue
                 };
 
-                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
@@ -2423,17 +2423,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, 0,
+                    true, false, Restrictions.MaxQuestionRating, 0,
                     false,
-                    false, Constants.MaxQuestionRating, 1
+                    false, Restrictions.MaxQuestionRating, 1
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, 0,
+                    true, false, Restrictions.MaxQuestionRating, 0,
                     true,
-                    false, Constants.MaxQuestionRating-1, 0
+                    false, Restrictions.MaxQuestionRating-1, 0
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
@@ -2441,9 +2441,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, penaltyPoints,
+                    true, false, Restrictions.MaxQuestionRating, penaltyPoints,
                     false,
-                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                    false, Restrictions.MaxQuestionRating, penaltyPoints+1
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
@@ -2451,25 +2451,25 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, penaltyPoints,
+                    true, false, Restrictions.MaxQuestionRating, penaltyPoints,
                     true,
-                    false, Constants.MaxQuestionRating, penaltyPoints-1
+                    false, Restrictions.MaxQuestionRating, penaltyPoints-1
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, int.MaxValue,
+                    true, false, Restrictions.MaxQuestionRating, int.MaxValue,
                     false,
-                    false, Constants.MaxQuestionRating, int.MaxValue
+                    false, Restrictions.MaxQuestionRating, int.MaxValue
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, int.MaxValue,
+                    true, false, Restrictions.MaxQuestionRating, int.MaxValue,
                     true,
-                    false, Constants.MaxQuestionRating, int.MaxValue-1
+                    false, Restrictions.MaxQuestionRating, int.MaxValue-1
                 };
 
                 //t f Constants.MaxQuestionRating
@@ -2477,17 +2477,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, true, Constants.MaxQuestionRating, 0,
+                    true, true, Restrictions.MaxQuestionRating, 0,
                     true,
-                    false, Constants.MaxQuestionRating-1, 0
+                    false, Restrictions.MaxQuestionRating-1, 0
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, true, Constants.MaxQuestionRating, 0,
+                    true, true, Restrictions.MaxQuestionRating, 0,
                     false,
-                    true, Constants.MaxQuestionRating, 0
+                    true, Restrictions.MaxQuestionRating, 0
                 };
             }
         }

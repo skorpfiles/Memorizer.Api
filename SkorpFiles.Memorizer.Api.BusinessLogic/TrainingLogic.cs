@@ -5,6 +5,7 @@ using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
+using SkorpFiles.Memorizer.Api.Models.Utils;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic
 {
@@ -31,7 +32,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 {
                     IsNew = true,
                     PenaltyPoints = 0,
-                    Rating = Constants.InitialQuestionRating,
+                    Rating = Restrictions.InitialQuestionRating,
                     AverageTrainingTimeSeconds = question.EstimatedTrainingTimeSeconds
                 };
             }
@@ -74,11 +75,11 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 UserId = userId,
                 IsNew = true,
                 PenaltyPoints = 0,
-                Rating = Constants.InitialQuestionRating
+                Rating = Restrictions.InitialQuestionRating
             };
         }
 
-        private static QuestionStatus CreateNewQuestionStatus() => new() { IsNew = true, PenaltyPoints = 0, Rating = Constants.InitialQuestionRating };
+        private static QuestionStatus CreateNewQuestionStatus() => new() { IsNew = true, PenaltyPoints = 0, Rating = Restrictions.InitialQuestionRating };
 
         private static void UpdateUserQuestionStatusByAnswer(ref UserQuestionStatus userQuestionStatus, bool isAnswerCorrect)
         {
@@ -88,14 +89,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 {
                     userQuestionStatus.IsNew = false;
                     userQuestionStatus.PenaltyPoints = 0;
-                    userQuestionStatus.Rating = Constants.InitialQuestionRating;
+                    userQuestionStatus.Rating = Restrictions.InitialQuestionRating;
                 }
 
                 if (userQuestionStatus.PenaltyPoints > 0)
                 {
                     userQuestionStatus.PenaltyPoints--;
                 }
-                else if (userQuestionStatus.Rating > Constants.MinQuestionRating)
+                else if (userQuestionStatus.Rating > Restrictions.MinQuestionRating)
                 {
                     userQuestionStatus.Rating--;
                 }
@@ -105,7 +106,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 if (userQuestionStatus.IsNew)
                 {
                     userQuestionStatus.PenaltyPoints = 0;
-                    userQuestionStatus.Rating = Constants.InitialQuestionRating;
+                    userQuestionStatus.Rating = Restrictions.InitialQuestionRating;
                 }
                 else
                 {
@@ -113,7 +114,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                     {
                         userQuestionStatus.PenaltyPoints++;
                     }
-                    userQuestionStatus.Rating = Constants.MaxQuestionRating;
+                    userQuestionStatus.Rating = Restrictions.MaxQuestionRating;
                 }
             }
         }

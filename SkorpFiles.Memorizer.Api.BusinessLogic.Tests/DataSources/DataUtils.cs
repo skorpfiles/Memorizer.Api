@@ -24,19 +24,19 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     {
                         rs.RuleFor(uqs => uqs.PenaltyPoints, 0);
                         rs.RuleFor(uqs => uqs.IsNew, true);
-                        rs.RuleFor(uqs => uqs.Rating, Constants.InitialQuestionRating);
+                        rs.RuleFor(uqs => uqs.Rating, Restrictions.InitialQuestionRating);
                     })
                     .RuleSet("penalty", rs =>
                     {
                         rs.RuleFor(uqs => uqs.PenaltyPoints, f => generalFaker.Random.Number(min: 1));
                         rs.RuleFor(uqs => uqs.IsNew, false);
-                        rs.RuleFor(uqs => uqs.Rating, Constants.InitialQuestionRating);
+                        rs.RuleFor(uqs => uqs.Rating, Restrictions.InitialQuestionRating);
                     })
                     .RuleSet("usual", rs =>
                     {
                         rs.RuleFor(uqs => uqs.PenaltyPoints, 0);
                         rs.RuleFor(uqs => uqs.IsNew, false);
-                        rs.RuleFor(uqs => uqs.Rating, f => f.Random.Number(Constants.MinQuestionRating, Constants.MaxQuestionRating));
+                        rs.RuleFor(uqs => uqs.Rating, f => f.Random.Number(Restrictions.MinQuestionRating, Restrictions.MaxQuestionRating));
                     });
         }
 
@@ -59,19 +59,19 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     {
                         rs.RuleFor(q => q.QuestionUserPenaltyPoints, 0);
                         rs.RuleFor(q => q.QuestionUserIsNew, true);
-                        rs.RuleFor(q => q.QuestionUserRating, Constants.InitialQuestionRating);
+                        rs.RuleFor(q => q.QuestionUserRating, Restrictions.InitialQuestionRating);
                     })
                     .RuleSet("penalty", rs =>
                     {
                         rs.RuleFor(q => q.QuestionUserPenaltyPoints, f => generalFaker.Random.Number(min: 1));
                         rs.RuleFor(q => q.QuestionUserIsNew, false);
-                        rs.RuleFor(q => q.QuestionUserRating, Constants.InitialQuestionRating);
+                        rs.RuleFor(q => q.QuestionUserRating, Restrictions.InitialQuestionRating);
                     })
                     .RuleSet("usual", rs =>
                     {
                         rs.RuleFor(q => q.QuestionUserPenaltyPoints, 0);
                         rs.RuleFor(q => q.QuestionUserIsNew, false);
-                        rs.RuleFor(q => q.QuestionUserRating, f => f.Random.Number(Constants.MinQuestionRating, Constants.MaxQuestionRating));
+                        rs.RuleFor(q => q.QuestionUserRating, f => f.Random.Number(Restrictions.MinQuestionRating, Restrictions.MaxQuestionRating));
                     });
         }
 

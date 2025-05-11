@@ -10,10 +10,6 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
     {
         public const double AllowableErrorFraction = 0.1;
 
-        public const int InitialQuestionRating = 50;
-        public const int MinQuestionRating = 1;
-        public const int MaxQuestionRating = 50;
-
         public const int StandardTrainingTimeSeconds = 10;
 
         public const double NewQuestionsLearningTimeMultiplicator = 2;
