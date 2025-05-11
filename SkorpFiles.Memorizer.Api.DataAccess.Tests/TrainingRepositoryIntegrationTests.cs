@@ -11,6 +11,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
     [TestClass]
     public class TrainingRepositoryIntegrationTests:IntegrationTestsBase
     {
+        [Ignore("Do not run on CI")]
         [TestMethod]
         [DynamicData(nameof(TrainingRepositoryTestDataSource.GetQuestionsForTrainingAsync_CorrectParameters_ReturnsQuestions),typeof(TrainingRepositoryTestDataSource))]
         public async Task GetQuestionsForTrainingAsync_CorrectParameters_ReturnsExactQuestionsList(List<Questionnaire> questionnaires, 
