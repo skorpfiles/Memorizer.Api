@@ -1,8 +1,9 @@
 ﻿using SkorpFiles.Memorizer.Api.Models;
+using SkorpFiles.Memorizer.Api.Models.Utils;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
-    internal class RatingTape:IPickable<ExistingQuestion>
+    internal class RatingTape:IPickable<GetQuestionsForTrainingResult>
     {
         private int _nextCoordinate = 1;
 
@@ -26,9 +27,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             _ratingToWeightConversion = ratingToWeightConversion;
         }
 
-        public void Add(ExistingQuestion question)
+        public void Add(GetQuestionsForTrainingResult question)
         {
-            int rating = question.MyStatus?.Rating ?? Constants.InitialQuestionRating;
+            int rating = question.QuestionUserRating ?? Restrictions.InitialQuestionRating;
 
             if (RatingsAndComponents.TryGetValue(rating, out RatingComponent? ratingComponent))
             {
@@ -41,9 +42,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             }
         }
 
-        public void AddRange(IEnumerable<ExistingQuestion> items)
+        public void AddRange(IEnumerable<GetQuestionsForTrainingResult> items)
         {
-            foreach(ExistingQuestion item in items)
+            foreach(GetQuestionsForTrainingResult item in items)
             {
                 Add(item);
             }
@@ -61,26 +62,26 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                 throw new InvalidOperationException("No rating component with such rating.");
         }
 
-        public ExistingQuestion Pick(Random random)
+        public GetQuestionsForTrainingResult Pick(Random random)
         {
             RatingComponent foundRatingComponent = PickRatingComponent(random);
             return foundRatingComponent.Pick(random);
         }
 
-        public ExistingQuestion PickAndDelete(Random random)
+        public GetQuestionsForTrainingResult PickAndDelete(Random random)
         {
             RatingComponent foundRatingComponent = PickRatingComponent(random);
-            ExistingQuestion foundQuestion = foundRatingComponent.PickAndDelete(random);
+            GetQuestionsForTrainingResult foundQuestion = foundRatingComponent.PickAndDelete(random);
             if (foundRatingComponent.Consumed)
                 DeleteRatingComponent(foundRatingComponent);
             return foundQuestion;
         }
 
-        public bool Return(ExistingQuestion question)
+        public bool Return(GetQuestionsForTrainingResult question)
         {
             bool result;
 
-            int rating = question.MyStatus?.Rating ?? Constants.InitialQuestionRating;
+            int rating = question.QuestionUserRating ?? Restrictions.InitialQuestionRating;
 
             if (RatingsAndComponents.TryGetValue(rating, out RatingComponent? ratingComponent))
             {

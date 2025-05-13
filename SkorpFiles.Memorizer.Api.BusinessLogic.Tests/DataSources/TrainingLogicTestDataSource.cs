@@ -445,8 +445,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             {
                 var generalFaker = new Faker();
                 var userId = generalFaker.Random.Guid();
-                var userQuestionStatusFaker = DataUtils.GetUserQuestionStatusFaker(generalFaker);
-                var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
+                var questionFaker = DataUtils.GetQuestionFaker(generalFaker);
 
                 // test cases
 
@@ -1705,8 +1704,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 var generalFaker = new Faker();
                 var userId = generalFaker.Random.Guid();
                 var trainingId = generalFaker.Random.Guid();
-                var userQuestionStatusFaker = DataUtils.GetUserQuestionStatusFaker(generalFaker);
-                var questionFaker = DataUtils.GetQuestionFaker(userQuestionStatusFaker);
+                var questionFaker = DataUtils.GetQuestionFaker(generalFaker);
 
                 var testCases = TestCustomQuestionCollectionWithAllStandardFractions(generalFaker, userId, GenerateQuestionsUsingRules(generalFaker, questionFaker,
                     [],
@@ -2241,7 +2239,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     false, default(bool), default(int), default(int),
                     false,
-                    true, Constants.MaxQuestionRating, 0
+                    true, Restrictions.MaxQuestionRating, 0
                 };
 
                 yield return new object[]
@@ -2249,7 +2247,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     false, default(bool), default(int), default(int),
                     true,
-                    false, Constants.InitialQuestionRating-1, 0
+                    false, Restrictions.InitialQuestionRating-1, 0
                 };
 
                 yield return new object[]
@@ -2257,7 +2255,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, 0, 0,
                     false,
-                    false, Constants.MaxQuestionRating, 1
+                    false, Restrictions.MaxQuestionRating, 1
                 };
 
                 yield return new object[]
@@ -2275,7 +2273,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, 0, penaltyPoints,
                     false,
-                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                    false, Restrictions.MaxQuestionRating, penaltyPoints+1
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
@@ -2293,7 +2291,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, 0, int.MaxValue,
                     false,
-                    false, Constants.MaxQuestionRating, int.MaxValue
+                    false, Restrictions.MaxQuestionRating, int.MaxValue
                 };
 
                 yield return new object[]
@@ -2308,17 +2306,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, 0,
+                    true, false, Restrictions.MinQuestionRating, 0,
                     false,
-                    false, Constants.MaxQuestionRating, 1
+                    false, Restrictions.MaxQuestionRating, 1
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, 0,
+                    true, false, Restrictions.MinQuestionRating, 0,
                     true,
-                    false, Constants.MinQuestionRating, 0
+                    false, Restrictions.MinQuestionRating, 0
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
@@ -2326,9 +2324,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, penaltyPoints,
+                    true, false, Restrictions.MinQuestionRating, penaltyPoints,
                     false,
-                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                    false, Restrictions.MaxQuestionRating, penaltyPoints+1
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
@@ -2336,39 +2334,39 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, penaltyPoints,
+                    true, false, Restrictions.MinQuestionRating, penaltyPoints,
                     true,
-                    false, Constants.MinQuestionRating, penaltyPoints-1
+                    false, Restrictions.MinQuestionRating, penaltyPoints-1
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, int.MaxValue,
+                    true, false, Restrictions.MinQuestionRating, int.MaxValue,
                     false,
-                    false, Constants.MaxQuestionRating, int.MaxValue
+                    false, Restrictions.MaxQuestionRating, int.MaxValue
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MinQuestionRating, int.MaxValue,
+                    true, false, Restrictions.MinQuestionRating, int.MaxValue,
                     true,
-                    false, Constants.MinQuestionRating, int.MaxValue-1
+                    false, Restrictions.MinQuestionRating, int.MaxValue-1
                 };
 
                 //t f [Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1]
-                var rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                var rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, rating, 0,
                     false,
-                    false, Constants.MaxQuestionRating, 1
+                    false, Restrictions.MaxQuestionRating, 1
                 };
 
-                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
@@ -2379,18 +2377,18 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
-                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, rating, penaltyPoints,
                     false,
-                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                    false, Restrictions.MaxQuestionRating, penaltyPoints+1
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
-                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
@@ -2400,17 +2398,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                     false, rating, penaltyPoints-1
                 };
 
-                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
                     true, false, rating, int.MaxValue,
                     false,
-                    false, Constants.MaxQuestionRating, int.MaxValue
+                    false, Restrictions.MaxQuestionRating, int.MaxValue
                 };
 
-                rating = faker.Random.Number(Constants.MinQuestionRating + 1, Constants.MaxQuestionRating - 1);
+                rating = faker.Random.Number(Restrictions.MinQuestionRating + 1, Restrictions.MaxQuestionRating - 1);
 
                 yield return new object[]
                 {
@@ -2425,17 +2423,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, 0,
+                    true, false, Restrictions.MaxQuestionRating, 0,
                     false,
-                    false, Constants.MaxQuestionRating, 1
+                    false, Restrictions.MaxQuestionRating, 1
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, 0,
+                    true, false, Restrictions.MaxQuestionRating, 0,
                     true,
-                    false, Constants.MaxQuestionRating-1, 0
+                    false, Restrictions.MaxQuestionRating-1, 0
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
@@ -2443,9 +2441,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, penaltyPoints,
+                    true, false, Restrictions.MaxQuestionRating, penaltyPoints,
                     false,
-                    false, Constants.MaxQuestionRating, penaltyPoints+1
+                    false, Restrictions.MaxQuestionRating, penaltyPoints+1
                 };
 
                 penaltyPoints = faker.Random.Number(1, int.MaxValue - 1);
@@ -2453,25 +2451,25 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, penaltyPoints,
+                    true, false, Restrictions.MaxQuestionRating, penaltyPoints,
                     true,
-                    false, Constants.MaxQuestionRating, penaltyPoints-1
+                    false, Restrictions.MaxQuestionRating, penaltyPoints-1
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, int.MaxValue,
+                    true, false, Restrictions.MaxQuestionRating, int.MaxValue,
                     false,
-                    false, Constants.MaxQuestionRating, int.MaxValue
+                    false, Restrictions.MaxQuestionRating, int.MaxValue
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, false, Constants.MaxQuestionRating, int.MaxValue,
+                    true, false, Restrictions.MaxQuestionRating, int.MaxValue,
                     true,
-                    false, Constants.MaxQuestionRating, int.MaxValue-1
+                    false, Restrictions.MaxQuestionRating, int.MaxValue-1
                 };
 
                 //t f Constants.MaxQuestionRating
@@ -2479,17 +2477,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, true, Constants.MaxQuestionRating, 0,
+                    true, true, Restrictions.MaxQuestionRating, 0,
                     true,
-                    false, Constants.MaxQuestionRating-1, 0
+                    false, Restrictions.MaxQuestionRating-1, 0
                 };
 
                 yield return new object[]
                 {
                     faker.Random.Guid(), faker.Random.Guid(), faker.Random.Number(0,int.MaxValue),
-                    true, true, Constants.MaxQuestionRating, 0,
+                    true, true, Restrictions.MaxQuestionRating, 0,
                     false,
-                    true, Constants.MaxQuestionRating, 0
+                    true, Restrictions.MaxQuestionRating, 0
                 };
             }
         }
@@ -2544,16 +2542,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             }
         }
 
-        private static List<ExistingQuestion> GenerateQuestionsUsingRules(Faker generalFaker, Faker<ExistingQuestion> questionFaker, List<CustomQuestionRule> rulesForNewQuestions, List<CustomQuestionRule> rulesForPenaltyQuestions, List<CustomQuestionRule> rulesForUsualQuestions, 
+        private static List<GetQuestionsForTrainingResult> GenerateQuestionsUsingRules(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, List<CustomQuestionRule> rulesForNewQuestions, List<CustomQuestionRule> rulesForPenaltyQuestions, List<CustomQuestionRule> rulesForUsualQuestions, 
             List<CustomQuestionRule> expectedRules, out List<Guid> expectedQuestionsGuids)
         {
-            List<ExistingQuestion> result = [];
+            List<GetQuestionsForTrainingResult> result = [];
 
             expectedQuestionsGuids = [];
 
             foreach(var rule in rulesForNewQuestions)
             {
-                ExistingQuestion question = GenerateQuestion(generalFaker, questionFaker, "default,new", rule);
+                GetQuestionsForTrainingResult question = GenerateQuestion(generalFaker, questionFaker, "default,new", rule);
                 if (question.Id!=null && expectedRules.Any(rule.Equals))
                 {
                     expectedQuestionsGuids.Add(question.Id.Value);
@@ -2563,7 +2561,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
 
             foreach (var rule in rulesForPenaltyQuestions)
             {
-                ExistingQuestion question = GenerateQuestion(generalFaker, questionFaker, "default,penalty", rule);
+                GetQuestionsForTrainingResult question = GenerateQuestion(generalFaker, questionFaker, "default,penalty", rule);
                 if (question.Id != null && expectedRules.Any(rule.Equals))
                 {
                     expectedQuestionsGuids.Add(question.Id.Value);
@@ -2573,7 +2571,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
 
             foreach (var rule in rulesForUsualQuestions)
             {
-                ExistingQuestion question = GenerateQuestion(generalFaker, questionFaker, "default,usual", rule);
+                GetQuestionsForTrainingResult question = GenerateQuestion(generalFaker, questionFaker, "default,usual", rule);
                 if (question.Id != null && expectedRules.Any(rule.Equals))
                 {
                     expectedQuestionsGuids.Add(question.Id.Value);
@@ -2586,16 +2584,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             return result;
         }
 
-        private static ExistingQuestion GenerateQuestion(Faker generalFaker, Faker<ExistingQuestion> questionFaker, string fakerRuleSet, CustomQuestionRule questionRule)
+        private static GetQuestionsForTrainingResult GenerateQuestion(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, string fakerRuleSet, CustomQuestionRule questionRule)
         {
-            ExistingQuestion question = questionFaker.Generate(fakerRuleSet);
+            GetQuestionsForTrainingResult question = questionFaker.Generate(fakerRuleSet);
             if (questionRule.IsExactValue)
             {
-                question.EstimatedTrainingTimeSeconds = questionRule.ExactValue;
+                question.QuestionActualTrainingTimeSeconds = questionRule.ExactValue;
             }
             else
             {
-                question.EstimatedTrainingTimeSeconds = generalFaker.Random.Number(questionRule.MinValue, questionRule.MaxValue);
+                question.QuestionActualTrainingTimeSeconds = generalFaker.Random.Number(questionRule.MinValue, questionRule.MaxValue);
             } 
             return question;
         }
@@ -2617,7 +2615,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             ];
         }
 
-        private static IEnumerable<object[]> TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(Faker generalFaker, Faker<ExistingQuestion> questionFaker, Guid userId, int newCount, int penaltyCount, int usualCount, int lengthValue)
+        private static IEnumerable<object[]> TestRandomQuestionCollectionsWithAllStandardFractionsAndLengthTypes(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, Guid userId, int newCount, int penaltyCount, int usualCount, int lengthValue)
         {
             List<TrainingLengthType> lengthTypes = [TrainingLengthType.QuestionsCount, TrainingLengthType.Time];
             List<(double newQuestionsFraction, double penaltyQuestionsFraction)> allStandardFractions = GetAllStandardFractions(generalFaker);
@@ -2632,7 +2630,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
         }
 
         private static IEnumerable<object[]> TestCustomQuestionCollectionWithAllStandardFractions(Faker generalFaker, Guid userId,
-            List<ExistingQuestion> questions, int lengthValue, List<Guid> expectedQuestionsGuids)
+            List<GetQuestionsForTrainingResult> questions, int lengthValue, List<Guid> expectedQuestionsGuids)
         {
             List<(double newQuestionsFraction, double penaltyQuestionsFraction)> allStandardFractions = GetAllStandardFractions(generalFaker);
             foreach (var (newQuestionsFraction, penaltyQuestionsFraction) in allStandardFractions)
@@ -2650,9 +2648,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             }
         }
 
-        private static object[] GenerateQuestionData(Faker generalFaker, Faker<ExistingQuestion> questionFaker, Guid userId, int newCount, int penaltyCount, int usualCount, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction)
+        private static object[] GenerateQuestionData(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, Guid userId, int newCount, int penaltyCount, int usualCount, TrainingLengthType lengthType, int lengthValue, double newQuestionsFraction, double penaltyQuestionsFraction)
         {
-            var questions = new List<ExistingQuestion>();
+            var questions = new List<GetQuestionsForTrainingResult>();
             if (lengthType == TrainingLengthType.QuestionsCount)
             {
                 questions.AddRange(questionFaker.Generate(newCount, "default,new"));
@@ -2680,9 +2678,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             ];
         }
 
-        private static List<ExistingQuestion> CreateQuestionsCollectionByTime(Faker generalFaker, Faker<ExistingQuestion> questionFaker, string ruleSet, int fullTime)
+        private static List<GetQuestionsForTrainingResult> CreateQuestionsCollectionByTime(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, string ruleSet, int fullTime)
         {
-            List<ExistingQuestion> questions = [];
+            List<GetQuestionsForTrainingResult> questions = [];
             const int recommendedMinimumCountOfQuestions = 50;
             int minimumCountOfQuestions = fullTime > recommendedMinimumCountOfQuestions ? recommendedMinimumCountOfQuestions : fullTime;
             int currentTimeLength = 0;
@@ -2692,7 +2690,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
                 var nextTime = generalFaker.Random.Number(1, fullTime / minimumCountOfQuestions);
                 if (nextTime + currentTimeLength > fullTime)
                     nextTime = fullTime - currentTimeLength;
-                question.EstimatedTrainingTimeSeconds = nextTime;
+                question.QuestionActualTrainingTimeSeconds = nextTime;
                 questions.Add(question);
                 currentTimeLength += nextTime;
             }

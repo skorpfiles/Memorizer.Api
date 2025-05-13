@@ -5,11 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
 {
-    public class DataAccessMappingProfile:Profile
+    public class DataAccessMappingProfile : Profile
     {
         public DataAccessMappingProfile()
         {
@@ -49,7 +50,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
             CreateMap<SkorpFiles.Memorizer.Api.Models.Label, Label>()
                 .ForMember(dest => dest.LabelId, opts => opts.MapFrom(src => src.Id))
                 .ForMember(dest => dest.LabelName, opts => opts.MapFrom(src => src.Name))
-                .ForMember(dest=>dest.LabelCode, opts=>opts.MapFrom(src=>src.Code))
+                .ForMember(dest => dest.LabelCode, opts => opts.MapFrom(src => src.Code))
                 .ForMember(dest => dest.ObjectCreationTimeUtc, opts => opts.MapFrom(src => src.CreationTimeUtc))
                 .ForMember(dest => dest.ObjectIsRemoved, opts => opts.MapFrom(src => src.IsRemoved))
                 .ForMember(dest => dest.ObjectRemovalTimeUtc, opts => opts.MapFrom(src => src.RemovalTimeUtc));
@@ -69,7 +70,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.UntypedAnswer, opts => opts.MapFrom(src => src.QuestionUntypedAnswer))
                 .IncludeAllDerived();
             CreateMap<Question, SkorpFiles.Memorizer.Api.Models.ExistingQuestion>()
-                .ForMember(dest=>dest.Labels, opts=>opts.MapFrom(src=>src.LabelsForQuestion));
+                .ForMember(dest => dest.Labels, opts => opts.MapFrom(src => src.LabelsForQuestion));
             CreateMap<Question, SkorpFiles.Memorizer.Api.Models.QuestionToUpdate>()
                 .ForMember(dest => dest.LabelsIds, opts =>
                 {
@@ -100,7 +101,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.QuestionUserPenaltyPoints, opts => opts.MapFrom(src => src.PenaltyPoints));
             CreateMap<TypedAnswer, SkorpFiles.Memorizer.Api.Models.TypedAnswer>()
                 .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.TypedAnswerId))
-                .ForMember(dest => dest.Text, opts=>opts.MapFrom(src=>src.TypedAnswerText))
+                .ForMember(dest => dest.Text, opts => opts.MapFrom(src => src.TypedAnswerText))
                 .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
                 .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.ObjectIsRemoved))
                 .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc));

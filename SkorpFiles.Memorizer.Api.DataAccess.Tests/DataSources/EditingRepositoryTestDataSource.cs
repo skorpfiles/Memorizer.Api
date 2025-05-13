@@ -35,7 +35,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.DataSources
                     .RuleFor(q=>q.QuestionType,QuestionType.Task)
                     .RuleFor(q=>q.QuestionText, f=>f.Lorem.Text().ClampLength(1,Restrictions.QuestionTextMaxLength))
                     .RuleFor(q=>q.QuestionIsEnabled, true)
-                    .RuleFor(q=>q.QuestionEstimatedTrainingTimeSeconds, f=>f.Random.Number(Restrictions.QuestionEstimatedTrainingTimeSecondsMinValue,Restrictions.QuestionEstimatedTrainingTimeSecondsMaxValue))
+                    .RuleFor(q=>q.QuestionEstimatedTrainingTimeSeconds, f=>f.Random.Number(Restrictions.QuestionTrainingTimeSecondsMinValue,Restrictions.QuestionTrainingTimeSecondsMaxValue))
                     .RuleFor(q=>q.QuestionnaireId,questionnaire.QuestionnaireId)
                     .RuleFor(q=>q.QuestionQuestionnaireCode,f=>f.IndexFaker)
                     .RuleFor(q=>q.ObjectCreationTimeUtc,DateTime.UtcNow)

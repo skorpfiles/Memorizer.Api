@@ -5,6 +5,7 @@ using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -50,6 +51,15 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
                     throw;
                 }
             }
+        }
+        public static string ReadEmbeddedTextFile(string fileName)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = $"{assembly.GetName().Name}.{fileName}";
+
+            using Stream? stream = assembly.GetManifestResourceStream(resourceName) ?? throw new FileNotFoundException($"The embedded resource '{resourceName}' was not found.");
+            using StreamReader reader = new(stream);
+            return reader.ReadToEnd();
         }
     }
 }

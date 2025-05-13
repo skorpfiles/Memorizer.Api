@@ -37,6 +37,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
                 fk.DeleteBehavior = DeleteBehavior.Restrict;
 
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Api.Models.GetQuestionsForTrainingResult>(entity =>
+            {
+                entity.HasNoKey();
+                entity.ToView(null);
+            });
         }
     }
 }

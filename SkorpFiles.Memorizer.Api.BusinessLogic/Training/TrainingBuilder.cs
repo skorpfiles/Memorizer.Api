@@ -1,52 +1,47 @@
-﻿using Azure.Core;
-using Microsoft.Extensions.Options;
+﻿using AutoMapper;
 using SkorpFiles.Memorizer.Api.BusinessLogic.Extensions;
 using SkorpFiles.Memorizer.Api.Models;
+using SkorpFiles.Memorizer.Api.Models.Abstract;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
     internal class TrainingBuilder
     {
         private readonly Random _random = new();
+        public List<GetQuestionsForTrainingResult> BasicQuestionsList { get; set; } = [];
+        public EntitiesListForRandomChoice<GetQuestionsForTrainingResult> NewQuestionsList { get; set; } = [];
+        public EntitiesListForRandomChoice<GetQuestionsForTrainingResult> PrioritizedPenaltyQuestionsList { get; set; } = [];
 
-        public List<ExistingQuestion> BasicQuestionsList { get; set; } = [];
-        public EntitiesListForRandomChoice<ExistingQuestion> NewQuestionsList { get; set; } = [];
-        public EntitiesListForRandomChoice<ExistingQuestion> PrioritizedPenaltyQuestionsList { get; set; } = [];
-
-        public TrainingBuilder(IEnumerable<ExistingQuestion> initialQuestionsList)
+        public TrainingBuilder(IEnumerable<GetQuestionsForTrainingResult> initialQuestionsList)
         {
             FillQuestionsListsInitially(initialQuestionsList);
         }
 
-        private void FillQuestionsListsInitially(IEnumerable<ExistingQuestion> initialQuestionsList)
+        private void FillQuestionsListsInitially(IEnumerable<GetQuestionsForTrainingResult> initialQuestionsList)
         {
-            IEnumerator<Api.Models.ExistingQuestion> questionsEnumerator = initialQuestionsList.GetEnumerator();
+            //todo optimize so that the questions are not copied to the new lists
+            IEnumerator<GetQuestionsForTrainingResult> questionsEnumerator = initialQuestionsList.GetEnumerator();
             while (questionsEnumerator.MoveNext())
             {
                 var currentQuestion = questionsEnumerator.Current;
 
-                if (currentQuestion.IsEnabled)
+                if (currentQuestion.QuestionIsEnabled)
                 {
-                    if (currentQuestion.MyStatus == null || currentQuestion.MyStatus.IsNew)
+                    if (currentQuestion.QuestionUserIsNew == null || currentQuestion.QuestionUserIsNew.Value)
                         NewQuestionsList.Add(currentQuestion);
                     else
                     {
                         BasicQuestionsList.Add(currentQuestion);
-                        if (currentQuestion.MyStatus.PenaltyPoints > 0)
+                        if (currentQuestion.QuestionUserPenaltyPoints > 0)
                             PrioritizedPenaltyQuestionsList.Add(currentQuestion);
                     }
                 }
             }
         }
 
-        public List<ExistingQuestion> MakeQuestionsListForTraining(TrainingOptions options)
+        public List<ExistingQuestion> MakeQuestionsListForTraining(TrainingOptions options, IMapper mapper)
         {
             if (options.NewQuestionsFraction < 0 || options.PrioritizedPenaltyQuestionsFraction < 0)
                 throw new IncorrectTrainingOptionsException(Constants.NegativeFractionsMessage);
@@ -63,38 +58,38 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             double expectedLengthForPrioritizedPenaltyQuestionsList = options.LengthValue * options.PrioritizedPenaltyQuestionsFraction;
 
             //create new questions list
-            result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForNewQuestionList, _random, out int resultNewLength).Values);
+            result.AddRange(mapper.Map<List<ExistingQuestion>>(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForNewQuestionList, _random, out int resultNewLength).Values));
             //create penalty questions list
             var selectedPenaltyQuestions = GetSelectedQuestionsFromGeneralList(PrioritizedPenaltyQuestionsList, options.LengthType, expectedLengthForPrioritizedPenaltyQuestionsList, _random, out int resultPenaltyLength);
             BasicQuestionsList.RemoveAll(q => selectedPenaltyQuestions.ContainsKey(q.Id!.Value));
-            result.AddRange(selectedPenaltyQuestions.Values);
+            result.AddRange(mapper.Map<List<ExistingQuestion>>(selectedPenaltyQuestions.Values));
 
             //basic list
             int expectedLengthForBasicQuestionList = options.LengthValue - resultNewLength - resultPenaltyLength;
             if (expectedLengthForBasicQuestionList > 0)
             {
                 RatingTape ratingTape = InitializeRatingTape(BasicQuestionsList, result);
-                Dictionary<Guid, ExistingQuestion> questionsSelectedFromRatingTape = GetSelectedQuestionsFromGeneralList(ratingTape, options.LengthType, expectedLengthForBasicQuestionList, _random, out int resultBasicLength);
+                Dictionary<Guid, GetQuestionsForTrainingResult> questionsSelectedFromRatingTape = GetSelectedQuestionsFromGeneralList(ratingTape, options.LengthType, expectedLengthForBasicQuestionList, _random, out int resultBasicLength);
                 BasicQuestionsList.RemoveAll(q => questionsSelectedFromRatingTape.ContainsKey(q.Id!.Value));
-                result.AddRange(questionsSelectedFromRatingTape.Values);
+                result.AddRange(mapper.Map<List<ExistingQuestion>>(questionsSelectedFromRatingTape.Values));
 
                 //if there is lack of questions, add from new ones
                 int expectedLengthForAdditionalNewQuestionList = expectedLengthForBasicQuestionList - resultBasicLength;
                 if (expectedLengthForAdditionalNewQuestionList > expectedLengthForAdditionalNewQuestionList * Constants.AllowableErrorFraction)
                 {
-                    result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForAdditionalNewQuestionList, _random, out int resultAdditionalNewLength).Values);
+                    result.AddRange(mapper.Map<List<ExistingQuestion>>(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForAdditionalNewQuestionList, _random, out int resultAdditionalNewLength).Values));
 
                     //if there is lack of questions after all selections, search for questions to fill 
                     if (options.LengthType == Models.Enums.TrainingLengthType.Time && options.LengthValue - options.LengthValue * Constants.AllowableErrorFraction > resultNewLength+resultPenaltyLength+resultBasicLength+resultAdditionalNewLength)
                     {
-                        List<ExistingQuestion> remainingQuestions = [.. NewQuestionsList.ToList(), .. BasicQuestionsList.ToList()];
+                        List<GetQuestionsForTrainingResult> remainingQuestions = [.. NewQuestionsList.ToList(), .. BasicQuestionsList.ToList()];
 
-                        result.AddRange(Utils.FindBestQuestionsTimesCombination(remainingQuestions, options.LengthValue));
+                        result.AddRange(mapper.Map<List<ExistingQuestion>>(Utils.FindBestQuestionsTimesCombination(remainingQuestions, options.LengthValue)));
 
                         //if the list is empty, add one the cheapest question
                         if (result.Count == 0 && remainingQuestions.Count != 0)
                         {
-                            result.Add(GetQuestionWithMinimalCost(remainingQuestions)!);
+                            result.Add(mapper.Map<ExistingQuestion>(GetQuestionWithMinimalCost(remainingQuestions))!);
                         }
                     }
                 }
@@ -105,24 +100,24 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             return result;
         }
 
-        private static ExistingQuestion? GetQuestionWithMinimalCost(IEnumerable<ExistingQuestion> questions)
+        private static GetQuestionsForTrainingResult? GetQuestionWithMinimalCost(IEnumerable<GetQuestionsForTrainingResult> questions)
         {
-            ExistingQuestion? result = null;
+            GetQuestionsForTrainingResult? result = null;
             int currentMinimum = -1;
-            foreach (ExistingQuestion question in questions)
+            foreach (GetQuestionsForTrainingResult question in questions)
             {
-                if (question.FullEstimatedTrainingTimeSeconds() < currentMinimum || currentMinimum == -1)
+                if (Math.Round((double)question.FullActualTrainingTimeSeconds()) < currentMinimum || currentMinimum == -1)
                 {
-                    currentMinimum = question.FullEstimatedTrainingTimeSeconds();
+                    currentMinimum = question.FullActualTrainingTimeSeconds();
                     result = question;
                 }
             }
             return result;
         }
 
-        private static Dictionary<Guid, ExistingQuestion> GetSelectedQuestionsFromGeneralList(IPickable<ExistingQuestion> sourceList, Models.Enums.TrainingLengthType lengthType, double expectedLength, Random random, out int resultLength)
+        private static Dictionary<Guid, GetQuestionsForTrainingResult> GetSelectedQuestionsFromGeneralList(IPickable<GetQuestionsForTrainingResult> sourceList, Models.Enums.TrainingLengthType lengthType, double expectedLength, Random random, out int resultLength)
         {
-            Dictionary<Guid, ExistingQuestion> selectedQuestions = [];
+            Dictionary<Guid, GetQuestionsForTrainingResult> selectedQuestions = [];
 
             int consumedValue = 0;
             int tryingAttemptInARowWithoutResult = 0;
@@ -131,7 +126,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 
             if (Math.Round(expectedLength) > 0 && !sourceList.Consumed)
             {
-                ExistingQuestion? selectedQuestion;
+                GetQuestionsForTrainingResult? selectedQuestion;
                 do
                 {
                     selectedQuestion = sourceList.PickAndDelete(random);
@@ -146,7 +141,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
                         switch (lengthType)
                         {
                             case Models.Enums.TrainingLengthType.Time:
-                                int lengthValue = selectedQuestion.FullEstimatedTrainingTimeSeconds();
+                                int lengthValue = selectedQuestion.FullActualTrainingTimeSeconds();
 
                                 if (consumedValue <= Math.Round(expectedLength))
                                 {
@@ -194,12 +189,12 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             return selectedQuestions;
         }
 
-        private static RatingTape InitializeRatingTape(List<ExistingQuestion> basicList, IEnumerable<ExistingQuestion> questionsToFilter)
+        private static RatingTape InitializeRatingTape(List<GetQuestionsForTrainingResult> basicList, IEnumerable<Entity> questionsToFilter)
         {
             RatingTape result = new(RatingToWeight);
-            List<ExistingQuestion> questionsToRemoveFromBasicList = [];
+            List<GetQuestionsForTrainingResult> questionsToRemoveFromBasicList = [];
 
-            foreach(ExistingQuestion question in basicList)
+            foreach(GetQuestionsForTrainingResult question in basicList)
             {
                 if (!questionsToFilter.Any(q => q.Id == question.Id))
                 {

@@ -1,20 +1,15 @@
-﻿using FluentAssertions;
+﻿using SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources;
 using SkorpFiles.Memorizer.Api.BusinessLogic.Extensions;
-using SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using FluentAssertions;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 {
     [TestClass]
-    public class ApiQuestionExtensionsUnitTests
+    public class GetQuestionsForTrainingResultExtensionsUnitTests
     {
         [TestMethod]
-        [DynamicData(nameof(ApiQuestionExtensionsUnitTestsDataSource.FullActualTrainingTimeSeconds_CorrectQuestion_CorrectResult),typeof(ApiQuestionExtensionsUnitTestsDataSource))]
-        public void FullActualTrainingTimeSeconds_CorrectQuestion_CorrectResult(Models.Question question, int expectedResult)
+        [DynamicData(nameof(GetQuestionsForTrainingResultExtensionsUnitTestsDataSource.FullActualTrainingTimeSeconds_CorrectQuestion_CorrectResult), typeof(GetQuestionsForTrainingResultExtensionsUnitTestsDataSource))]
+        public void FullActualTrainingTimeSeconds_CorrectQuestion_CorrectResult(Models.GetQuestionsForTrainingResult question, int expectedResult)
         {
             //Arrange
             //Act

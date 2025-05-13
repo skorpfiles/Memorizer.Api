@@ -10,7 +10,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         [Key]
         public Guid TypedAnswerId { get; set; }
         public Guid? QuestionId { get; set; }
-        public string TypedAnswerText { get; set; }
+        public string TypedAnswerText { get; set; } = null!;
 
         public Question? Question { get; set; }
 
@@ -18,5 +18,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         {
             TypedAnswerText = typedAnswerText;
         }
+
+        public TypedAnswer() { }
     }
 }

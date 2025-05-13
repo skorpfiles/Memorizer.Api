@@ -11,8 +11,14 @@ namespace SkorpFiles.Memorizer.Api.Models.Utils
         public const int QuestionnaireNameMaxLength = 10000;
         public const int QuestionTextMaxLength = 100000;
         public const int QuestionUntypedAnswerMaxLength = 100000;
-        public const int QuestionEstimatedTrainingTimeSecondsMinValue = 1;
-        public const int QuestionEstimatedTrainingTimeSecondsMaxValue = 21600;
+        public const int QuestionReferenceMaxLength = 100000;
+        public const int QuestionTrainingTimeSecondsMinValue = 1;
+        public const int QuestionTrainingTimeSecondsMaxValue = 21600;
         public const int LabelNameMaxLength = 10000;
+        public const int TypedAnswerTextMaxLength = 100000;
+
+        public const int InitialQuestionRating = 50;
+        public const int MinQuestionRating = 1;
+        public const int MaxQuestionRating = 50;
     }
 }

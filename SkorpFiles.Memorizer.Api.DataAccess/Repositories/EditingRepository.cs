@@ -820,6 +820,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 changed = true;
             }
 
+            if (request.LengthType != null)
+            {
+                trainingResult.TrainingLengthType = request.LengthType.Value;
+                changed = true;
+            }
+
             if (request.QuestionsCount != null)
             {
                 trainingResult.TrainingQuestionsCount = request.QuestionsCount.Value;
