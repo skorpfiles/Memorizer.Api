@@ -3,7 +3,7 @@ using SkorpFiles.Memorizer.Api.Models.Utils;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
-    internal class RatingTape:IPickable<GetQuestionsForTrainingResult>
+    internal class RatingTape:IPickableTrainingList<GetQuestionsForTrainingResult>
     {
         private int _nextCoordinate = 1;
 

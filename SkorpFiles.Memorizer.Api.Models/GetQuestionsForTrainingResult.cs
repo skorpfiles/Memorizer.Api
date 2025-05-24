@@ -1,5 +1,6 @@
 ﻿using SkorpFiles.Memorizer.Api.Models.Abstract;
 using SkorpFiles.Memorizer.Api.Models.Enums;
+using SkorpFiles.Memorizer.Api.Models.Interfaces;
 
 namespace SkorpFiles.Memorizer.Api.Models
 {
@@ -18,5 +19,6 @@ namespace SkorpFiles.Memorizer.Api.Models
         public int? QuestionUserRating { get; set; }
         public int? QuestionUserPenaltyPoints { get; set; }
         public int QuestionActualTrainingTimeSeconds { get; set; }
+        public DateTime? LastTrainingTimeUtc { get; set; }
     }
 }
