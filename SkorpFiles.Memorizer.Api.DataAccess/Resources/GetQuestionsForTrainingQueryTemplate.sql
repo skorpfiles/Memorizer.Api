@@ -2,7 +2,7 @@
     SELECT
         t.TrainingResultQuestionId,
         t.TrainingResultTimeSeconds,
-        ROW_NUMBER() OVER (PARTITION BY t.TrainingResultQuestionId ORDER BY t.TrainingResultId) AS rn
+        ROW_NUMBER() OVER (PARTITION BY t.TrainingResultQuestionId ORDER BY t.TrainingResultRecordingTime DESC) AS rn
     FROM memorizer.jTrainingResult t
     WHERE t.TrainingResultUserId = @ownerId
 ),
@@ -25,6 +25,14 @@ TrainingStats AS (
         TrainingCount,
         MedianTrainingTime
     FROM TrainingStatsWithWindow
+),
+LatestTrainingTime AS (
+    SELECT
+        t.TrainingResultQuestionId,
+        MAX(t.TrainingResultRecordingTime) AS LastTrainingTime
+    FROM memorizer.jTrainingResult t
+    WHERE t.TrainingResultUserId = @ownerId
+    GROUP BY t.TrainingResultQuestionId
 )
 SELECT
     q.QuestionId AS Id,
@@ -54,9 +62,11 @@ SELECT
         WHEN ts.TrainingCount BETWEEN 1 AND 10 THEN 
             CAST(((q.QuestionEstimatedTrainingTimeSeconds + ts.MedianTrainingTime) / 2.0) AS int)
         ELSE CAST(ts.MedianTrainingTime AS int)
-    END AS QuestionActualTrainingTimeSeconds
+    END AS QuestionActualTrainingTimeSeconds,
+    ltt.LastTrainingTime AS LastTrainingTimeUtc
 FROM memorizer.rQuestion q
 LEFT JOIN TrainingStats ts ON ts.TrainingResultQuestionId = q.QuestionId
+LEFT JOIN LatestTrainingTime ltt ON ltt.TrainingResultQuestionId = q.QuestionId
 LEFT JOIN memorizer.rQuestionnaire qr ON qr.QuestionnaireId = q.QuestionnaireId
 LEFT JOIN memorizer.nnQuestionUser qu ON qu.QuestionId = q.QuestionId AND qu.UserId = @ownerId
 WHERE q.ObjectIsRemoved = 0 AND q.QuestionnaireId IN ({inClause});

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
-    internal class EntitiesListForRandomChoice<T>:IPickable<T>, IEnumerable<T> where T: Entity
+    internal class EntitiesListForRandomChoice<T>:IPickableTrainingList<T>, IEnumerable<T> where T: Entity
     {
         private readonly List<Wrapper<Guid>> _existingIds = new();
         private readonly Dictionary<Guid, T> _existingEntities = new();

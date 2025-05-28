@@ -11,8 +11,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
     {
         private readonly Random _random = new();
         public List<GetQuestionsForTrainingResult> BasicQuestionsList { get; set; } = [];
-        public EntitiesListForRandomChoice<GetQuestionsForTrainingResult> NewQuestionsList { get; set; } = [];
-        public EntitiesListForRandomChoice<GetQuestionsForTrainingResult> PrioritizedPenaltyQuestionsList { get; set; } = [];
+        public EntitiesListForWeighedSoftmaxChoice NewQuestionsList { get; set; } = [];
+        public EntitiesListForWeighedSoftmaxChoice PrioritizedPenaltyQuestionsList { get; set; } = [];
 
         public TrainingBuilder(IEnumerable<GetQuestionsForTrainingResult> initialQuestionsList)
         {
@@ -27,7 +27,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             {
                 var currentQuestion = questionsEnumerator.Current;
 
-                if (currentQuestion.QuestionIsEnabled)
+                if (currentQuestion != null && currentQuestion.QuestionIsEnabled)
                 {
                     if (currentQuestion.QuestionUserIsNew == null || currentQuestion.QuestionUserIsNew.Value)
                         NewQuestionsList.Add(currentQuestion);
@@ -115,7 +115,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             return result;
         }
 
-        private static Dictionary<Guid, GetQuestionsForTrainingResult> GetSelectedQuestionsFromGeneralList(IPickable<GetQuestionsForTrainingResult> sourceList, Models.Enums.TrainingLengthType lengthType, double expectedLength, Random random, out int resultLength)
+        private static Dictionary<Guid, GetQuestionsForTrainingResult> GetSelectedQuestionsFromGeneralList(IPickableTrainingList<GetQuestionsForTrainingResult> sourceList, Models.Enums.TrainingLengthType lengthType, double expectedLength, Random random, out int resultLength)
         {
             Dictionary<Guid, GetQuestionsForTrainingResult> selectedQuestions = [];
 

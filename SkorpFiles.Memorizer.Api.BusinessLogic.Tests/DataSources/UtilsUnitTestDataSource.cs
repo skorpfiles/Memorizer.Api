@@ -147,6 +147,30 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests.DataSources
             }
         }
 
+        public static IEnumerable<object[]> SoftmaxSample_CorrectParameters_CorrectResult
+        {
+            get
+            {
+                var generalFaker = new Faker();
+                var questionFaker = DataUtils.GetQuestionFaker(generalFaker);
+                var random = new Random(44472135);
+
+                yield return new object[]
+                {
+                    new Dictionary<Guid, int>
+                    {
+                        { Guid.NewGuid(), generalFaker.Random.Number() },
+                        { Guid.NewGuid(), generalFaker.Random.Number() },
+                        { Guid.NewGuid(), generalFaker.Random.Number() },
+                        { Guid.NewGuid(), generalFaker.Random.Number() },
+                        { Guid.NewGuid(), generalFaker.Random.Number() }
+                    },
+                    random,
+                    generalFaker.Random.Double(-10.0, 10.0)
+                };
+            }
+        }
+
         private static List<GetQuestionsForTrainingResult> GenerateQuestionsUsingRules(Faker generalFaker, Faker<GetQuestionsForTrainingResult> questionFaker, List<CustomQuestionRule> rulesForUsualQuestions,
             List<CustomQuestionRule> expectedRules, out List<Guid> expectedQuestionsGuids)
         {

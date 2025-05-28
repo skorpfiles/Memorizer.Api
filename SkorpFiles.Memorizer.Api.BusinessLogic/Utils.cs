@@ -1,4 +1,5 @@
 ﻿using SkorpFiles.Memorizer.Api.BusinessLogic.Extensions;
+using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Models;
 using System;
 using System.Collections.Generic;
@@ -44,6 +45,34 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             }
 
             return result;
+        }
+
+        public static KeyValuePair<TKey, TValue>? SoftmaxSample<TKey, TValue>(IDictionary<TKey, TValue> elements, Func<TValue,int> weightCalculationFunc, Random random, double temperature = 1.0) where TKey:notnull
+        {
+            ArgumentNullException.ThrowIfNull(elements);
+
+            if (!elements.Any())
+            {
+                return default;
+            }
+
+            var expList = elements
+                .Select(e => (item: e, exp: Math.Exp(weightCalculationFunc(e.Value) / temperature)))
+                .ToList();
+
+            double total = expList.Sum(e => e.exp);
+            double r = random.NextDouble() * total;
+
+            foreach (var (item, exp) in expList)
+            {
+                r -= exp;
+                if (r <= 0)
+                {
+                    return item;
+                }
+            }
+
+            return expList.Last().item;
         }
     }
 }

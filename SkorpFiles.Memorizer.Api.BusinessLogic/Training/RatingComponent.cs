@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
 {
-    internal class RatingComponent(int coordinate, int length) : EntitiesListForRandomChoice<GetQuestionsForTrainingResult>
+    internal class RatingComponent(int coordinate, int length) : EntitiesListForWeighedSoftmaxChoice
     {
         public int Coordinate { get; set; } = coordinate;
         public int Length { get; set; } = length;
