@@ -19,7 +19,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Mapping
                 {
                     if (src?.TypedAnswersJson == null)
                         return null;
-                    return context.Mapper.Map<List<TypedAnswer>>(JsonSerializer.Deserialize<List<TypedAnswer>>(src.TypedAnswersJson));
+                    return context.Mapper.Map<List<TypedAnswer>>(JsonSerializer.Deserialize<List<DataAccess.Models.TypedAnswer>>(src.TypedAnswersJson));
                 }))
                 .ForMember(dest => dest.Questionnaire, opts => opts.MapFrom(src => new Questionnaire
                 {
