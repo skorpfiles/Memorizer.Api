@@ -60,7 +60,7 @@ SELECT
     CASE 
         WHEN ts.TrainingCount IS NULL THEN q.QuestionEstimatedTrainingTimeSeconds
         WHEN ts.TrainingCount BETWEEN 1 AND 10 THEN 
-            CAST(((q.QuestionEstimatedTrainingTimeSeconds + ts.MedianTrainingTime) / 2.0) AS int)
+            CAST(((q.QuestionEstimatedTrainingTimeSeconds * (10 - ts.TrainingCount) + ts.MedianTrainingTime) / (10 - ts.TrainingCount + 1)) AS int)
         ELSE CAST(ts.MedianTrainingTime AS int)
     END AS QuestionActualTrainingTimeSeconds,
     ltt.LastTrainingTime AS LastTrainingTimeUtc
