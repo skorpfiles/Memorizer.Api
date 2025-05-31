@@ -24,7 +24,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.DataSources
             get
             {
                 // there are 2 questionnaires, the first has 5 questions of all types, the second has 2 questions.
-                // there are questions without past trainings, with 1 training, with 6 trainings, with 12 trainings
+                // there are questions without past trainings, with 1 training, with 8 trainings, with 10 trainings, with 12 trainings
                 // trainings have times that make median time not equal to average time
                 // there is another questionnaire that should not be included in the result
 
@@ -61,7 +61,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.DataSources
                     .RuleFor(ta => ta.TypedAnswerId, f => Guid.NewGuid())
                     .RuleFor(ta => ta.TypedAnswerText, f => f.Lorem.Word().ClampLength(1, Restrictions.TypedAnswerTextMaxLength));
 
-                questionnaires[0].Questions = questionFaker.Generate(5);
+                questionnaires[0].Questions = questionFaker.Generate(6);
 
                 var expectedAverageTimes = new List<int>();
                 var expectedTypedAnswersJsonsWithoutSpaces = new List<string?>();
@@ -85,7 +85,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.DataSources
                 expectedAverageTimes.Add(questionnaires[0].Questions![0].QuestionEstimatedTrainingTimeSeconds);
                 expectedTypedAnswersJsonsWithoutSpaces.Add(null);
 
-                // question with 1 training: estimated time = 10, actual time = 5. Expected average time = 7.5.
+                // question with 1 training: estimated time = 10, actual time = 5. Expected average time = 9.5.
                 questionnaires[0].Questions![1].QuestionType = QuestionType.UntypedAnswer;
                 questionnaires[0].Questions![1].QuestionUntypedAnswer = generalFaker.Lorem.Text().ClampLength(1, Restrictions.QuestionUntypedAnswerMaxLength);
                 questionnaires[0].Questions![1].QuestionEstimatedTrainingTimeSeconds = 10;
@@ -93,10 +93,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.DataSources
                 questionnaires[0].Questions![1].TrainingResults = trainingResultFaker.Generate(1);
                 questionnaires[0].Questions![1].TrainingResults![0].TrainingResultTimeSeconds = 5;
 
-                expectedAverageTimes.Add(7);
+                expectedAverageTimes.Add(9);
                 expectedTypedAnswersJsonsWithoutSpaces.Add(null);
 
-                //question with 8 trainings: estimated time = 10, actual times = 5, 5, 10, 12, 14, 15, 18, 1000. Expected average time = (13+10)/2 = 11.5 (not (152+10)/2 because of median)
+                //question with 8 trainings: estimated time = 10, actual times = 5, 5, 10, 12, 14, 15, 18, 1000. Expected average time = (13+10+10)/3 = 11 (not (152+10+10)/2 because of median)
                 questionnaires[0].Questions![2].QuestionType = QuestionType.TypedAnswers;
                 questionnaires[0].Questions![2].TypedAnswers = typedAnswerFaker.Generate(2);
                 questionnaires[0].Questions![2].QuestionEstimatedTrainingTimeSeconds = 10;
@@ -114,38 +114,58 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.DataSources
                 expectedAverageTimes.Add(11);
                 expectedTypedAnswersJsonsWithoutSpaces.Add(TypedAnswersListToJsonString([questionnaires[0].Questions![2].TypedAnswers![0], questionnaires[0].Questions![2].TypedAnswers![1]]));
 
-                //question with 12 trainings: estimated time = 20000, actual times = 5, 5, 10, 12, 14, 14, 17, 21, 40, 52, 64, 8000. Expected average time = 15.5. (estimated time does not matter)
-                questionnaires[0].Questions![3].QuestionType = QuestionType.UntypedAndTypedAnswers;
-                questionnaires[0].Questions![3].QuestionUntypedAnswer = generalFaker.Lorem.Text().ClampLength(1, Restrictions.QuestionUntypedAnswerMaxLength);
+                //question with 10 trainings: estimated time = 10, actual times = 5, 5, 5, 5, 10, 12, 14, 15, 18, 1000. Expected average time = 11 (estimated time is ignored).
+                questionnaires[0].Questions![3].QuestionType = QuestionType.TypedAnswers;
                 questionnaires[0].Questions![3].TypedAnswers = typedAnswerFaker.Generate(2);
-                questionnaires[0].Questions![3].QuestionEstimatedTrainingTimeSeconds = 20000;
+                questionnaires[0].Questions![3].QuestionEstimatedTrainingTimeSeconds = 10;
 
-                questionnaires[0].Questions![3].TrainingResults = trainingResultFaker.Generate(12);
+                questionnaires[0].Questions![3].TrainingResults = trainingResultFaker.Generate(10);
                 questionnaires[0].Questions![3].TrainingResults![0].TrainingResultTimeSeconds = 5;
                 questionnaires[0].Questions![3].TrainingResults![1].TrainingResultTimeSeconds = 5;
-                questionnaires[0].Questions![3].TrainingResults![2].TrainingResultTimeSeconds = 10;
-                questionnaires[0].Questions![3].TrainingResults![3].TrainingResultTimeSeconds = 12;
-                questionnaires[0].Questions![3].TrainingResults![4].TrainingResultTimeSeconds = 14;
-                questionnaires[0].Questions![3].TrainingResults![5].TrainingResultTimeSeconds = 14;
-                questionnaires[0].Questions![3].TrainingResults![6].TrainingResultTimeSeconds = 17;
-                questionnaires[0].Questions![3].TrainingResults![7].TrainingResultTimeSeconds = 21;
-                questionnaires[0].Questions![3].TrainingResults![8].TrainingResultTimeSeconds = 40;
-                questionnaires[0].Questions![3].TrainingResults![9].TrainingResultTimeSeconds = 52;
-                questionnaires[0].Questions![3].TrainingResults![10].TrainingResultTimeSeconds = 64;
-                questionnaires[0].Questions![3].TrainingResults![11].TrainingResultTimeSeconds = 8000;
+                questionnaires[0].Questions![3].TrainingResults![2].TrainingResultTimeSeconds = 5;
+                questionnaires[0].Questions![3].TrainingResults![3].TrainingResultTimeSeconds = 5;
+                questionnaires[0].Questions![3].TrainingResults![4].TrainingResultTimeSeconds = 10;
+                questionnaires[0].Questions![3].TrainingResults![5].TrainingResultTimeSeconds = 12;
+                questionnaires[0].Questions![3].TrainingResults![6].TrainingResultTimeSeconds = 14;
+                questionnaires[0].Questions![3].TrainingResults![7].TrainingResultTimeSeconds = 15;
+                questionnaires[0].Questions![3].TrainingResults![8].TrainingResultTimeSeconds = 18;
+                questionnaires[0].Questions![3].TrainingResults![9].TrainingResultTimeSeconds = 1000;
 
-                expectedAverageTimes.Add(15);
+                expectedAverageTimes.Add(11);
                 expectedTypedAnswersJsonsWithoutSpaces.Add(TypedAnswersListToJsonString([questionnaires[0].Questions![3].TypedAnswers![0], questionnaires[0].Questions![3].TypedAnswers![1]]));
 
-                //question with 3 trainings: estimated time = 1000, actual times = 10, 20, 30. Expected average time = (20+1000)/2 = 510.
-                questionnaires[0].Questions![4].QuestionEstimatedTrainingTimeSeconds = 1000;
+                //question with 12 trainings: estimated time = 20000, actual times = 5, 5, 10, 12, 14, 14, 17, 21, 40, 52, 64, 8000. Expected average time = 15.5. (estimated time does not matter)
+                questionnaires[0].Questions![4].QuestionType = QuestionType.UntypedAndTypedAnswers;
+                questionnaires[0].Questions![4].QuestionUntypedAnswer = generalFaker.Lorem.Text().ClampLength(1, Restrictions.QuestionUntypedAnswerMaxLength);
+                questionnaires[0].Questions![4].TypedAnswers = typedAnswerFaker.Generate(2);
+                questionnaires[0].Questions![4].QuestionEstimatedTrainingTimeSeconds = 20000;
 
-                questionnaires[0].Questions![4].TrainingResults = trainingResultFaker.Generate(3);
-                questionnaires[0].Questions![4].TrainingResults![0].TrainingResultTimeSeconds = 10;
-                questionnaires[0].Questions![4].TrainingResults![1].TrainingResultTimeSeconds = 20;
-                questionnaires[0].Questions![4].TrainingResults![2].TrainingResultTimeSeconds = 30;
+                questionnaires[0].Questions![4].TrainingResults = trainingResultFaker.Generate(12);
+                questionnaires[0].Questions![4].TrainingResults![0].TrainingResultTimeSeconds = 5;
+                questionnaires[0].Questions![4].TrainingResults![1].TrainingResultTimeSeconds = 5;
+                questionnaires[0].Questions![4].TrainingResults![2].TrainingResultTimeSeconds = 10;
+                questionnaires[0].Questions![4].TrainingResults![3].TrainingResultTimeSeconds = 12;
+                questionnaires[0].Questions![4].TrainingResults![4].TrainingResultTimeSeconds = 14;
+                questionnaires[0].Questions![4].TrainingResults![5].TrainingResultTimeSeconds = 14;
+                questionnaires[0].Questions![4].TrainingResults![6].TrainingResultTimeSeconds = 17;
+                questionnaires[0].Questions![4].TrainingResults![7].TrainingResultTimeSeconds = 21;
+                questionnaires[0].Questions![4].TrainingResults![8].TrainingResultTimeSeconds = 40;
+                questionnaires[0].Questions![4].TrainingResults![9].TrainingResultTimeSeconds = 52;
+                questionnaires[0].Questions![4].TrainingResults![10].TrainingResultTimeSeconds = 64;
+                questionnaires[0].Questions![4].TrainingResults![11].TrainingResultTimeSeconds = 8000;
 
-                expectedAverageTimes.Add(510);
+                expectedAverageTimes.Add(15);
+                expectedTypedAnswersJsonsWithoutSpaces.Add(TypedAnswersListToJsonString([questionnaires[0].Questions![4].TypedAnswers![0], questionnaires[0].Questions![4].TypedAnswers![1]]));
+
+                //question with 3 trainings: estimated time = 1000, actual times = 10, 20, 30. Expected average time = (20+1000*7)/8 = 877.5.
+                questionnaires[0].Questions![5].QuestionEstimatedTrainingTimeSeconds = 1000;
+
+                questionnaires[0].Questions![5].TrainingResults = trainingResultFaker.Generate(3);
+                questionnaires[0].Questions![5].TrainingResults![0].TrainingResultTimeSeconds = 10;
+                questionnaires[0].Questions![5].TrainingResults![1].TrainingResultTimeSeconds = 20;
+                questionnaires[0].Questions![5].TrainingResults![2].TrainingResultTimeSeconds = 30;
+
+                expectedAverageTimes.Add(877);
                 expectedTypedAnswersJsonsWithoutSpaces.Add(null);
 
                 // questionnaire 2
