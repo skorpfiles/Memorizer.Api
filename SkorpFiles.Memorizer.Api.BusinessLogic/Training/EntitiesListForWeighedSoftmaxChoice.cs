@@ -79,7 +79,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
             if (question.LastTrainingTimeUtc == null || question.LastTrainingTimeUtc.Value < _minimumMeaningfulTimeForWeightCalculation)
                 result = 0;
             else
-                result = (int)Math.Round((question.LastTrainingTimeUtc.Value - _minimumMeaningfulTimeForWeightCalculation).TotalHours);
+                result = (int)Math.Round((question.LastTrainingTimeUtc.Value - _minimumMeaningfulTimeForWeightCalculation).TotalDays);
             return result;
         }
     }

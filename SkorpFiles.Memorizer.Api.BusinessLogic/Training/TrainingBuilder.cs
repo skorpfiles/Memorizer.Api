@@ -11,7 +11,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
     {
         private readonly Random _random = new();
         public List<GetQuestionsForTrainingResult> BasicQuestionsList { get; set; } = [];
-        public EntitiesListForWeighedSoftmaxChoice NewQuestionsList { get; set; } = [];
+        public EntitiesListForRandomChoice<GetQuestionsForTrainingResult> NewQuestionsList { get; set; } = [];
         public EntitiesListForWeighedSoftmaxChoice PrioritizedPenaltyQuestionsList { get; set; } = [];
 
         public TrainingBuilder(IEnumerable<GetQuestionsForTrainingResult> initialQuestionsList)

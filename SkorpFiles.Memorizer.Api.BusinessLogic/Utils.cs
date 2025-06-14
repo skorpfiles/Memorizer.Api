@@ -56,8 +56,10 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 return default;
             }
 
+            int minWeight = elements.Values.Min(weightCalculationFunc);
+
             var expList = elements
-                .Select(e => (item: e, exp: Math.Exp(weightCalculationFunc(e.Value) / temperature)))
+                .Select(e => (item: e, exp: Math.Exp(NormalizeWeight(weightCalculationFunc, e.Value, minWeight, temperature))))
                 .ToList();
 
             double total = expList.Sum(e => e.exp);
@@ -73,6 +75,17 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             }
 
             return expList.Last().item;
+        }
+
+        private static double NormalizeWeight<T>(Func<T, int> weightCalculationFunc, T value, int minWeight, double temperature)
+        {
+            const double maxPossibleWeight = 709.78; // Maximum value for exp(x) to avoid overflow in double precision
+            double weight = (weightCalculationFunc(value) - minWeight) / temperature;
+            if (weight > maxPossibleWeight)
+            {
+                weight = maxPossibleWeight;
+            }
+            return weight;
         }
     }
 }
