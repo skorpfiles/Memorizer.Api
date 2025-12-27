@@ -116,7 +116,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 resultList.Add(questionnaire);
             }
 
-            return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(resultList, totalCount, request.PageNumber, request.PageSize);
+            return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(resultList.OrderBy(q => q.Name), totalCount, request.PageNumber, request.PageSize);
         }
 
         public async Task<Api.Models.Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime)
