@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies.WeightedRandomSamplingStrategy;
+﻿using SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies.WeightedRandomSamplingStrategy;
 using System.Diagnostics;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic

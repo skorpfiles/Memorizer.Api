@@ -14,7 +14,8 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies.W
 
         internal override IPickableTrainingList<GetQuestionsForTrainingResult> GetPickerForBasicList(IEnumerable<SkorpFiles.Memorizer.Api.Models.Abstract.Entity> entitiesHaveBeenAlreadyChosen)
         {
-            return new WeightedRandomSamplingPicker<GetQuestionsForTrainingResult>(BasicQuestionsList, x => x.QuestionUserRating ?? Restrictions.InitialQuestionRating, Random);
+            const double alpha = 10;
+            return new WeightedRandomSamplingPicker<GetQuestionsForTrainingResult>(BasicQuestionsList, x => x.QuestionUserRating ?? Restrictions.InitialQuestionRating, Random, alpha);
         }
     }
 }
