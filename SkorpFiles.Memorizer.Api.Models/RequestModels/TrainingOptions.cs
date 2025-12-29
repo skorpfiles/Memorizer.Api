@@ -13,5 +13,6 @@ namespace SkorpFiles.Memorizer.Api.Models.RequestModels
         public int LengthValue { get; set; } //for time - seconds
         public double NewQuestionsFraction {  get; set; }
         public double PrioritizedPenaltyQuestionsFraction {  get; set; }
+        public MakingTrainingListStrategies MakingTrainingListStrategy { get; set; }
     }
 }

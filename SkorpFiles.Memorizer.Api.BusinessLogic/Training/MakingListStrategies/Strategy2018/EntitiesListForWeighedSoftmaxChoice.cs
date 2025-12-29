@@ -1,9 +1,9 @@
 ﻿using SkorpFiles.Memorizer.Api.Models;
 using System.Collections;
 
-namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
+namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies.Strategy2018
 {
-    internal class EntitiesListForWeighedSoftmaxChoice : IPickableTrainingList<GetQuestionsForTrainingResult>, IEnumerable<GetQuestionsForTrainingResult>
+    internal class EntitiesListForWeighedSoftmaxChoice : IPickableTrainingList<GetQuestionsForTrainingResult>, IEditableListWithId<GetQuestionsForTrainingResult, Guid>, IEnumerable<GetQuestionsForTrainingResult>
     {
         private readonly Dictionary<Guid, GetQuestionsForTrainingResult> _existingEntities = new();
         private static readonly DateTime _minimumMeaningfulTimeForWeightCalculation = new(2020, 1, 1);

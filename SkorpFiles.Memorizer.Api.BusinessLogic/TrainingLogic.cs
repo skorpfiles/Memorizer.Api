@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
-using SkorpFiles.Memorizer.Api.BusinessLogic.Training;
+using SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies;
+using SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies.Strategy2018;
+using SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies.WeightedRandomSamplingStrategy;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
@@ -23,8 +25,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 throw new IncorrectTrainingOptionsException(Constants.NonPositiveLengthValueMessage);
 
             var allQuestions = (await trainingRepository.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ToList();
-            var questionsListsCollection = new TrainingBuilder(allQuestions);
-            var questionsList = questionsListsCollection.MakeQuestionsListForTraining(options, mapper);
+            var questionsList = InitializeStrategy(options.MakingTrainingListStrategy, allQuestions).MakeQuestionsListForTraining(options, mapper);
 
             foreach(var question in questionsList)
             {
@@ -65,6 +66,16 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             await trainingRepository.UpdateQuestionStatusAsync(currentUserQuestionStatus, trainingResult, CreateNewQuestionStatus());
 
             return currentUserQuestionStatus;
+        }
+
+        private static IMakingListStrategy InitializeStrategy(MakingTrainingListStrategies strategy, IEnumerable<GetQuestionsForTrainingResult> initialList)
+        {
+            return strategy switch
+            {
+                MakingTrainingListStrategies.Strategy2018 => new Strategy2018(initialList),
+                MakingTrainingListStrategies.WeightedRandomSampling => new WeightedRandomSamplingStrategy(initialList),
+                _ => new WeightedRandomSamplingStrategy(initialList),
+            };
         }
 
         private static UserQuestionStatus CreateNewUserQuestionStatus(Guid userId, Guid questionId)

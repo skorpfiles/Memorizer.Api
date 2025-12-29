@@ -1,7 +1,7 @@
 ﻿using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Utils;
 
-namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
+namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies.Strategy2018
 {
     internal class RatingTape:IPickableTrainingList<GetQuestionsForTrainingResult>
     {
