@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training
+namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies.Strategy2018
 {
     internal class RatingComponent(int coordinate, int length) : EntitiesListForWeighedSoftmaxChoice
     {
