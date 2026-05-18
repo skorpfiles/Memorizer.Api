@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
@@ -39,10 +40,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             var opt = new DbContextOptionsBuilder<ApplicationDbContext>();
             opt.UseSqlServer(configuration["DatabaseConnectionString"]);
 
-            var mapperConfig = new MapperConfiguration(mc =>
-            {
-                mc.AddProfile(new DataAccessMappingProfile());
-            });
+            var mapperExpression = new MapperConfigurationExpression();
+            mapperExpression.AddProfile(new DataAccessMappingProfile());
+            var mapperConfig = new MapperConfiguration(mapperExpression, NullLoggerFactory.Instance);
 
             Mapper = mapperConfig.CreateMapper();
 

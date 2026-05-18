@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SkorpFiles.Memorizer.Api.Web.Authorization;
@@ -103,15 +104,13 @@ builder.Services.ConfigureApplicationCookie(options => {
 
 builder.Services.AddScoped<IAuthorizationMiddlewareResultHandler, AuthorizationWithCheckTokenMiddlewareResultHandler>();
 
-var mapperConfig = new MapperConfiguration(mc =>
-{
-    mc.AddProfile(new RequestsMappingProfile());
-    mc.AddProfile(new ResponsesMappingProfile());
-    mc.AddProfile(new ApiEntitiesMappingProfile());
-
-    mc.AddProfile(new DataAccessMappingProfile());
-    mc.AddProfile(new BusinessLogicMappingProfile());
-});
+var mapperExpression = new MapperConfigurationExpression();
+mapperExpression.AddProfile(new RequestsMappingProfile());
+mapperExpression.AddProfile(new ResponsesMappingProfile());
+mapperExpression.AddProfile(new ApiEntitiesMappingProfile());
+mapperExpression.AddProfile(new DataAccessMappingProfile());
+mapperExpression.AddProfile(new BusinessLogicMappingProfile());
+var mapperConfig = new MapperConfiguration(mapperExpression, NullLoggerFactory.Instance);
 
 IMapper mapper = mapperConfig.CreateMapper();
 builder.Services.AddScoped(services => mapperConfig.CreateMapper());
