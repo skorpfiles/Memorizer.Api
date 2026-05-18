@@ -1,5 +1,6 @@
 using AutoMapper;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using SkorpFiles.Memorizer.Api.BusinessLogic.Extensions;
 using SkorpFiles.Memorizer.Api.BusinessLogic.Mapping;
@@ -20,10 +21,9 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
         public TrainingLogicUnitTests()
         {
-            var mapperConfig = new MapperConfiguration(mc =>
-            {
-                mc.AddProfile(new BusinessLogicMappingProfile());
-            });
+            var mapperExpression = new MapperConfigurationExpression();
+            mapperExpression.AddProfile(new BusinessLogicMappingProfile());
+            var mapperConfig = new MapperConfiguration(mapperExpression, NullLoggerFactory.Instance);
 
             Mapper = mapperConfig.CreateMapper();
         }
