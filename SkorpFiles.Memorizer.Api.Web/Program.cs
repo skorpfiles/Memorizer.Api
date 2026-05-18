@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using SkorpFiles.Memorizer.Api.Web.Authorization;
 using SkorpFiles.Memorizer.Api.BusinessLogic.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess;
@@ -13,6 +14,7 @@ using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using System.Text;
 using SkorpFiles.Memorizer.Api.BusinessLogic.Mapping;
+using SkorpFiles.Memorizer.Api.Web.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +24,19 @@ builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter the JWT access token from POST /Account/Token response."
+    });
+    options.OperationFilter<AuthorizeOperationFilter>();
+});
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(
         options =>
