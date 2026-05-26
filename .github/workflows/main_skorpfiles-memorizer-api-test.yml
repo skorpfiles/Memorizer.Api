@@ -68,9 +68,8 @@ jobs:
           package: .
 
       - name: Update Azure Database
-        uses: Azure/sql-action@v1
+        uses: Azure/sql-action@v2
         with:
-          server-name: ${{ secrets.DATABASE_SERVER_NAME_MAIN }}
           connection-string: ${{ secrets.DATABASE_CONNECTION_STRING_MAIN }}
-          sql-file: ${{github.workspace}}/update-database.sql
+          path: ${{github.workspace}}/update-database.sql
 
