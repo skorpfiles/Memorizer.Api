@@ -15,7 +15,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public string QuestionnaireName { get; set; } = null!;
         public Availability QuestionnaireAvailability { get; set; }
         public string OwnerId { get; set; } = null!;
-
+        [Column("QuestionnaireLastEditingTime")]
+        public DateTime QuestionnaireLastEditingTimeUtc { get; set; }
         public List<EntityLabel>? LabelsForQuestionnaire { get; set; }
         public List<Question>? Questions { get; set; }
 

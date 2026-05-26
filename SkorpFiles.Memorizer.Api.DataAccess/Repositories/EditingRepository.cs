@@ -432,6 +432,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                             throw new ObjectNotFoundException("One of the deleted questions doesn't exist.");
                     }
                 }
+
+                if (request.CreatedQuestions != null || request.UpdatedQuestions != null || request.DeletedQuestions != null)
+                    questionnaireResult.QuestionnaireLastEditingTimeUtc = DateTime.UtcNow;
+
                 await DbContext.SaveChangesAsync();
             }
         }
@@ -456,6 +460,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 QuestionnaireName = request.Name,
                 OwnerId = userId.ToAspNetUserIdString()!,
                 QuestionnaireAvailability = request.Availability!.Value,
+                QuestionnaireLastEditingTimeUtc = DateTime.UtcNow,
                 ObjectCreationTimeUtc = DateTime.UtcNow,
                 ObjectIsRemoved = false
             };
@@ -535,7 +540,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             }
 
             if (changed)
+            {
+                questionnaireResult.QuestionnaireLastEditingTimeUtc = DateTime.UtcNow;
                 await DbContext.SaveChangesAsync();
+            }
 
             return _mapper.Map<Api.Models.Questionnaire>(questionnaireResult);
         }
