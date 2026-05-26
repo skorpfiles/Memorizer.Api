@@ -90,6 +90,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                         case SortDirection.Descending: foundQuestionnaires = foundQuestionnaires.OrderByDescending(p => p.Owner!.UserName); break;
                     }
                     break;
+                case QuestionnaireSortField.EditingTime:
+                    switch (request.SortDirection)
+                    {
+                        case SortDirection.Ascending: foundQuestionnaires = foundQuestionnaires.OrderBy(p => p.QuestionnaireLastEditingTimeUtc); break;
+                        case SortDirection.Descending: foundQuestionnaires = foundQuestionnaires.OrderByDescending(p => p.QuestionnaireLastEditingTimeUtc); break;
+                    }
+                    break;
             }
 
             var totalCount = await foundQuestionnaires.CountAsync();
@@ -97,6 +104,31 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             foundQuestionnaires = foundQuestionnaires.Page(request.PageNumber, request.PageSize);
 
             var foundGroups = GetQuestionnairesAndCountsOfQuestionsQuery(foundQuestionnaires, userIdString);
+
+            switch (request.SortField)
+            {
+                case QuestionnaireSortField.Name:
+                    switch (request.SortDirection)
+                    {
+                        case SortDirection.Ascending: foundGroups = foundGroups.OrderBy(p => p.Questionnaire.QuestionnaireName); break;
+                        case SortDirection.Descending: foundGroups = foundGroups.OrderByDescending(p => p.Questionnaire.QuestionnaireName); break;
+                    }
+                    break;
+                case QuestionnaireSortField.OwnerName:
+                    switch (request.SortDirection)
+                    {
+                        case SortDirection.Ascending: foundGroups = foundGroups.OrderBy(p => p.Questionnaire.Owner!.UserName); break;
+                        case SortDirection.Descending: foundGroups = foundGroups.OrderByDescending(p => p.Questionnaire.Owner!.UserName); break;
+                    }
+                    break;
+                case QuestionnaireSortField.EditingTime:
+                    switch (request.SortDirection)
+                    {
+                        case SortDirection.Ascending: foundGroups = foundGroups.OrderBy(p => p.Questionnaire.QuestionnaireLastEditingTimeUtc); break;
+                        case SortDirection.Descending: foundGroups = foundGroups.OrderByDescending(p => p.Questionnaire.QuestionnaireLastEditingTimeUtc); break;
+                    }
+                    break;
+            }
 
             var foundGroupsResult = await foundGroups.ToListAsync();
 
@@ -116,7 +148,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 resultList.Add(questionnaire);
             }
 
-            return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(resultList.OrderBy(q => q.Name), totalCount, request.PageNumber, request.PageSize);
+            return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(resultList, totalCount, request.PageNumber, request.PageSize);
         }
 
         public async Task<Api.Models.Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime)
