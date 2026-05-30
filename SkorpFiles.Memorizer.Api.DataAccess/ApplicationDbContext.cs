@@ -18,7 +18,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
         public DbSet<Question> Questions => Set<Question>();
         public DbSet<QuestionUser> QuestionsUsers => Set<QuestionUser>();
         public DbSet<Label> Labels => Set<Label>();
-        public DbSet<EntityLabel> EntitiesLabels => Set<EntityLabel>();
+        public DbSet<QuestionLabel> QuestionsLabels => Set<QuestionLabel>();
         public DbSet<TypedAnswer> TypedAnswers => Set<TypedAnswer>();
         public DbSet<Training> Trainings => Set<Training>();
         public DbSet<TrainingQuestionnaire> TrainingsQuestionnaires => Set<TrainingQuestionnaire>();

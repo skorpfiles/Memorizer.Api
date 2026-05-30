@@ -28,30 +28,30 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 where !questionnaire.ObjectIsRemoved
                 select questionnaire;
 
-            if (request.LabelsNames != null && request.LabelsNames.Any())
-            {
-                var labelsIds =
-                    from label in DbContext.Labels
-                    where !label.ObjectIsRemoved && request.LabelsNames.Contains(label.LabelName)
-                    select label.LabelId;
+            //if (request.LabelsNames != null && request.LabelsNames.Any())
+            //{
+            //    var labelsIds =
+            //        from label in DbContext.Labels
+            //        where !label.ObjectIsRemoved && request.LabelsNames.Contains(label.LabelName)
+            //        select label.LabelId;
 
-                var entityLabels =
-                    from entityLabel in DbContext.EntitiesLabels
-                    where labelsIds.Contains(entityLabel.LabelId)
-                    select entityLabel;
+            //    var entityLabels =
+            //        from entityLabel in DbContext.EntitiesLabels
+            //        where labelsIds.Contains(entityLabel.LabelId)
+            //        select entityLabel;
 
-                var questionnaireIds =
-                    from entityLabel in entityLabels
-                    group entityLabel by entityLabel.QuestionnaireId into grouped
-                    where grouped.Count() >= request.LabelsNames.Count()
-                    select grouped.Key;
+            //    var questionnaireIds =
+            //        from entityLabel in entityLabels
+            //        group entityLabel by entityLabel.QuestionnaireId into grouped
+            //        where grouped.Count() >= request.LabelsNames.Count()
+            //        select grouped.Key;
 
-                foundQuestionnaires =
-                    from questionnaire in foundQuestionnaires
-                    where
-                        questionnaireIds.Contains(questionnaire.QuestionnaireId)
-                    select questionnaire;
-            }
+            //    foundQuestionnaires =
+            //        from questionnaire in foundQuestionnaires
+            //        where
+            //            questionnaireIds.Contains(questionnaire.QuestionnaireId)
+            //        select questionnaire;
+            //}
 
             foundQuestionnaires =
                 from questionnaire in foundQuestionnaires
@@ -140,11 +140,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             foreach (var group in foundGroupsResult)
             {
-                if (group.Questionnaire.LabelsForQuestionnaire != null)
-                    group.Questionnaire.LabelsForQuestionnaire = [.. group.Questionnaire.LabelsForQuestionnaire.OrderBy(l => l.LabelNumber)];
-
                 var questionnaire = MapQuestionnaireWithCounts(group, questionnairesWithRelations ?? []);
-
                 resultList.Add(questionnaire);
             }
 
@@ -210,7 +206,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     select label.LabelId;
 
                 var entityLabels =
-                    from entityLabel in DbContext.EntitiesLabels
+                    from entityLabel in DbContext.QuestionsLabels
                     where labelsIds.Contains(entityLabel.LabelId)
                     select entityLabel;
 
@@ -261,9 +257,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             {
                 if (questionnaire?.Question.TypedAnswers != null)
                     questionnaire.Question.TypedAnswers = questionnaire.Question.TypedAnswers.Where(a => !a.ObjectIsRemoved).ToList();
-
-                if (questionnaire?.Question.LabelsForQuestion != null)
-                    questionnaire.Question.LabelsForQuestion = [.. questionnaire.Question.LabelsForQuestion.OrderBy(l => l.LabelNumber)];
             }
 
             var foundQuestions = foundQuestionsAndStatusesResult.Select(questionAndStatus =>
@@ -342,15 +335,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
                         if (question.LabelsIds!=null)
                         {
-                            IEnumerable<EntityLabel>? entitiesLabelsToAdd = null;
-                            entitiesLabelsToAdd = question.LabelsIds.Select(id => new EntityLabel
+                            IEnumerable<QuestionLabel>? entitiesLabelsToAdd = null;
+                            entitiesLabelsToAdd = question.LabelsIds.Select(id => new QuestionLabel
                             {
                                 QuestionId = addedQuestion.Entity.QuestionId,
                                 LabelId = id,
-                                EntityType = Enums.EntityType.Question,
                                 ObjectCreationTimeUtc = DateTime.UtcNow
                             });
-                            DbContext.EntitiesLabels.AddRange(entitiesLabelsToAdd);
+                            DbContext.QuestionsLabels.AddRange(entitiesLabelsToAdd);
                         }
 
                         if (question.TypedAnswers!=null)
@@ -391,16 +383,15 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                             var labelsToDelete = currentLabelsIds.Where(l => !newLabelsIds.Contains(l)).ToList();
 
                             var entitiesLabelsToDelete =
-                                from entityLabel in DbContext.EntitiesLabels
+                                from entityLabel in DbContext.QuestionsLabels
                                 where labelsToDelete.Contains(entityLabel.LabelId) &&
                                     entityLabel.QuestionId == questionFromDb.QuestionId
                                 select entityLabel;
 
-                            DbContext.EntitiesLabels.RemoveRange(entitiesLabelsToDelete);
+                            DbContext.QuestionsLabels.RemoveRange(entitiesLabelsToDelete);
 
-                            DbContext.EntitiesLabels.AddRange(labelsToAdd.Select(l => new Models.EntityLabel
+                            DbContext.QuestionsLabels.AddRange(labelsToAdd.Select(l => new Models.QuestionLabel
                             {
-                                EntityType = Enums.EntityType.Question,
                                 LabelId = l,
                                 QuestionId = questionFromDb.QuestionId,
                                 ObjectCreationTimeUtc = DateTime.UtcNow
@@ -482,10 +473,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (userId == Guid.Empty)
                 throw new ArgumentException($"{userId} cannot be empty.");
 
-            var labelsList = request.Labels?.ToList();
+            //var labelsList = request.Labels?.ToList();
 
-            if (labelsList!=null)
-                await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsList.Select(l=>l.Id).ToList());
+            //if (labelsList!=null)
+            //    await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsList.Select(l=>l.Id).ToList());
 
             Models.Questionnaire newQuestionnaire = new()
             {
@@ -498,20 +489,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             };
 
             var questionnaireEntry = DbContext.Questionnaires.Add(newQuestionnaire);
-
-            if (labelsList != null)
-                foreach(var label in labelsList)
-                {
-                    DbContext.EntitiesLabels.Add(new Models.EntityLabel
-                    {
-                        EntityType = Enums.EntityType.Questionnaire,
-                        QuestionnaireId = questionnaireEntry.Entity.QuestionnaireId,
-                        LabelId = label.Id,
-                        LabelNumber = label.Number,
-                        ParentLabelId = label.ParentLabelId,
-                        ObjectCreationTimeUtc = DateTime.UtcNow,
-                    });
-                }
 
             await DbContext.SaveChangesAsync();
 
@@ -542,34 +519,34 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 changed = true;
             }
 
-            if (request.Labels != null)
-            {
-                var currentLabelsIds = questionnaireResult.LabelsForQuestionnaire!.Select(l => l.LabelId).ToList();
-                var newLabelsIds = request.Labels!.Select(l=>l.Id).ToList();
-                var labelsToAdd = newLabelsIds.Where(l => !currentLabelsIds.Contains(l)).ToList();
+            //if (request.Labels != null)
+            //{
+            //    var currentLabelsIds = questionnaireResult.LabelsForQuestionnaire!.Select(l => l.LabelId).ToList();
+            //    var newLabelsIds = request.Labels!.Select(l=>l.Id).ToList();
+            //    var labelsToAdd = newLabelsIds.Where(l => !currentLabelsIds.Contains(l)).ToList();
 
-                await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsToAdd);
+            //    await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsToAdd);
 
-                var labelsToDelete = currentLabelsIds.Where(l => !newLabelsIds.Contains(l)).ToList();
+            //    var labelsToDelete = currentLabelsIds.Where(l => !newLabelsIds.Contains(l)).ToList();
 
-                var entitiesLabelsToDelete =
-                    from entityLabel in DbContext.EntitiesLabels
-                    where labelsToDelete.Contains(entityLabel.LabelId) &&
-                        entityLabel.QuestionnaireId == questionnaireResult.QuestionnaireId
-                    select entityLabel;
+            //    var entitiesLabelsToDelete =
+            //        from entityLabel in DbContext.QuestionsLabels
+            //        where labelsToDelete.Contains(entityLabel.LabelId) &&
+            //            entityLabel.QuestionnaireId == questionnaireResult.QuestionnaireId
+            //        select entityLabel;
 
-                DbContext.EntitiesLabels.RemoveRange(entitiesLabelsToDelete);
+            //    DbContext.QuestionsLabels.RemoveRange(entitiesLabelsToDelete);
 
-                DbContext.EntitiesLabels.AddRange(labelsToAdd.Select(l => new Models.EntityLabel
-                {
-                    EntityType = Enums.EntityType.Questionnaire,
-                    LabelId = l,
-                    QuestionnaireId = questionnaireResult.QuestionnaireId,
-                    ObjectCreationTimeUtc = DateTime.UtcNow
-                }));
+            //    DbContext.QuestionsLabels.AddRange(labelsToAdd.Select(l => new Models.QuestionLabel
+            //    {
+            //        EntityType = Enums.EntityType.Questionnaire,
+            //        LabelId = l,
+            //        QuestionnaireId = questionnaireResult.QuestionnaireId,
+            //        ObjectCreationTimeUtc = DateTime.UtcNow
+            //    }));
 
-                changed = true;
-            }
+            //    changed = true;
+            //}
 
             if (changed)
             {
@@ -944,8 +921,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         private IQueryable<Models.Questionnaire> GetBasicQuestionnaireQuery(Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             return from questionnaire in DbContext.Questionnaires
-                       .Include(q => q.LabelsForQuestionnaire!)
-                       .ThenInclude(el => el.Label)
                    where
                        !questionnaire.ObjectIsRemoved &&
                        (questionnaire.QuestionnaireId == questionnaireId || questionnaire.QuestionnaireCode == questionnaireCode)

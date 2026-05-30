@@ -11,6 +11,6 @@ namespace SkorpFiles.Memorizer.Api.Models
     {
         public string? Name { get; set; }
         public Guid? OwnerId { get; set; }
-        public LabelInQuestionnaire? StatusInQuestionnaire { get; set; }
+        //public LabelInQuestionnaire? StatusInQuestionnaire { get; set; }
     }
 }

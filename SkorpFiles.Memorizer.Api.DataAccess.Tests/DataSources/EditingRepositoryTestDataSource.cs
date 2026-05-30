@@ -1,6 +1,5 @@
 ﻿using Bogus;
 using Bogus.Extensions;
-using SkorpFiles.Memorizer.Api.DataAccess.Enums;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
@@ -41,20 +40,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.DataSources
                     .RuleFor(q=>q.ObjectCreationTimeUtc,DateTime.UtcNow)
                     .RuleFor(q=>q.QuestionUntypedAnswer,f=>f.Lorem.Text().ClampLength(1,Restrictions.QuestionUntypedAnswerMaxLength))
                     .GenerateBetween(0, 100);
-                questionnaire.LabelsForQuestionnaire = new Faker<EntityLabel>()
-                    .RuleFor(el => el.LabelNumber, f => f.IndexFaker)
-                    .RuleFor(el=>el.EntityType,EntityType.Questionnaire)
-                    .RuleFor(el=>el.ObjectCreationTimeUtc,DateTime.UtcNow)
-                    .GenerateBetween(0, 10);
-                foreach (var entityLabel in questionnaire.LabelsForQuestionnaire)
-                {
-                    entityLabel.LabelId = Guid.NewGuid();
-                    entityLabel.Label = new Faker<Label>()
-                        .RuleFor(l => l.LabelName, f => f.Lorem.Word().ClampLength(1, Restrictions.LabelNameMaxLength))
-                        .RuleFor(l => l.ObjectCreationTimeUtc, DateTime.UtcNow)
-                        .RuleFor(l=>l.OwnerId, Constants.DefaultUserId.ToAspNetUserIdString())
-                        .Generate();
-                }
 
                 yield return new object[]
                 {

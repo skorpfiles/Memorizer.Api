@@ -1,5 +1,4 @@
-﻿using SkorpFiles.Memorizer.Api.DataAccess.Enums;
-using SkorpFiles.Memorizer.Api.DataAccess.Models.Abstract;
+﻿using SkorpFiles.Memorizer.Api.DataAccess.Models.Abstract;
 using SkorpFiles.Memorizer.Api.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -21,7 +20,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public Guid QuestionnaireId { get; set; }
         public int QuestionQuestionnaireCode { get; set; }
 
-        public List<EntityLabel>? LabelsForQuestion { get; set; }
+        public List<QuestionLabel>? LabelsForQuestion { get; set; }
         public Questionnaire? Questionnaire { get; set; }
         public List<QuestionUser>? UsersForQuestion { get; set; }
         public List<TypedAnswer>? TypedAnswers { get; set; }
