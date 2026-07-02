@@ -1,6 +1,4 @@
-using AutoMapper;
 using FluentAssertions;
-using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using SkorpFiles.Memorizer.Api.BusinessLogic.Extensions;
 using SkorpFiles.Memorizer.Api.BusinessLogic.Mapping;
@@ -17,23 +15,12 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
     [TestClass]
     public class TrainingLogicUnitTests
     {
-        protected IMapper Mapper { get; private set; }
-
-        public TrainingLogicUnitTests()
-        {
-            var mapperExpression = new MapperConfigurationExpression();
-            mapperExpression.AddProfile(new BusinessLogicMappingProfile());
-            var mapperConfig = new MapperConfiguration(mapperExpression, NullLoggerFactory.Instance);
-
-            Mapper = mapperConfig.CreateMapper();
-        }
-
         [TestMethod]
         [DynamicData(nameof(TrainingLogicTestDataSource.SelectQuestionsForTrainingAsync_IncorrectOptions_IncorrectTrainingOptionsException), typeof(TrainingLogicTestDataSource))]
         public async Task SelectQuestionsForTrainingAsync_IncorrectOptions_IncorrectTrainingOptionsException(Guid userId, IEnumerable<Guid> questionnairesIds, double newQuestionsFraction, double prioritizedPenaltyQuestionsFraction, int lengthValue, string expectedErrorMessage)
         {
             //Arrange
-            var trainingLogic = new TrainingLogic(new Mock<ITrainingRepository>().Object, Mapper);
+            var trainingLogic = new TrainingLogic(new Mock<ITrainingRepository>().Object);
             var trainingOptions = new Mock<TrainingOptions>().Object;
             trainingOptions.NewQuestionsFraction = newQuestionsFraction;
             trainingOptions.PrioritizedPenaltyQuestionsFraction = prioritizedPenaltyQuestionsFraction;
@@ -51,7 +38,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         public async Task SelectQuestionsForTrainingAsync_CorrectOptions_NoExceptions(Guid userId, IEnumerable<Guid> questionnairesIds, double newQuestionsFraction, double prioritizedPenaltyQuestionsFraction, int lengthValue)
         {
             //Arrange
-            var trainingLogic = new TrainingLogic(new Mock<ITrainingRepository>().Object, Mapper);
+            var trainingLogic = new TrainingLogic(new Mock<ITrainingRepository>().Object);
             var trainingOptions = new Mock<TrainingOptions>().Object;
             trainingOptions.NewQuestionsFraction = newQuestionsFraction;
             trainingOptions.PrioritizedPenaltyQuestionsFraction = prioritizedPenaltyQuestionsFraction;
@@ -72,7 +59,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
             trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(new List<GetQuestionsForTrainingResult>());
 
-            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object, Mapper);
+            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
             var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, new TrainingOptions
@@ -95,7 +82,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
             trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(allQuestions);
 
-            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object, Mapper);
+            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             var trainingOptions = new TrainingOptions
             {
@@ -120,7 +107,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
             trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(allQuestions);
 
-            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object, Mapper);
+            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
             var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
@@ -167,7 +154,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
             trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(allQuestions);
 
-            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object, Mapper);
+            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
             var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
@@ -223,7 +210,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                 var actualNewQuestions = actualResult.Where(q=>q.MyStatus!.IsNew).ToList();
                 if (expectedNewQuestions.Count != 0)
                 {
-                    actualNewQuestions.Should().BeEquivalentTo(Mapper.Map<List<ExistingQuestion>>(expectedNewQuestions));
+                    actualNewQuestions.Should().BeEquivalentTo(expectedNewQuestions.MapTo<List<ExistingQuestion>>());
                 }
                 else
                 {
@@ -239,7 +226,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
             trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(allQuestions);
 
-            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object, Mapper);
+            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
             var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, new TrainingOptions { LengthType = lengthType, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
@@ -284,7 +271,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
 
                 if (expectedPenaltyQuestions.Count != 0)
                 {
-                    actualPenaltyQuestions.Should().BeEquivalentTo(Mapper.Map<List<ExistingQuestion>>(expectedPenaltyQuestions));
+                    actualPenaltyQuestions.Should().BeEquivalentTo(expectedPenaltyQuestions.MapTo<List<ExistingQuestion>>());
                 }
                 else
                 {
@@ -302,7 +289,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
             trainingRepositoryMock.Setup(x => x.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ReturnsAsync(allQuestions);
 
-            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object, Mapper);
+            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
             var actualResult = await trainingLogic.SelectQuestionsForTrainingAsync(userId, questionnairesIds, new TrainingOptions { LengthType = TrainingLengthType.Time, LengthValue = lengthValue, NewQuestionsFraction = newQuestionsFraction, PrioritizedPenaltyQuestionsFraction = penaltyQuestionsFraction }).ConfigureAwait(false);
@@ -325,7 +312,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
                 new UserQuestionStatus { QuestionId = questionId, UserId = userId, IsNew = sourceIsNewStatus, Rating = sourceRating, PenaltyPoints = sourcePenaltyPoints } :
                 null);
 
-            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object, Mapper);
+            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
             var actualResult = await trainingLogic.UpdateQuestionStatusAsync(userId, new TrainingResult { IsAnswerCorrect = isAnswerCorrect, QuestionId = questionId, AnswerTimeMilliseconds = answerTimeMilliseconds }).ConfigureAwait(false);
@@ -343,7 +330,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Tests
         {
             //Arrange
             var trainingRepositoryMock = new Mock<ITrainingRepository>();
-            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object, Mapper);
+            var trainingLogic = new TrainingLogic(trainingRepositoryMock.Object);
 
             //Act
             Func<Task> act = async () => await trainingLogic.UpdateQuestionStatusAsync(userId, request).ConfigureAwait(false);

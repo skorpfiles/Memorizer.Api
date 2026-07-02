@@ -1,5 +1,5 @@
-﻿using AutoMapper;
-using SkorpFiles.Memorizer.Api.BusinessLogic.Extensions;
+﻿using SkorpFiles.Memorizer.Api.BusinessLogic.Extensions;
+using SkorpFiles.Memorizer.Api.BusinessLogic.Mapping;
 using SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies.Strategy2018;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Abstract;
@@ -51,7 +51,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies
             }
         }
 
-        public List<ExistingQuestion> MakeQuestionsListForTraining(TrainingOptions options, IMapper mapper)
+        public List<ExistingQuestion> MakeQuestionsListForTraining(TrainingOptions options)
         {
             if (options.NewQuestionsFraction < 0 || options.PrioritizedPenaltyQuestionsFraction < 0)
                 throw new IncorrectTrainingOptionsException(Constants.NegativeFractionsMessage);
@@ -68,11 +68,11 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies
             double expectedLengthForPrioritizedPenaltyQuestionsList = options.LengthValue * options.PrioritizedPenaltyQuestionsFraction;
 
             //create new questions list
-            result.AddRange(mapper.Map<List<ExistingQuestion>>(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForNewQuestionList, Random, out int resultNewLength).Values));
+            result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForNewQuestionList, Random, out int resultNewLength).Values.MapTo<List<ExistingQuestion>>());
             //create penalty questions list
             var selectedPenaltyQuestions = GetSelectedQuestionsFromGeneralList(PrioritizedPenaltyQuestionsList, options.LengthType, expectedLengthForPrioritizedPenaltyQuestionsList, Random, out int resultPenaltyLength);
             BasicQuestionsList.RemoveAll(q => selectedPenaltyQuestions.ContainsKey(q.Id!.Value));
-            result.AddRange(mapper.Map<List<ExistingQuestion>>(selectedPenaltyQuestions.Values));
+            result.AddRange(selectedPenaltyQuestions.Values.MapTo<List<ExistingQuestion>>());
 
             //basic list
             int expectedLengthForBasicQuestionList = options.LengthValue - resultNewLength - resultPenaltyLength;
@@ -82,25 +82,25 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies
 
                 Dictionary<Guid, GetQuestionsForTrainingResult> questionsSelectedFromRatingTape = GetSelectedQuestionsFromGeneralList(pickerForBasicList, options.LengthType, expectedLengthForBasicQuestionList, Random, out int resultBasicLength);
                 BasicQuestionsList.RemoveAll(q => questionsSelectedFromRatingTape.ContainsKey(q.Id!.Value));
-                result.AddRange(mapper.Map<List<ExistingQuestion>>(questionsSelectedFromRatingTape.Values));
+                result.AddRange(questionsSelectedFromRatingTape.Values.MapTo<List<ExistingQuestion>>());
 
                 //if there is lack of questions, add from new ones
                 int expectedLengthForAdditionalNewQuestionList = expectedLengthForBasicQuestionList - resultBasicLength;
                 if (expectedLengthForAdditionalNewQuestionList > expectedLengthForAdditionalNewQuestionList * Constants.AllowableErrorFraction)
                 {
-                    result.AddRange(mapper.Map<List<ExistingQuestion>>(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForAdditionalNewQuestionList, Random, out int resultAdditionalNewLength).Values));
+                    result.AddRange(GetSelectedQuestionsFromGeneralList(NewQuestionsList, options.LengthType, expectedLengthForAdditionalNewQuestionList, Random, out int resultAdditionalNewLength).Values.MapTo<List<ExistingQuestion>>());
 
                     //if there is lack of questions after all selections, search for questions to fill 
                     if (options.LengthType == Models.Enums.TrainingLengthType.Time && options.LengthValue - options.LengthValue * Constants.AllowableErrorFraction > resultNewLength + resultPenaltyLength + resultBasicLength + resultAdditionalNewLength)
                     {
                         List<GetQuestionsForTrainingResult> remainingQuestions = [.. NewQuestionsList.ToList(), .. BasicQuestionsList.ToList()];
 
-                        result.AddRange(mapper.Map<List<ExistingQuestion>>(Utils.FindBestQuestionsTimesCombination(remainingQuestions, options.LengthValue)));
+                        result.AddRange(Utils.FindBestQuestionsTimesCombination(remainingQuestions, options.LengthValue).MapTo<List<ExistingQuestion>>());
 
                         //if the list is empty, add one the cheapest question
                         if (result.Count == 0 && remainingQuestions.Count != 0)
                         {
-                            result.Add(mapper.Map<ExistingQuestion>(GetQuestionWithMinimalCost(remainingQuestions))!);
+                            result.Add(GetQuestionWithMinimalCost(remainingQuestions)!.MapTo<ExistingQuestion>());
                         }
                     }
                 }

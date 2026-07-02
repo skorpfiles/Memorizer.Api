@@ -1,7 +1,7 @@
-﻿using AutoMapper;
-using Azure.Core;
+﻿using Azure.Core;
 using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
+using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
@@ -11,10 +11,8 @@ using SkorpFiles.Memorizer.Api.Models.RequestModels;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 {
-    public class EditingRepository(ApplicationDbContext dbContext, IMapper mapper) : RepositoryBase(dbContext), IEditingRepository
+    public class EditingRepository(ApplicationDbContext dbContext) : RepositoryBase(dbContext), IEditingRepository
     {
-        private readonly IMapper _mapper = mapper;
-
         public async Task<Api.Models.PaginatedCollection<Api.Models.Questionnaire>> GetQuestionnairesAsync(Guid userId,
             GetQuestionnairesRequest request)
         {
@@ -268,8 +266,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var foundQuestions = foundQuestionsAndStatusesResult.Select(questionAndStatus =>
             {
-                var question = _mapper.Map<Api.Models.ExistingQuestion>(questionAndStatus.Question);
-                question.MyStatus = _mapper.Map<Api.Models.UserQuestionStatus>(questionAndStatus.QuestionUser);
+                var question = questionAndStatus.Question.MapTo<Api.Models.ExistingQuestion>();
+                question.MyStatus = questionAndStatus.QuestionUser.MapTo<Api.Models.UserQuestionStatus>();
                 return question;
             });
 
@@ -333,7 +331,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 {
                     foreach (var question in request.CreatedQuestions)
                     {
-                        var questionForDb = _mapper.Map<DataAccess.Models.Question>(question);
+                        var questionForDb = question.MapTo<DataAccess.Models.Question>();
                         questionForDb.QuestionId = Guid.Empty;
                         questionForDb.QuestionnaireId = questionnaireResult.QuestionnaireId;
                         questionForDb.ObjectCreationTimeUtc = DateTime.UtcNow;
@@ -516,7 +514,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             await DbContext.SaveChangesAsync();
 
             var result = questionnaireEntry.Entity;
-            return _mapper.Map<Api.Models.Questionnaire>(result);
+            return result.MapTo<Api.Models.Questionnaire>();
         }
 
         public async Task<Api.Models.Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request)
@@ -577,7 +575,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 await DbContext.SaveChangesAsync();
             }
 
-            return _mapper.Map<Api.Models.Questionnaire>(questionnaireResult);
+            return questionnaireResult.MapTo<Api.Models.Questionnaire>();
         }
 
         public async Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId) =>
@@ -611,7 +609,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 var questionUserToUpdate = questionsUsersToUpdate.SingleOrDefault(q=>q.QuestionId == requestItem.QuestionId);
                 if (questionUserToUpdate==null)
                 {
-                    questionUserToUpdate = _mapper.Map<QuestionUser>(requestItem);
+                    questionUserToUpdate = requestItem.MapTo<QuestionUser>();
                     questionUserToUpdate.UserId = userId.ToAspNetUserIdString()!;
                     questionUserToUpdate.ObjectCreationTimeUtc = DateTime.UtcNow;
                     DbContext.Add(questionUserToUpdate);
@@ -647,14 +645,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var foundLabelsResult = await foundLabels.ToListAsync();
 
-            return new Api.Models.PaginatedCollection<Api.Models.Label>(_mapper.Map<IEnumerable<Api.Models.Label>>(foundLabelsResult), totalCount, request.PageNumber, request.PageSize);
+            return new Api.Models.PaginatedCollection<Api.Models.Label>(foundLabelsResult.Select(l => l.MapTo<Api.Models.Label>()).ToList(), totalCount, request.PageNumber, request.PageSize);
         }
 
         public async Task<Api.Models.Label> GetLabelAsync(Guid userId, Guid labelId) =>
-            _mapper.Map<Api.Models.Label>(await GetLabelAsync(userId, labelId, null));
+            (await GetLabelAsync(userId, labelId, null)).MapTo<Api.Models.Label>();
 
         public async Task<Api.Models.Label> GetLabelAsync(Guid userId, int labelCode) =>
-            _mapper.Map<Api.Models.Label>(await GetLabelAsync(userId, null, labelCode));
+            (await GetLabelAsync(userId, null, labelCode)).MapTo<Api.Models.Label>();
 
         public async Task<Api.Models.Label> CreateLabelAsync(Guid userId, string labelName)
         {
@@ -676,7 +674,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             await DbContext.SaveChangesAsync();
 
             var result = labelEntry.Entity;
-            return _mapper.Map<Api.Models.Label>(result);
+            return result.MapTo<Api.Models.Label>();
         }
 
         public async Task DeleteLabelAsync(Guid userId, Guid labelId) =>
@@ -703,7 +701,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             var foundTrainingsResult = await foundTrainings.ToListAsync();
 
-            return new PaginatedCollection<Api.Models.Training>(_mapper.Map<IEnumerable<Api.Models.Training>>(foundTrainingsResult), totalCount, request.PageNumber, request.PageSize);
+            return new PaginatedCollection<Api.Models.Training>(foundTrainingsResult.Select(t => t.MapTo<Api.Models.Training>()).ToList(), totalCount, request.PageNumber, request.PageSize);
         }
 
         public async Task<Api.Models.Training> GetTrainingAsync(Guid userId, Guid trainingId, bool calculateTime)
@@ -760,7 +758,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     var mappedQuestionnaire = MapQuestionnaireWithCounts(group, questionnairesWithRelations ?? []);
                     resultQuestionnairesList.Add(mappedQuestionnaire);
                 }
-                Api.Models.Training resultTraining = _mapper.Map<Api.Models.Training>(trainingResult);
+                Api.Models.Training resultTraining = trainingResult.MapTo<Api.Models.Training>();
                 resultTraining.Questionnaires = resultQuestionnairesList;
                 return resultTraining;
             }
@@ -826,7 +824,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             await DbContext.SaveChangesAsync();
 
             var result = trainingEntry.Entity;
-            return _mapper.Map<Api.Models.Training>(result);
+            return result.MapTo<Api.Models.Training>();
         }
 
         public async Task<Api.Models.Training> UpdateTrainingAsync(Guid userId, UpdateTrainingRequest request)
@@ -920,7 +918,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (changed)
                 await DbContext.SaveChangesAsync();
 
-            return _mapper.Map<Api.Models.Training>(trainingResult);
+            return trainingResult.MapTo<Api.Models.Training>();
         }
 
         public async Task DeleteTrainingAsync(Guid userId, Guid trainingId)
@@ -993,7 +991,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             {
                 Utils.CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(groupResult.Questionnaire.OwnerId), groupResult.Questionnaire.QuestionnaireAvailability);
 
-                Api.Models.Questionnaire result = _mapper.Map<Api.Models.Questionnaire>(groupResult.Questionnaire);
+                Api.Models.Questionnaire result = groupResult.Questionnaire.MapTo<Api.Models.Questionnaire>();
                 result.CountsOfQuestions = new QuestionsCounts
                 {
                     Total = groupResult.QuestionsTotalCount,
@@ -1189,7 +1187,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
         private Api.Models.Questionnaire MapQuestionnaireWithCounts(QuestionnaireAndCountsOfQuestions questionnaireAndCountsOfQuestions, IEnumerable<Models.Questionnaire> sourceQuestionnaires)
         {
-            Api.Models.Questionnaire questionnaire = _mapper.Map<Api.Models.Questionnaire>(questionnaireAndCountsOfQuestions.Questionnaire);
+            Api.Models.Questionnaire questionnaire = questionnaireAndCountsOfQuestions.Questionnaire.MapTo<Api.Models.Questionnaire>();
             questionnaire.CountsOfQuestions = new QuestionsCounts
             {
                 Total = questionnaireAndCountsOfQuestions.QuestionsTotalCount,

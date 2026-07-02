@@ -1,20 +1,15 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SkorpFiles.Memorizer.Api.Web.Authorization;
 using SkorpFiles.Memorizer.Api.BusinessLogic.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess;
 using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
-using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
-using SkorpFiles.Memorizer.Api.Web.Mapping;
 using SkorpFiles.Memorizer.Api.Web.Authorization.TokensCache;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using System.Text;
-using SkorpFiles.Memorizer.Api.BusinessLogic.Mapping;
 using SkorpFiles.Memorizer.Api.Web.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -103,17 +98,6 @@ builder.Services.ConfigureApplicationCookie(options => {
 });
 
 builder.Services.AddScoped<IAuthorizationMiddlewareResultHandler, AuthorizationWithCheckTokenMiddlewareResultHandler>();
-
-var mapperExpression = new MapperConfigurationExpression();
-mapperExpression.AddProfile(new RequestsMappingProfile());
-mapperExpression.AddProfile(new ResponsesMappingProfile());
-mapperExpression.AddProfile(new ApiEntitiesMappingProfile());
-mapperExpression.AddProfile(new DataAccessMappingProfile());
-mapperExpression.AddProfile(new BusinessLogicMappingProfile());
-var mapperConfig = new MapperConfiguration(mapperExpression, NullLoggerFactory.Instance);
-
-IMapper mapper = mapperConfig.CreateMapper();
-builder.Services.AddScoped(services => mapperConfig.CreateMapper());
 
 builder.Logging.ClearProviders().AddApplicationInsights();
 

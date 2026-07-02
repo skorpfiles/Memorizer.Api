@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +8,7 @@ using SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
 using SkorpFiles.Memorizer.Api.Web.Controllers.Abstract;
 using SkorpFiles.Memorizer.Api.Web.Exceptions;
+using SkorpFiles.Memorizer.Api.Web.Mapping;
 using SkorpFiles.Memorizer.Api.Web.Models.ApiEntities;
 using SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository;
 using SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository.Abstract;
@@ -22,12 +22,10 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
     public class RepositoryController:ControllerWithUserInfo
     {
         private readonly IEditingLogic _editingLogic;
-        private readonly IMapper _mapper;
 
-        public RepositoryController(IEditingLogic editingLogic, UserManager<DataAccess.Models.ApplicationUser> userManager, IUserStore<DataAccess.Models.ApplicationUser> userStore, IMapper mapper):base(userManager,userStore)
+        public RepositoryController(IEditingLogic editingLogic, UserManager<DataAccess.Models.ApplicationUser> userManager, IUserStore<DataAccess.Models.ApplicationUser> userStore):base(userManager,userStore)
         {
             _editingLogic = editingLogic;
-            _mapper = mapper;
         }
 
         [Route("Questionnaires")]
@@ -39,8 +37,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             {
                 RestoreDefaultPageValues(request);
                 var userGuid = await GetCurrentUserGuidAsync();
-                var result = await _editingLogic.GetQuestionnairesAsync(userGuid, _mapper.Map<SkorpFiles.Memorizer.Api.Models.RequestModels.GetQuestionnairesRequest>(request));
-                return Ok(_mapper.Map<GetQuestionnairesResponse>(result));
+                var result = await _editingLogic.GetQuestionnairesAsync(userGuid, request.MapTo<SkorpFiles.Memorizer.Api.Models.RequestModels.GetQuestionnairesRequest>());
+                return Ok(result.MapTo<GetQuestionnairesResponse>());
             });
         }
 
@@ -52,7 +50,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             return await SwitchIdOrCodeAndExecuteActionToBusinessLogicAsync(idOrCode,
                 async (id) => await _editingLogic.GetQuestionnaireAsync(await GetCurrentUserGuidAsync(), id, calculateTime),
                 async (code) => await _editingLogic.GetQuestionnaireAsync(await GetCurrentUserGuidAsync(), code, calculateTime),
-                (businessLogicResult) => Ok(_mapper.Map<Questionnaire>(businessLogicResult)));
+                (businessLogicResult) => Ok(businessLogicResult?.MapTo<Questionnaire>()));
         }
 
         [Route("Questionnaire")]
@@ -62,7 +60,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
-                var creatingResult = await _editingLogic.CreateQuestionnaireAsync(await GetCurrentUserGuidAsync(), _mapper.Map<Api.Models.RequestModels.UpdateQuestionnaireRequest>(request));
+                var creatingResult = await _editingLogic.CreateQuestionnaireAsync(await GetCurrentUserGuidAsync(), request.MapTo<Api.Models.RequestModels.UpdateQuestionnaireRequest>());
                 if (creatingResult != null)
                     return CreatedAtRoute("GetQuestionnaire", new { idOrCode = creatingResult.Code.ToString() },
                     new IdentifiersGroupResponse
@@ -82,7 +80,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
-                await _editingLogic.UpdateQuestionnaireAsync(await GetCurrentUserGuidAsync(), _mapper.Map<Api.Models.RequestModels.UpdateQuestionnaireRequest>(request));
+                await _editingLogic.UpdateQuestionnaireAsync(await GetCurrentUserGuidAsync(), request.MapTo<Api.Models.RequestModels.UpdateQuestionnaireRequest>());
                 return Ok();
             });
         }
@@ -114,8 +112,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
                 RestoreDefaultPageValues(request);
-                var result = await _editingLogic.GetQuestionsAsync(await GetCurrentUserGuidAsync(), _mapper.Map<Api.Models.RequestModels.GetQuestionsRequest>(request));
-                return Ok(_mapper.Map<GetQuestionsResponse>(result));
+                var result = await _editingLogic.GetQuestionsAsync(await GetCurrentUserGuidAsync(), request.MapTo<Api.Models.RequestModels.GetQuestionsRequest>());
+                return Ok(result.MapTo<GetQuestionsResponse>());
             });
         }
 
@@ -126,7 +124,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         {
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
-                await _editingLogic.UpdateQuestionsAsync(await GetCurrentUserGuidAsync(), _mapper.Map<Api.Models.RequestModels.UpdateQuestionsRequest>(request));
+                await _editingLogic.UpdateQuestionsAsync(await GetCurrentUserGuidAsync(), request.MapTo<Api.Models.RequestModels.UpdateQuestionsRequest>());
                 return Ok();
             });
         }
@@ -139,7 +137,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
                 await _editingLogic.UpdateUserQuestionStatusAsync(await GetCurrentUserGuidAsync(),
-                    _mapper.Map<Api.Models.RequestModels.UpdateUserQuestionStatusesRequest>(request));
+                    request.MapTo<Api.Models.RequestModels.UpdateUserQuestionStatusesRequest>());
                 return Ok();
             });
         }
@@ -152,8 +150,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
                 var result = await _editingLogic.GetLabelsAsync(await GetCurrentUserGuidAsync(),
-                    _mapper.Map<Api.Models.RequestModels.GetLabelsRequest>(request));
-                return Ok(_mapper.Map<GetLabelsResponse>(result));
+                    request.MapTo<Api.Models.RequestModels.GetLabelsRequest>());
+                return Ok(result.MapTo<GetLabelsResponse>());
             });
         }
 
@@ -165,7 +163,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             return await SwitchIdOrCodeAndExecuteActionToBusinessLogicAsync(idOrCode,
                 async (id) => await _editingLogic.GetLabelAsync(await GetCurrentUserGuidAsync(), id),
                 async (code) => await _editingLogic.GetLabelAsync(await GetCurrentUserGuidAsync(), code),
-                (businessLogicResult) => Ok(_mapper.Map<Label>(businessLogicResult)));
+                (businessLogicResult) => Ok(businessLogicResult?.MapTo<Label>()));
         }
 
         [Route("Label")]
@@ -216,8 +214,8 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             {
                 RestoreDefaultPageValues(request);
                 var userGuid = await GetCurrentUserGuidAsync();
-                var result = await _editingLogic.GetTrainingsForUserAsync(userGuid, _mapper.Map<SkorpFiles.Memorizer.Api.Models.RequestModels.GetCollectionRequest>(request));
-                return Ok(_mapper.Map<GetTrainingsResponse>(result));
+                var result = await _editingLogic.GetTrainingsForUserAsync(userGuid, request.MapTo<SkorpFiles.Memorizer.Api.Models.RequestModels.GetCollectionRequest>());
+                return Ok(result.MapTo<GetTrainingsResponse>());
             });
         }
 
@@ -230,7 +228,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             {
                 var userGuid = await GetCurrentUserGuidAsync();
                 var result = await _editingLogic.GetTrainingAsync(userGuid, id, calculateTime);
-                return Ok(_mapper.Map<Training>(result));
+                return Ok(result.MapTo<Training>());
             });
         }
 
@@ -242,7 +240,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
                 var userGuid = await GetCurrentUserGuidAsync();
-                var result = await _editingLogic.CreateTrainingAsync(userGuid, _mapper.Map<UpdateTrainingRequest>(request));
+                var result = await _editingLogic.CreateTrainingAsync(userGuid, request.MapTo<UpdateTrainingRequest>());
                 if (result != null)
                     return CreatedAtRoute("GetTraining", new { id = result.Id.ToString() }, new { result.Id });
                 else
@@ -258,7 +256,7 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
             return await ExecuteActionToBusinessLogicAsync(async () =>
             {
                 var userGuid = await GetCurrentUserGuidAsync();
-                var result = await _editingLogic.UpdateTrainingAsync(userGuid, _mapper.Map<UpdateTrainingRequest>(request));
+                var result = await _editingLogic.UpdateTrainingAsync(userGuid, request.MapTo<UpdateTrainingRequest>());
                 if (result != null)
                     return Ok();
                 else

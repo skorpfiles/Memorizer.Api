@@ -1,7 +1,7 @@
-﻿using AutoMapper;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
+using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 {
-    public class TrainingRepository(ApplicationDbContext dbContext, IMapper mapper) : RepositoryBase(dbContext), ITrainingRepository
+    public class TrainingRepository(ApplicationDbContext dbContext) : RepositoryBase(dbContext), ITrainingRepository
     {
         public async Task<IEnumerable<GetQuestionsForTrainingResult>> GetQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds)
         {
@@ -83,7 +83,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                                where uq.UserId == userIdString &&
                                uq.QuestionId == questionId
                                select uq).SingleOrDefaultAsync();
-            return questionUser != null ? mapper.Map<UserQuestionStatus>(questionUser) : null;
+            return questionUser.MapTo<UserQuestionStatus>();
         }
 
         private async Task<bool> UpdateNonExistingQuestionStatusAndSaveChangesAsync(UserQuestionStatus newQuestionStatus, Api.Models.TrainingResult trainingResult, Api.Models.QuestionStatus defaultQuestionStatus)
@@ -96,7 +96,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             {
                 Utils.CheckQuestionnaireAvailabilityForUser(newQuestionStatus.UserId,
                     Guid.Parse(question.Questionnaire.OwnerId), question.Questionnaire.QuestionnaireAvailability);
-                var questionUser = mapper.Map<QuestionUser>(newQuestionStatus);
+                var questionUser = newQuestionStatus.MapTo<QuestionUser>();
                 questionUser.ObjectCreationTimeUtc = DateTime.UtcNow;
 
                 await DbContext.QuestionsUsers.AddAsync(questionUser);
@@ -148,7 +148,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (trainingResult.UserId == Guid.Empty)
                 throw new ArgumentException($"UserId must not be null.");
 
-            await DbContext.TrainingResults.AddAsync(mapper.Map<Models.TrainingResult>(trainingResult));
+            await DbContext.TrainingResults.AddAsync(trainingResult.MapTo<Models.TrainingResult>());
         }
     }
 }

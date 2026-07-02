@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies;
+﻿using SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies;
 using SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies.Strategy2018;
 using SkorpFiles.Memorizer.Api.BusinessLogic.Training.MakingListStrategies.WeightedRandomSamplingStrategy;
 using SkorpFiles.Memorizer.Api.Models;
@@ -11,7 +10,7 @@ using SkorpFiles.Memorizer.Api.Models.Utils;
 
 namespace SkorpFiles.Memorizer.Api.BusinessLogic
 {
-    public class TrainingLogic(ITrainingRepository trainingRepository, IMapper mapper) : ITrainingLogic
+    public class TrainingLogic(ITrainingRepository trainingRepository) : ITrainingLogic
     {
         public async Task<IEnumerable<Api.Models.ExistingQuestion>> SelectQuestionsForTrainingAsync(Guid userId, IEnumerable<Guid> questionnairesIds, TrainingOptions options)
         {
@@ -25,7 +24,7 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
                 throw new IncorrectTrainingOptionsException(Constants.NonPositiveLengthValueMessage);
 
             var allQuestions = (await trainingRepository.GetQuestionsForTrainingAsync(userId, questionnairesIds)).ToList();
-            var questionsList = InitializeStrategy(options.MakingTrainingListStrategy, allQuestions).MakeQuestionsListForTraining(options, mapper);
+            var questionsList = InitializeStrategy(options.MakingTrainingListStrategy, allQuestions).MakeQuestionsListForTraining(options);
 
             foreach(var question in questionsList)
             {

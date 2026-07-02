@@ -1,19 +1,15 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
-using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 {
     public abstract class IntegrationTestsBase : IDisposable
     {
         protected ApplicationDbContext DbContext { get; private set; }
-        protected IMapper Mapper { get; private set; }
         protected IServiceProvider ServiceProvider { get; private set; }
 
         public IntegrationTestsBase()
@@ -39,14 +35,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
             var opt = new DbContextOptionsBuilder<ApplicationDbContext>();
             opt.UseSqlServer(configuration["DatabaseConnectionString"]);
-
-            var mapperExpression = new MapperConfigurationExpression();
-            mapperExpression.AddProfile(new DataAccessMappingProfile());
-            var mapperConfig = new MapperConfiguration(mapperExpression, NullLoggerFactory.Instance);
-
-            Mapper = mapperConfig.CreateMapper();
-
-            services.AddScoped(services => mapperConfig.CreateMapper());
 
             ServiceProvider = services.BuildServiceProvider();
         }

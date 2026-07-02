@@ -33,7 +33,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
                 expectedQuestions.AddRange(questions);
             }
 
-            var trainingRepository = new TrainingRepository(DbContext, Mapper);
+            var trainingRepository = new TrainingRepository(DbContext);
 
             // Act
             var actualResults = await trainingRepository.GetQuestionsForTrainingAsync(userId, questionnairesIds);
