@@ -69,36 +69,6 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             await _editingRepository.UpdateUserQuestionStatusAsync(userId, request);
         }
 
-        public async Task<PaginatedCollection<Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
-        {
-            return await _editingRepository.GetLabelsAsync(userId, request);
-        }
-
-        public async Task<Label> GetLabelAsync(Guid userId, Guid labelId)
-        {
-            return await _editingRepository.GetLabelAsync(userId, labelId);
-        }
-
-        public async Task<Label> GetLabelAsync(Guid userId, int labelCode)
-        {
-            return await _editingRepository.GetLabelAsync(userId, labelCode);
-        }
-
-        public async Task<Label> CreateLabelAsync(Guid userId, string labelName)
-        {
-            return await _editingRepository.CreateLabelAsync(userId, labelName);
-        }
-
-        public async Task DeleteLabelAsync(Guid userId, Guid labelId)
-        {
-            await _editingRepository.DeleteLabelAsync(userId, labelId);
-        }
-
-        public async Task DeleteLabelAsync(Guid userId, int labelCode)
-        {
-            await _editingRepository.DeleteLabelAsync(userId, labelCode);
-        }
-
         public async Task<PaginatedCollection<Models.Training>> GetTrainingsForUserAsync(Guid userId, GetCollectionRequest request)
         {
             return await _editingRepository.GetTrainingsForUserAsync(userId, request);

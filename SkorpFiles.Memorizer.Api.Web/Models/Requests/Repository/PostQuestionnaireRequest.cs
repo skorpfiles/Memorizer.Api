@@ -6,6 +6,5 @@
         public int? Code { get; set; }
         public string? Name { get; set; }
         public string? Availability { get; set; }
-        public List<Guid>? LabelsIds { get; set; }
     }
 }
