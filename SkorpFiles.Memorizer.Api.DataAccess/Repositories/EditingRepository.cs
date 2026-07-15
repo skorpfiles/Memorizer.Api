@@ -194,8 +194,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     .ThenInclude(el => el.Label)
                 join questionUser in DbContext.QuestionsUsers on question equals questionUser.Question into questionsUsersGrouped
                 from questionUserResult in questionsUsersGrouped.DefaultIfEmpty()
-                where !question.ObjectIsRemoved &&
-                    (questionUserResult==null || questionUserResult.UserId == userIdString)
+                where !question.ObjectIsRemoved
                 select new
                 {
                     Question = question,
