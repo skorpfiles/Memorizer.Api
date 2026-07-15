@@ -15,13 +15,6 @@ namespace SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess
         Task UpdateQuestionsAsync(Guid userId, UpdateQuestionsRequest request);
         Task UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusesRequest request);
 
-        Task<PaginatedCollection<Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request);
-        Task<Label> GetLabelAsync(Guid userId, Guid labelId);
-        Task<Label> GetLabelAsync(Guid userId, int labelCode);
-        Task<Label> CreateLabelAsync(Guid userId, string labelName);
-        Task DeleteLabelAsync(Guid userId, Guid labelId);
-        Task DeleteLabelAsync(Guid userId, int labelCode);
-
         Task<PaginatedCollection<Training>> GetTrainingsForUserAsync(Guid userId, GetCollectionRequest request);
         Task<Training> GetTrainingAsync(Guid userId, Guid trainingId, bool calculateTime);
         Task<Training> CreateTrainingAsync(Guid userId, UpdateTrainingRequest request);

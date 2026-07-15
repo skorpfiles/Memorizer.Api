@@ -9,8 +9,6 @@ namespace SkorpFiles.Memorizer.Api.Models.Enums
     public enum QuestionSortField
     {
         AddedTime,
-        Text,
-        LabelAndThenAddedTime,
-        LabelAndThenText
+        Text
     }
 }

@@ -28,31 +28,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 where !questionnaire.ObjectIsRemoved
                 select questionnaire;
 
-            //if (request.LabelsNames != null && request.LabelsNames.Any())
-            //{
-            //    var labelsIds =
-            //        from label in DbContext.Labels
-            //        where !label.ObjectIsRemoved && request.LabelsNames.Contains(label.LabelName)
-            //        select label.LabelId;
-
-            //    var entityLabels =
-            //        from entityLabel in DbContext.EntitiesLabels
-            //        where labelsIds.Contains(entityLabel.LabelId)
-            //        select entityLabel;
-
-            //    var questionnaireIds =
-            //        from entityLabel in entityLabels
-            //        group entityLabel by entityLabel.QuestionnaireId into grouped
-            //        where grouped.Count() >= request.LabelsNames.Count()
-            //        select grouped.Key;
-
-            //    foundQuestionnaires =
-            //        from questionnaire in foundQuestionnaires
-            //        where
-            //            questionnaireIds.Contains(questionnaire.QuestionnaireId)
-            //        select questionnaire;
-            //}
-
             foundQuestionnaires =
                 from questionnaire in foundQuestionnaires
                 where
@@ -186,8 +161,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             var foundQuestionsAndStatuses =
                 from question in DbContext.Questions
                     .Include(q => q.TypedAnswers)
-                    .Include(q => q.LabelsForQuestion!)
-                    .ThenInclude(el => el.Label)
                 join questionUser in DbContext.QuestionsUsers on question equals questionUser.Question into questionsUsersGrouped
                 from questionUserResult in questionsUsersGrouped.DefaultIfEmpty()
                 where !question.ObjectIsRemoved &&
@@ -197,31 +170,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     Question = question,
                     QuestionUser = questionUserResult
                 };
-
-            if (request.LabelsNames != null && request.LabelsNames.Any())
-            {
-                var labelsIds =
-                    from label in DbContext.Labels
-                    where !label.ObjectIsRemoved && request.LabelsNames.Contains(label.LabelName)
-                    select label.LabelId;
-
-                var entityLabels =
-                    from entityLabel in DbContext.QuestionsLabels
-                    where labelsIds.Contains(entityLabel.LabelId)
-                    select entityLabel;
-
-                var questionIds =
-                    from entityLabel in entityLabels
-                    group entityLabel by entityLabel.QuestionId into grouped
-                    where grouped.Count() >= request.LabelsNames.Count()
-                    select grouped.Key;
-
-                foundQuestionsAndStatuses =
-                    from questionAndStatus in foundQuestionsAndStatuses
-                    where
-                        questionIds.Contains(questionAndStatus.Question.QuestionId)
-                    select questionAndStatus;
-            }
 
             foundQuestionsAndStatuses =
                 from questionAndStatus in foundQuestionsAndStatuses
@@ -282,9 +230,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 foreach (var question in request.CreatedQuestions)
                 {
                     CheckQuestionRequest(question);
-
-                    if (question.LabelsIds != null)
-                        await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, question.LabelsIds.ToList());
                 }
             }
 
@@ -333,18 +278,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
                         var addedQuestion = DbContext.Questions.Add(questionForDb);
 
-                        if (question.LabelsIds!=null)
-                        {
-                            IEnumerable<QuestionLabel>? entitiesLabelsToAdd = null;
-                            entitiesLabelsToAdd = question.LabelsIds.Select(id => new QuestionLabel
-                            {
-                                QuestionId = addedQuestion.Entity.QuestionId,
-                                LabelId = id,
-                                ObjectCreationTimeUtc = DateTime.UtcNow
-                            });
-                            DbContext.QuestionsLabels.AddRange(entitiesLabelsToAdd);
-                        }
-
                         if (question.TypedAnswers!=null)
                         {
                             IEnumerable<Models.TypedAnswer>? typedAnswersToAdd = null;
@@ -365,38 +298,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     {
 
                         var questionFromDb = await (from questionQuery in DbContext.Questions
-                                                        .Include(q=>q.LabelsForQuestion)
                                                         .Include(q=>q.TypedAnswers)
                                                     where !questionQuery.ObjectIsRemoved &&
                                                     questionQuery.QuestionnaireId == questionnaireResult.QuestionnaireId &&
                                                     (question.Id == null || questionQuery.QuestionId == question.Id) &&
                                                     (question.CodeInQuestionnaire == null || questionQuery.QuestionQuestionnaireCode == question.CodeInQuestionnaire)
                                                     select questionQuery).SingleOrDefaultAsync() ?? throw new ObjectNotFoundException("One of the updated questions doesn't exist.");
-                        if (question.LabelsIds != null)
-                        {
-                            var currentLabelsIds = questionFromDb.LabelsForQuestion!.Select(l => l.LabelId).ToList();
-                            var newLabelsIds = question.LabelsIds.ToList();
-                            var labelsToAdd = newLabelsIds.Where(l => !currentLabelsIds.Contains(l)).ToList();
-
-                            await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsToAdd);
-
-                            var labelsToDelete = currentLabelsIds.Where(l => !newLabelsIds.Contains(l)).ToList();
-
-                            var entitiesLabelsToDelete =
-                                from entityLabel in DbContext.QuestionsLabels
-                                where labelsToDelete.Contains(entityLabel.LabelId) &&
-                                    entityLabel.QuestionId == questionFromDb.QuestionId
-                                select entityLabel;
-
-                            DbContext.QuestionsLabels.RemoveRange(entitiesLabelsToDelete);
-
-                            DbContext.QuestionsLabels.AddRange(labelsToAdd.Select(l => new Models.QuestionLabel
-                            {
-                                LabelId = l,
-                                QuestionId = questionFromDb.QuestionId,
-                                ObjectCreationTimeUtc = DateTime.UtcNow
-                            }));
-                        }
 
                         if (question.TypedAnswers!=null)
                         {
@@ -473,11 +380,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (userId == Guid.Empty)
                 throw new ArgumentException($"{userId} cannot be empty.");
 
-            //var labelsList = request.Labels?.ToList();
-
-            //if (labelsList!=null)
-            //    await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsList.Select(l=>l.Id).ToList());
-
             Models.Questionnaire newQuestionnaire = new()
             {
                 QuestionnaireName = request.Name,
@@ -518,35 +420,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 questionnaireResult.QuestionnaireAvailability = request.Availability.Value;
                 changed = true;
             }
-
-            //if (request.Labels != null)
-            //{
-            //    var currentLabelsIds = questionnaireResult.LabelsForQuestionnaire!.Select(l => l.LabelId).ToList();
-            //    var newLabelsIds = request.Labels!.Select(l=>l.Id).ToList();
-            //    var labelsToAdd = newLabelsIds.Where(l => !currentLabelsIds.Contains(l)).ToList();
-
-            //    await CheckLabelsAvailabilityForManagingEntitiesAsync(userId, labelsToAdd);
-
-            //    var labelsToDelete = currentLabelsIds.Where(l => !newLabelsIds.Contains(l)).ToList();
-
-            //    var entitiesLabelsToDelete =
-            //        from entityLabel in DbContext.QuestionsLabels
-            //        where labelsToDelete.Contains(entityLabel.LabelId) &&
-            //            entityLabel.QuestionnaireId == questionnaireResult.QuestionnaireId
-            //        select entityLabel;
-
-            //    DbContext.QuestionsLabels.RemoveRange(entitiesLabelsToDelete);
-
-            //    DbContext.QuestionsLabels.AddRange(labelsToAdd.Select(l => new Models.QuestionLabel
-            //    {
-            //        EntityType = Enums.EntityType.Questionnaire,
-            //        LabelId = l,
-            //        QuestionnaireId = questionnaireResult.QuestionnaireId,
-            //        ObjectCreationTimeUtc = DateTime.UtcNow
-            //    }));
-
-            //    changed = true;
-            //}
 
             if (changed)
             {
@@ -603,64 +476,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             await DbContext.SaveChangesAsync();
         }
-
-        public async Task<Api.Models.PaginatedCollection<Api.Models.Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
-        {
-            ArgumentNullException.ThrowIfNull(request);
-
-            var userIdString = userId.ToAspNetUserIdString();
-
-            var foundLabels = from label in DbContext.Labels
-                              where !label.ObjectIsRemoved &&
-                              (request.Origin == null ||
-                              (request.Origin == Origin.Own && label.OwnerId == userIdString) ||
-                              (request.Origin == Origin.Foreign && label.OwnerId != userIdString)) &&
-                              (request.PartOfName == null || label.LabelName.ToLower().Contains(request.PartOfName.ToLower(), StringComparison.InvariantCulture))
-                              select label;
-
-            var totalCount = await foundLabels.CountAsync();
-
-            foundLabels = foundLabels.Page(request.PageNumber, request.PageSize);
-
-            var foundLabelsResult = await foundLabels.ToListAsync();
-
-            return new Api.Models.PaginatedCollection<Api.Models.Label>(_mapper.Map<IEnumerable<Api.Models.Label>>(foundLabelsResult), totalCount, request.PageNumber, request.PageSize);
-        }
-
-        public async Task<Api.Models.Label> GetLabelAsync(Guid userId, Guid labelId) =>
-            _mapper.Map<Api.Models.Label>(await GetLabelAsync(userId, labelId, null));
-
-        public async Task<Api.Models.Label> GetLabelAsync(Guid userId, int labelCode) =>
-            _mapper.Map<Api.Models.Label>(await GetLabelAsync(userId, null, labelCode));
-
-        public async Task<Api.Models.Label> CreateLabelAsync(Guid userId, string labelName)
-        {
-            if (userId == Guid.Empty)
-                throw new ArgumentException($"{userId} cannot be empty.");
-
-            if (string.IsNullOrEmpty(labelName))
-                throw new ArgumentNullException(nameof(labelName));
-
-            Models.Label newLabel = new()
-            {
-                LabelName = labelName,
-                OwnerId = userId.ToAspNetUserIdString()!,
-                ObjectCreationTimeUtc = DateTime.UtcNow
-            };
-
-            var labelEntry = DbContext.Labels.Add(newLabel);
-
-            await DbContext.SaveChangesAsync();
-
-            var result = labelEntry.Entity;
-            return _mapper.Map<Api.Models.Label>(result);
-        }
-
-        public async Task DeleteLabelAsync(Guid userId, Guid labelId) =>
-            await DeleteLabelAsync(userId, labelId, null);
-
-        public async Task DeleteLabelAsync(Guid userId, int labelCode) =>
-            await DeleteLabelAsync(userId, null, labelCode);
 
         public async Task<PaginatedCollection<Api.Models.Training>> GetTrainingsForUserAsync(Guid userId, GetCollectionRequest request)
         {
@@ -1019,30 +834,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw exceptionWhenBothNotNull;
         }
 
-        private async Task CheckLabelsAvailabilityForManagingEntitiesAsync(Guid userId, List<Guid> labelsIds)
-        {
-            if (labelsIds!=null)
-            {
-                var labelsFromDb = await (
-                    from label in DbContext.Labels
-                    where labelsIds.Contains(label.LabelId)
-                    select label).ToListAsync();
-
-                foreach(var labelIdFromRequest in labelsIds)
-                {
-                    var labelFromDb = labelsFromDb.SingleOrDefault(l => l.LabelId == labelIdFromRequest);
-                    if (labelFromDb != null)
-                    {
-                        Utils.CheckAvailabilityForUser(userId, Guid.Parse(labelFromDb.OwnerId), $"The user '{userId}' doesn't have a managing access to the label '{labelIdFromRequest}'.");
-                    }
-                    else
-                    {
-                        throw new ObjectNotFoundException($"The label '{labelIdFromRequest}' is not found.");
-                    }
-                }
-            }
-        }
-
         private async Task CheckQuestionnairesAvailabilityForManagingTrainingsAsync(Guid userId, List<Guid> questionnairesIds)
         {
             if (questionnairesIds != null)
@@ -1081,56 +872,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             if (newQuestionsFraction + penaltyQuestionsFraction < 0 || newQuestionsFraction + penaltyQuestionsFraction > 1)
                 throw new ArgumentException("Sum of new questions fraction and penalty questions fraction cannot be less than 0 or more than 1.");
         }
-        private async Task<Models.Label> GetLabelAsync(Guid userId, Guid? labelId = null, int? labelCode = null)
-        {
-            CheckIdAndCodeDefinitionRule(labelId, labelCode,
-                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
-                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
-
-            Models.Label? labelResult = await (from label in DbContext.Labels
-                                               where !label.ObjectIsRemoved &&
-                                               (labelId == null || label.LabelId == labelId) &&
-                                               (labelCode == null || label.LabelCode == labelCode)
-                                               select label).SingleOrDefaultAsync();
-
-            if (labelResult!=null)
-            {
-                Utils.CheckAvailabilityForUser(userId, Guid.Parse(labelResult.OwnerId), $"The user '{userId}' doesn't have a managing access to the label '{labelResult.OwnerId}'.");
-                return labelResult;
-            }
-            else
-                throw new ObjectNotFoundException("Label with such ID or code is not found.");
-        }
-
-        private async Task DeleteLabelAsync(Guid userId, Guid? labelId=null, int? labelCode=null)
-        {
-            CheckIdAndCodeDefinitionRule(labelId, labelCode,
-                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
-                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
-
-            var labelDetails =
-                await (from label in DbContext.Labels
-                       where
-                           !label.ObjectIsRemoved &&
-                           (labelId == null || label.LabelId == labelId) &&
-                           (labelCode == null || label.LabelCode == labelCode)
-                       select label).SingleOrDefaultAsync();
-
-            if (labelDetails != null)
-            {
-                if (Guid.TryParse(labelDetails.OwnerId, out Guid ownerGuid) && ownerGuid == userId)
-                {
-                    labelDetails.ObjectIsRemoved = true;
-                    labelDetails.ObjectRemovalTimeUtc = DateTime.UtcNow;
-                    await DbContext.SaveChangesAsync();
-                }
-                else
-                    throw new AccessDeniedForUserException("The user doesn't have rights to delete the questionnaire.");
-            }
-            else
-                throw new ObjectNotFoundException("Questionnaire with such ID or Code doesn't exist.");
-        }
-
         private struct QuestionnaireAndCountsOfQuestions
         {
             public Models.Questionnaire Questionnaire { get; set; }

@@ -10,6 +10,5 @@
         public string? OwnerName { get; set; }
         public QuestionsCounts? CountsOfQuestions { get; set; }
         public long TotalTrainingTimeSeconds { get; set; }
-        public List<Label>? Labels { get; set; }
     }
 }

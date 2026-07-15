@@ -8,6 +8,5 @@ namespace SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository
         public Guid OwnerId { get; set; }
         public string? Availability { get; set; }
         public string? PartOfName { get; set; }
-        public List<string>? LabelsNames { get; set; }
     }
 }
