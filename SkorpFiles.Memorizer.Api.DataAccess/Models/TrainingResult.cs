@@ -28,6 +28,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public ApplicationUser? TrainingResultUser { get; set; }
         public Question? TrainingResultQuestion { get; set; }
 
-        public List<TrainingResultTypedAnswer>? TypedAnswers { get; set; }
+        public List<TrainingResultTypedAnswer> TypedAnswers { get; set; } = [];
     }
 }

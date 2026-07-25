@@ -192,7 +192,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.DataSources
             }
         }
 
-        private static string TypedAnswersListToJsonString(List<TypedAnswer>? typedAnswers)
+        private static string? TypedAnswersListToJsonString(List<TypedAnswer>? typedAnswers)
         {
             if (typedAnswers == null)
                 return null;

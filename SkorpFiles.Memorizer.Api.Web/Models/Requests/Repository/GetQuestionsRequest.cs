@@ -7,5 +7,6 @@ namespace SkorpFiles.Memorizer.Api.Web.Models.Requests.Repository
     {
         public Guid? QuestionnaireId { get; set; }
         public int? QuestionnaireCode { get; set; }
+        public IEnumerable<string>? Labels { get; set; }
     }
 }

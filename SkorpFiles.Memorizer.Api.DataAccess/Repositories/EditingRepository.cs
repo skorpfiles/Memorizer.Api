@@ -8,12 +8,17 @@ using SkorpFiles.Memorizer.Api.Models.Enums;
 using SkorpFiles.Memorizer.Api.Models.Exceptions;
 using SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess;
 using SkorpFiles.Memorizer.Api.Models.RequestModels;
+using SkorpFiles.Memorizer.Api.Models.Utils;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 {
-    public class EditingRepository(ApplicationDbContext dbContext, IMapper mapper) : RepositoryBase(dbContext), IEditingRepository
+    public class EditingRepository(
+        ApplicationDbContext dbContext, 
+        IMapper mapper,
+        LabelsService labelsService) : RepositoryBase(dbContext), IEditingRepository
     {
         private readonly IMapper _mapper = mapper;
+        private readonly LabelsService _labelsService = labelsService;
 
         public async Task<Api.Models.PaginatedCollection<Api.Models.Questionnaire>> GetQuestionnairesAsync(Guid userId,
             GetQuestionnairesRequest request)
@@ -42,7 +47,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     ((request.Availability == null) ||
                     (request.Availability == questionnaire.QuestionnaireAvailability)) &&
 
-                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName.ToLower(),StringComparison.InvariantCulture)) &&
+                    (request.PartOfName == null || questionnaire.QuestionnaireName.ToLower().Contains(request.PartOfName.ToLower(), StringComparison.InvariantCulture)) &&
 
                     //If the questionnaire is private, return only own questionnaires! Edit carefully!
                     ((questionnaire.QuestionnaireAvailability == Availability.Private && questionnaire.OwnerId == userIdString) ||
@@ -145,25 +150,45 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             //Checking user rights
             var questionnaireResult =
                 await (from questionnaire in DbContext.Questionnaires
-                where
-                    (request.QuestionnaireId == null || questionnaire.QuestionnaireId == request.QuestionnaireId) &&
-                    (request.QuestionnaireCode == null || questionnaire.QuestionnaireCode == request.QuestionnaireCode)
-                select questionnaire).SingleOrDefaultAsync();
+                       where
+                           (request.QuestionnaireId == null || questionnaire.QuestionnaireId == request.QuestionnaireId) &&
+                           (request.QuestionnaireCode == null || questionnaire.QuestionnaireCode == request.QuestionnaireCode)
+                       select questionnaire).SingleOrDefaultAsync();
 
             if (questionnaireResult != null)
                 Utils.CheckQuestionnaireAvailabilityForUser(userId, Guid.Parse(questionnaireResult.OwnerId), questionnaireResult.QuestionnaireAvailability);
             else
                 throw new ObjectNotFoundException("No questionnaire with such ID or code.");
 
+            //Checking labels restrictions
+            if (request.Labels != null)
+            {
+                if (request.Labels.Count() > Restrictions.MaxCountOfLabelsForQuestionsFilter)
+                    throw new ArgumentException($"The count of labels for filtering questions should not exceed {Restrictions.MaxCountOfLabelsForQuestionsFilter}.");
+
+                foreach (var label in request.Labels)
+                {
+                    if (string.IsNullOrEmpty(label))
+                        throw new ArgumentException("Label name cannot be null or empty.");
+                    if (label.Length > Restrictions.LabelNameMaxLength)
+                        throw new ArgumentException($"Label name cannot exceed {Restrictions.LabelNameMaxLength} characters.");
+                }
+            }
+
             //Getting data
             var userIdString = userId.ToAspNetUserIdString();
+
+            var normalizedLabels = request.Labels?.Select(l => Normalize(l)).ToList() ?? [];
 
             var foundQuestionsAndStatuses =
                 from question in DbContext.Questions
                     .Include(q => q.TypedAnswers)
+                    .Include(q => q.LabelsForQuestion)
+                    .ThenInclude(lq => lq.NormalizedLabel)
                 join questionUser in DbContext.QuestionsUsers on question equals questionUser.Question into questionsUsersGrouped
                 from questionUserResult in questionsUsersGrouped.DefaultIfEmpty()
-                where !question.ObjectIsRemoved
+                where !question.ObjectIsRemoved && (request.Labels == null || !request.Labels.Any() || 
+                    question.LabelsForQuestion.Any(lq => normalizedLabels.Contains(lq.NormalizedLabel!.NormalizedLabelName)))
                 select new
                 {
                     Question = question,
@@ -176,21 +201,21 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     questionAndStatus.Question.QuestionnaireId == questionnaireResult.QuestionnaireId
                 select questionAndStatus;
 
-            switch(request.SortField)
+            switch (request.SortField)
             {
                 case QuestionSortField.AddedTime:
                 default:
-                    switch(request.SortDirection)
+                    switch (request.SortDirection)
                     {
-                        case SortDirection.Ascending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderBy(p => p.Question.ObjectCreationTimeUtc);break;
-                        case SortDirection.Descending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderByDescending(p => p.Question.ObjectCreationTimeUtc);break;
+                        case SortDirection.Ascending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderBy(p => p.Question.ObjectCreationTimeUtc); break;
+                        case SortDirection.Descending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderByDescending(p => p.Question.ObjectCreationTimeUtc); break;
                     }
                     break;
                 case QuestionSortField.Text:
-                    switch(request.SortDirection)
+                    switch (request.SortDirection)
                     {
-                        case SortDirection.Ascending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderBy(p => p.Question.QuestionText);break;
-                        case SortDirection.Descending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderByDescending(p=>p.Question.QuestionText);break;
+                        case SortDirection.Ascending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderBy(p => p.Question.QuestionText); break;
+                        case SortDirection.Descending: foundQuestionsAndStatuses = foundQuestionsAndStatuses.OrderByDescending(p => p.Question.QuestionText); break;
                     }
                     break;
             }
@@ -232,9 +257,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 }
             }
 
-            if (request.UpdatedQuestions!=null)
+            if (request.UpdatedQuestions != null)
             {
-                foreach(var question in request.UpdatedQuestions)
+                foreach (var question in request.UpdatedQuestions)
                 {
                     CheckIdAndCodeDefinitionRule(question.Id, question.CodeInQuestionnaire,
                         new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
@@ -246,22 +271,23 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             if (request.DeletedQuestions != null)
             {
-                foreach(var question in request.DeletedQuestions)
+                foreach (var question in request.DeletedQuestions)
                 {
                     CheckIdAndCodeDefinitionRule(question.Id, question.CodeInQuestionnaire,
-                        new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull), 
+                        new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
                         new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
                 }
             }
 
             var questionnaireResult =
                 await (from questionnaire in DbContext.Questionnaires
-                        where
-                            !questionnaire.ObjectIsRemoved &&
-                            (request.QuestionnaireId == null || questionnaire.QuestionnaireId == request.QuestionnaireId) &&
-                            (request.QuestionnaireCode == null || questionnaire.QuestionnaireCode == request.QuestionnaireCode)
-                        select questionnaire).SingleOrDefaultAsync();
-            if (questionnaireResult!=null)
+                       where
+                           !questionnaire.ObjectIsRemoved &&
+                           (request.QuestionnaireId == null || questionnaire.QuestionnaireId == request.QuestionnaireId) &&
+                           (request.QuestionnaireCode == null || questionnaire.QuestionnaireCode == request.QuestionnaireCode)
+                       select questionnaire).SingleOrDefaultAsync();
+
+            if (questionnaireResult != null)
             {
                 if (questionnaireResult.OwnerId != userId.ToAspNetUserIdString())
                     throw new AccessDeniedForUserException(Constants.ExceptionMessages.UserCannotChangeQuestionnaire);
@@ -277,7 +303,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
                         var addedQuestion = DbContext.Questions.Add(questionForDb);
 
-                        if (question.TypedAnswers!=null)
+                        if (question.TypedAnswers != null)
                         {
                             IEnumerable<Models.TypedAnswer>? typedAnswersToAdd = null;
                             typedAnswersToAdd = question.TypedAnswers.Select(a => new Models.TypedAnswer(a)
@@ -288,29 +314,43 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                             });
                             DbContext.TypedAnswers.AddRange(typedAnswersToAdd);
                         }
+
+                        if (question.Labels != null)
+                        {
+                            var labelsAndIds = await _labelsService.EnsureLabelsAsync(question.Labels);
+                            IEnumerable<Models.QuestionLabel>? questionsLabelsToAdd = null;
+                            questionsLabelsToAdd = labelsAndIds.Select(l => new Models.QuestionLabel
+                            {
+                                QuestionId = addedQuestion.Entity.QuestionId,
+                                NormalizedLabelId = l.Value,
+                                QuestionLabelName = l.Key,
+                                ObjectCreationTimeUtc = DateTime.UtcNow
+                            });
+                            DbContext.QuestionsLabels.AddRange(questionsLabelsToAdd);
+                        }
                     }
                 }
 
-                if (request.UpdatedQuestions !=null)
+                if (request.UpdatedQuestions != null)
                 {
-                    foreach(var question in request.UpdatedQuestions)
+                    foreach (var question in request.UpdatedQuestions)
                     {
 
                         var questionFromDb = await (from questionQuery in DbContext.Questions
-                                                        .Include(q=>q.TypedAnswers)
+                                                        .Include(q => q.TypedAnswers)
                                                     where !questionQuery.ObjectIsRemoved &&
                                                     questionQuery.QuestionnaireId == questionnaireResult.QuestionnaireId &&
                                                     (question.Id == null || questionQuery.QuestionId == question.Id) &&
                                                     (question.CodeInQuestionnaire == null || questionQuery.QuestionQuestionnaireCode == question.CodeInQuestionnaire)
                                                     select questionQuery).SingleOrDefaultAsync() ?? throw new ObjectNotFoundException("One of the updated questions doesn't exist.");
 
-                        if (question.TypedAnswers!=null)
+                        if (question.TypedAnswers != null)
                         {
-                            var currentTypedAnswersTexts = questionFromDb.TypedAnswers!.Select(a=>a.TypedAnswerText).ToList();
+                            var currentTypedAnswersTexts = questionFromDb.TypedAnswers!.Select(a => a.TypedAnswerText).ToList();
                             var newTypedAnswersTexts = question.TypedAnswers.ToList();
                             var typedAnswersToAdd = newTypedAnswersTexts.Where(a => !currentTypedAnswersTexts.Contains(a)).ToList();
                             var typedAnswersToDelete = currentTypedAnswersTexts.Where(a => !newTypedAnswersTexts.Contains(a)).ToList();
-                            
+
                             var dbTypedAnswersToDelete =
                                 from typedAnswer in DbContext.TypedAnswers
                                 where !typedAnswer.ObjectIsRemoved &&
@@ -332,6 +372,32 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                             }));
                         }
 
+                        if (question.Labels != null)
+                        {
+                            var labelsAndIds = await _labelsService.EnsureLabelsAsync(question.Labels);
+
+                            var dbQuestionLabelsToDelete =
+                                from questionLabel in DbContext.QuestionsLabels
+                                where questionLabel.QuestionId == questionFromDb.QuestionId &&
+                                    !labelsAndIds.Any(l => l.Value == questionLabel.NormalizedLabelId)
+                                select questionLabel;
+
+                            await dbQuestionLabelsToDelete.ForEachAsync(l =>
+                            {
+                                DbContext.QuestionsLabels.Remove(l);
+                            });
+
+                            var dbQuestionLabelsToAdd = labelsAndIds.Where(l => !questionFromDb.LabelsForQuestion!.Any(q => q.NormalizedLabelId == l.Value)).Select(l => new Models.QuestionLabel
+                            {
+                                QuestionId = questionFromDb.QuestionId,
+                                NormalizedLabelId = l.Value,
+                                QuestionLabelName = l.Key,
+                                ObjectCreationTimeUtc = DateTime.UtcNow
+                            });
+
+                            DbContext.QuestionsLabels.AddRange(dbQuestionLabelsToAdd);
+                        }
+
                         questionFromDb.QuestionEstimatedTrainingTimeSeconds = question.EstimatedTrainingTimeSeconds;
                         questionFromDb.QuestionIsEnabled = question.IsEnabled;
                         questionFromDb.QuestionReference = question.Reference;
@@ -341,16 +407,16 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     }
                 }
 
-                if (request.DeletedQuestions!=null)
+                if (request.DeletedQuestions != null)
                 {
-                    foreach(var question in request.DeletedQuestions)
+                    foreach (var question in request.DeletedQuestions)
                     {
                         var questionFromDb = await (from questionQuery in DbContext.Questions
-                                where !questionQuery.ObjectIsRemoved &&
-                                questionQuery.QuestionnaireId == questionnaireResult.QuestionnaireId &&
-                                (question.Id == null || questionQuery.QuestionId == question.Id) &&
-                                (question.CodeInQuestionnaire == null || questionQuery.QuestionQuestionnaireCode == question.CodeInQuestionnaire)
-                                select questionQuery).SingleOrDefaultAsync();
+                                                    where !questionQuery.ObjectIsRemoved &&
+                                                    questionQuery.QuestionnaireId == questionnaireResult.QuestionnaireId &&
+                                                    (question.Id == null || questionQuery.QuestionId == question.Id) &&
+                                                    (question.CodeInQuestionnaire == null || questionQuery.QuestionQuestionnaireCode == question.CodeInQuestionnaire)
+                                                    select questionQuery).SingleOrDefaultAsync();
 
                         if (questionFromDb != null)
                         {
@@ -401,7 +467,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         {
             ArgumentNullException.ThrowIfNull(request);
 
-            var questionnaireResult = await GetSpecialQuestionnaireInfoAsync(userId,request.Id,request.Code);
+            var questionnaireResult = await GetSpecialQuestionnaireInfoAsync(userId, request.Id, request.Code);
 
             if (questionnaireResult.OwnerId != userId.ToAspNetUserIdString())
                 throw new AccessDeniedForUserException(Constants.ExceptionMessages.UserCannotChangeQuestionnaire);
@@ -432,8 +498,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         public async Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId) =>
             await DeleteQuestionnaireAsync(userId, questionnaireId, null);
 
-        public async Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode)=>
-            await DeleteQuestionnaireAsync(userId,null,questionnaireCode);
+        public async Task DeleteQuestionnaireAsync(Guid userId, int questionnaireCode) =>
+            await DeleteQuestionnaireAsync(userId, null, questionnaireCode);
 
         public async Task UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusesRequest request)
         {
@@ -443,22 +509,22 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             ArgumentNullException.ThrowIfNull(request);
             if (request.Items == null || !request.Items.Any())
                 throw new ArgumentException("Items should not be null or empty.");
-            
+
             var requestItems = request.Items.ToList();
-            var requestItemsIds = request.Items.Select(i=>i.QuestionId).ToList();
+            var requestItemsIds = request.Items.Select(i => i.QuestionId).ToList();
 
             var questionsUsersToUpdate = await (from questionUser in DbContext.QuestionsUsers
-                                                .Include(q=>q.Question)
-                                                .ThenInclude(q=>q!.Questionnaire)
-                                         where questionUser.UserId == userId.ToAspNetUserIdString() &&
-                                         !questionUser.Question!.ObjectIsRemoved &&
-                                         requestItemsIds.Contains(questionUser.QuestionId)
-                                         select questionUser).ToListAsync();
+                                                .Include(q => q.Question)
+                                                .ThenInclude(q => q!.Questionnaire)
+                                                where questionUser.UserId == userId.ToAspNetUserIdString() &&
+                                                !questionUser.Question!.ObjectIsRemoved &&
+                                                requestItemsIds.Contains(questionUser.QuestionId)
+                                                select questionUser).ToListAsync();
 
-            foreach(var requestItem in requestItems)
+            foreach (var requestItem in requestItems)
             {
-                var questionUserToUpdate = questionsUsersToUpdate.SingleOrDefault(q=>q.QuestionId == requestItem.QuestionId);
-                if (questionUserToUpdate==null)
+                var questionUserToUpdate = questionsUsersToUpdate.SingleOrDefault(q => q.QuestionId == requestItem.QuestionId);
+                if (questionUserToUpdate == null)
                 {
                     questionUserToUpdate = _mapper.Map<QuestionUser>(requestItem);
                     questionUserToUpdate.UserId = userId.ToAspNetUserIdString()!;
@@ -539,8 +605,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     throw;
                 }
             }
-                
-            if (trainingResult!=null)
+
+            if (trainingResult != null)
             {
                 Utils.CheckAvailabilityForUser(userId, Guid.Parse(trainingResult.OwnerId), "The user doesn't own the training.");
 
@@ -604,7 +670,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             var trainingEntry = await DbContext.Trainings.AddAsync(newTraining);
 
             if (questionnairesIdsList != null)
-                foreach(var questionnaireId in questionnairesIdsList)
+                foreach (var questionnaireId in questionnairesIdsList)
                 {
                     await DbContext.TrainingsQuestionnaires.AddAsync(new Models.TrainingQuestionnaire
                     {
@@ -629,7 +695,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                                         where !training.ObjectIsRemoved && training.TrainingId == request.Id
                                         select training).SingleOrDefaultAsync() ?? throw new ObjectNotFoundException("Training with such ID is not found.");
             if (trainingResult.OwnerId != userId.ToAspNetUserIdString())
-                    throw new AccessDeniedForUserException(Constants.ExceptionMessages.UserCannotChangeQuestionnaire);
+                throw new AccessDeniedForUserException(Constants.ExceptionMessages.UserCannotChangeQuestionnaire);
 
             if (request.NewQuestionsFraction != null || request.PenaltyQuestionsFraction != null)
             {
@@ -683,14 +749,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
             if (request.QuestionnairesIds != null)
             {
-                var currentQuestionnairesIds = trainingResult.QuestionnairesForTraining!.Select(qt=>qt.QuestionnaireId).ToList();
-                var questionnairesIdsToAdd = request.QuestionnairesIds.Where(q=> !currentQuestionnairesIds.Contains(q)).ToList();
+                var currentQuestionnairesIds = trainingResult.QuestionnairesForTraining!.Select(qt => qt.QuestionnaireId).ToList();
+                var questionnairesIdsToAdd = request.QuestionnairesIds.Where(q => !currentQuestionnairesIds.Contains(q)).ToList();
 
                 await CheckQuestionnairesAvailabilityForManagingTrainingsAsync(userId, questionnairesIdsToAdd);
 
                 var questionnairesToDelete = currentQuestionnairesIds.Where(q => !request.QuestionnairesIds.Contains(q)).ToList();
 
-                var trainingsQuestionnairesToDelete = 
+                var trainingsQuestionnairesToDelete =
                     from trainingQuestionnaire in DbContext.TrainingsQuestionnaires
                     where questionnairesToDelete.Contains(trainingQuestionnaire.QuestionnaireId) &&
                     trainingQuestionnaire.TrainingId == trainingResult.TrainingId
@@ -765,7 +831,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
 
             var groupResult =
-                await (from questionnaire in GetBasicQuestionnaireQuery(questionnaireId,questionnaireCode)
+                await (from questionnaire in GetBasicQuestionnaireQuery(questionnaireId, questionnaireCode)
                        from question in DbContext.Questions.Where(q => q.QuestionnaireId == questionnaire.QuestionnaireId).DefaultIfEmpty()
                        from questionUser in DbContext.QuestionsUsers.Where(qu => qu.QuestionId == question.QuestionId && qu.UserId == userId.ToAspNetUserIdString()).DefaultIfEmpty()
                        group new { question, questionUser } by questionnaire into questionnaireGroup
@@ -775,7 +841,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                            QuestionsTotalCount = questionnaireGroup.Count(q => q.question != null),
                            QuestionsNewCount = questionnaireGroup.Count(q => q.question != null && ((q.questionUser != null && q.questionUser.QuestionUserIsNew) || q.questionUser == null)),
                            QuestionsRecheckCount = questionnaireGroup.Count(q => q.questionUser != null && q.questionUser.QuestionUserPenaltyPoints > 0),
-                           TotalTrainingTimeSeconds = questionnaireGroup.Where(q=>q.question!=null).Sum(q=>q.question.QuestionEstimatedTrainingTimeSeconds)
+                           TotalTrainingTimeSeconds = questionnaireGroup.Where(q => q.question != null).Sum(q => q.question.QuestionEstimatedTrainingTimeSeconds)
                        }).SingleOrDefaultAsync();
 
             if (groupResult != null)
@@ -800,11 +866,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         private async Task DeleteQuestionnaireAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
-                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull), 
+                new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldBeNull));
 
             var questionnaireDetails =
-                await (from questionnaire in DbContext.Questionnaires.Include(q=>q.Questions)
+                await (from questionnaire in DbContext.Questionnaires.Include(q => q.Questions)
                        where
                            !questionnaire.ObjectIsRemoved &&
                            (questionnaireId == null || questionnaire.QuestionnaireId == questionnaireId) &&
@@ -841,8 +907,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     from questionnaire in DbContext.Questionnaires
                     where questionnairesIds.Contains(questionnaire.QuestionnaireId)
                     select questionnaire).ToListAsync();
-                
-                foreach(var questionnaireIdFromRequest in questionnairesIds)
+
+                foreach (var questionnaireIdFromRequest in questionnairesIds)
                 {
                     var questionnaireFromDb = questionnairesFromDb.SingleOrDefault(q => q.QuestionnaireId == questionnaireIdFromRequest);
                     if (questionnaireFromDb != null)
@@ -864,6 +930,21 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
         {
             if (question.Text == null)
                 throw new ArgumentException("All questions should have text.");
+
+            if (question.Labels != null)
+            {
+                if (question.Labels.Count() > Restrictions.MaxCountOfLabelsPerQuestion)
+                    throw new ArgumentException($"The number of labels for a question cannot exceed {Restrictions.MaxCountOfLabelsPerQuestion}.");
+
+                foreach (var label in question.Labels)
+                {
+                    if (string.IsNullOrEmpty(label))
+                        throw new ArgumentException("All labels should have text.");
+
+                    if (label.Length > Restrictions.LabelNameMaxLength)
+                        throw new ArgumentException($"The length of a label cannot exceed {Restrictions.LabelNameMaxLength} characters.");
+                }
+            }
         }
 
         private static void CheckFractions(decimal newQuestionsFraction, decimal penaltyQuestionsFraction)
@@ -918,6 +999,11 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 questionnaire.OwnerName = questionnaireWithRelations.Owner?.UserName;
             }
             return questionnaire;
+        }
+
+        private static string Normalize(string input)
+        {
+            return input.Trim().ToUpperInvariant();
         }
     }
 }

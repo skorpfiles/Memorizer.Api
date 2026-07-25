@@ -20,10 +20,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public Guid QuestionnaireId { get; set; }
         public int QuestionQuestionnaireCode { get; set; }
 
-        public List<QuestionLabel>? LabelsForQuestion { get; set; }
+        public List<QuestionLabel> LabelsForQuestion { get; set; } = [];
         public Questionnaire? Questionnaire { get; set; }
-        public List<QuestionUser>? UsersForQuestion { get; set; }
-        public List<TypedAnswer>? TypedAnswers { get; set; }
-        public List<TrainingResult>? TrainingResults { get; set; }
+        public List<QuestionUser> UsersForQuestion { get; set; } = [];
+        public List<TypedAnswer> TypedAnswers { get; set; } = [];
+        public List<TrainingResult> TrainingResults { get; set; } = [];
     }
 }

@@ -2,6 +2,7 @@
 {
     public class QuestionToUpdate:Question
     {
+        public IEnumerable<string>? Labels { get; set; }
         public IEnumerable<string>? TypedAnswers { get; set; }
     }
 }

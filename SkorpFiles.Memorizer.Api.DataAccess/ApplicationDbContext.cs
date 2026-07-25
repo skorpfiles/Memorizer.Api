@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
+using SkorpFiles.Memorizer.Api.Models.Utils;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess
 {
@@ -17,8 +18,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
         public DbSet<Questionnaire> Questionnaires => Set<Questionnaire>();
         public DbSet<Question> Questions => Set<Question>();
         public DbSet<QuestionUser> QuestionsUsers => Set<QuestionUser>();
-        public DbSet<Label> Labels => Set<Label>();
+        public DbSet<NormalizedLabel> NormalizedLabels => Set<NormalizedLabel>();
         public DbSet<QuestionLabel> QuestionsLabels => Set<QuestionLabel>();
+        public DbSet<QuestionnaireLabel> QuestionnairesLabels => Set<QuestionnaireLabel>();
         public DbSet<TypedAnswer> TypedAnswers => Set<TypedAnswer>();
         public DbSet<Training> Trainings => Set<Training>();
         public DbSet<TrainingQuestionnaire> TrainingsQuestionnaires => Set<TrainingQuestionnaire>();
@@ -43,6 +45,34 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
                 entity.HasNoKey();
                 entity.ToView(null);
             });
+
+            modelBuilder.Entity<NormalizedLabel>(builder =>
+            {
+                builder.Property(x => x.NormalizedLabelName)
+                    .HasMaxLength(Restrictions.LabelNameMaxLength)
+                    .IsRequired();
+
+                builder.HasIndex(x => x.NormalizedLabelName)
+                    .IsUnique();
+            });
+
+            modelBuilder.Entity<QuestionLabel>(builder =>
+            {
+                builder.Property(x => x.QuestionLabelName)
+                    .HasMaxLength(Restrictions.LabelNameMaxLength)
+                    .IsRequired();
+            });
+
+            modelBuilder.Entity<QuestionnaireLabel>(builder =>
+            {
+                builder.Property(x => x.QuestionnaireLabelName)
+                    .HasMaxLength(Restrictions.LabelNameMaxLength)
+                    .IsRequired();
+            });
+
+            modelBuilder.Entity<QuestionnaireLabel>()
+                .HasIndex(x => new { x.QuestionnaireId, x.NormalizedLabelId, x.QuestionnaireLabelName })
+                .IsUnique();
         }
     }
 }

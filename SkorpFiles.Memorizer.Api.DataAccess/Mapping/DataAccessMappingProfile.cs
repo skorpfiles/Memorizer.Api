@@ -42,7 +42,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.Text, opts => opts.MapFrom(src => src.QuestionText))
                 .ForMember(dest => dest.UntypedAnswer, opts => opts.MapFrom(src => src.QuestionUntypedAnswer))
                 .IncludeAllDerived();
-            CreateMap<Question, SkorpFiles.Memorizer.Api.Models.ExistingQuestion>();
+            CreateMap<Question, SkorpFiles.Memorizer.Api.Models.ExistingQuestion>()
+                .ForMember(dest => dest.Labels, opts => opts.MapFrom(src => src.LabelsForQuestion.Where(lq => lq.QuestionLabelName != null).Select(lq => lq.QuestionLabelName)));
             CreateMap<Question, SkorpFiles.Memorizer.Api.Models.QuestionToUpdate>();
             CreateMap<SkorpFiles.Memorizer.Api.Models.Question, Question>()
                 .ForMember(dest => dest.QuestionId, opts => opts.MapFrom(src => src.Id))
