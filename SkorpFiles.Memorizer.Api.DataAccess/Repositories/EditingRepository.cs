@@ -192,7 +192,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     .Include(q => q.TypedAnswers)
                     .Include(q => q.LabelsForQuestion!)
                     .ThenInclude(el => el.Label)
-                join questionUser in DbContext.QuestionsUsers on question equals questionUser.Question into questionsUsersGrouped
+                join questionUser in DbContext.QuestionsUsers.Where(qu => qu.UserId == userIdString) on question equals questionUser.Question into questionsUsersGrouped
                 from questionUserResult in questionsUsersGrouped.DefaultIfEmpty()
                 where !question.ObjectIsRemoved
                 select new
