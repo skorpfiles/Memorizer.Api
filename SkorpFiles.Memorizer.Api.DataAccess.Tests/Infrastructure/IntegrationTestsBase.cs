@@ -1,14 +1,12 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
-using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
 
-namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
+namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.Infrastructure
 {
     public abstract class IntegrationTestsBase : IDisposable
     {
@@ -54,12 +52,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             services.AddScoped(services => mapperConfig.CreateMapper());
 
             ServiceProvider = services.BuildServiceProvider();
-        }
-
-        public async Task RegisterUserAsync()
-        {
-            await DbContext.Users.AddAsync(new IdentityUser { Id = Constants.DefaultUserId.ToAspNetUserIdString()!, UserName = "TestLogin" });
-            await DbContext.SaveChangesAsync();
         }
 
         /// <summary>

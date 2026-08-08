@@ -1,6 +1,6 @@
 using System;
 
-namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
+namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.Infrastructure
 {
     /// <summary>
     /// Well-known identifiers and facts about the data produced by
