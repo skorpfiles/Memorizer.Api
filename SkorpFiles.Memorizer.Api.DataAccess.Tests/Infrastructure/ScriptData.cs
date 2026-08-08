@@ -1,11 +1,10 @@
 using System;
 
-namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
+namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.Infrastructure
 {
     /// <summary>
-    /// Well-known identifiers and facts about the data produced by
-    /// SkorpFiles.Memorizer.Api.DataAccess/Scripts/TestData.sql, so the integration
-    /// tests can address specific seeded rows without re-deriving the GUID scheme.
+    /// Well-known identifiers and facts about the data produced by Infrastructure/TestData.sql,
+    /// so the integration tests can address specific seeded rows without re-deriving the GUID scheme.
     ///
     /// The script gives every row a fixed GUID grouped by entity type:
     ///   A0000000-…  questionnaires (n = 1..50)

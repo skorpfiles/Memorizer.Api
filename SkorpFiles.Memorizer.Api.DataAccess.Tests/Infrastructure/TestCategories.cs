@@ -1,4 +1,4 @@
-namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
+namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.Infrastructure
 {
     /// <summary>
     /// Test category names used with <see cref="TestCategoryAttribute"/>.

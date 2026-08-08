@@ -27,10 +27,10 @@
     <ProjectReference Include="..\SkorpFiles.Memorizer.Api.Models\SkorpFiles.Memorizer.Api.Models.csproj" />
   </ItemGroup>
 
-  <!-- The integration tests seed the database from the shared test-data script.
-       Copy it next to the test assembly so IntegrationTestsBase can read it. -->
+  <!-- The integration tests seed the database from this test-data script;
+       copy it to the output so IntegrationTestsBase can read it at run time. -->
   <ItemGroup>
-    <None Include="..\SkorpFiles.Memorizer.Api.DataAccess\Scripts\TestData.sql" Link="TestData.sql">
+    <None Update="Infrastructure\TestData.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

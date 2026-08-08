@@ -1,14 +1,12 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using SkorpFiles.Memorizer.Api.DataAccess.DependencyInjection;
-using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
 using SkorpFiles.Memorizer.Api.DataAccess.Mapping;
 
-namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
+namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.Infrastructure
 {
     public abstract class IntegrationTestsBase : IDisposable
     {
@@ -56,21 +54,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             ServiceProvider = services.BuildServiceProvider();
         }
 
-        public async Task RegisterUserAsync()
-        {
-            await DbContext.Users.AddAsync(new IdentityUser { Id = Constants.DefaultUserId.ToAspNetUserIdString()!, UserName = "TestLogin" });
-            await DbContext.SaveChangesAsync();
-        }
-
         /// <summary>
-        /// Fills the freshly migrated database from the shared
-        /// SkorpFiles.Memorizer.Api.DataAccess/Scripts/TestData.sql, which is copied next
-        /// to the test assembly at build time. The script is a single self-contained batch
-        /// (no GO separators), so it runs as one command.
+        /// Fills the freshly migrated database from Infrastructure/TestData.sql, which is copied
+        /// to the Infrastructure output folder at build time (see the csproj). The script is a
+        /// single self-contained batch (no GO separators), so it runs as one command.
         /// </summary>
         private void SeedTestData()
         {
-            var scriptPath = Path.Combine(AppContext.BaseDirectory, "TestData.sql");
+            var scriptPath = Path.Combine(AppContext.BaseDirectory, "Infrastructure", "TestData.sql");
             var script = File.ReadAllText(scriptPath);
 
             // Run the script over the raw connection rather than through ExecuteSqlRaw, which
