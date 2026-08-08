@@ -56,13 +56,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.Infrastructure
 
         /// <summary>
         /// Fills the freshly migrated database from the shared
-        /// SkorpFiles.Memorizer.Api.DataAccess/Scripts/TestData.sql, which is copied next
-        /// to the test assembly at build time. The script is a single self-contained batch
-        /// (no GO separators), so it runs as one command.
+        /// SkorpFiles.Memorizer.Api.DataAccess/Scripts/TestData.sql, which is copied into the
+        /// Infrastructure output folder at build time (see the csproj). The script is a single
+        /// self-contained batch (no GO separators), so it runs as one command.
         /// </summary>
         private void SeedTestData()
         {
-            var scriptPath = Path.Combine(AppContext.BaseDirectory, "TestData.sql");
+            var scriptPath = Path.Combine(AppContext.BaseDirectory, "Infrastructure", "TestData.sql");
             var script = File.ReadAllText(scriptPath);
 
             // Run the script over the raw connection rather than through ExecuteSqlRaw, which
