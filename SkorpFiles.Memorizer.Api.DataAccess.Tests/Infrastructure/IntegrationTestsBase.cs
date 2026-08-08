@@ -55,10 +55,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.Infrastructure
         }
 
         /// <summary>
-        /// Fills the freshly migrated database from the shared
-        /// SkorpFiles.Memorizer.Api.DataAccess/Scripts/TestData.sql, which is copied into the
-        /// Infrastructure output folder at build time (see the csproj). The script is a single
-        /// self-contained batch (no GO separators), so it runs as one command.
+        /// Fills the freshly migrated database from Infrastructure/TestData.sql, which is copied
+        /// to the Infrastructure output folder at build time (see the csproj). The script is a
+        /// single self-contained batch (no GO separators), so it runs as one command.
         /// </summary>
         private void SeedTestData()
         {
