@@ -16,6 +16,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
         protected IMapper Mapper { get; private set; }
         protected IServiceProvider ServiceProvider { get; private set; }
 
+        private readonly DbContextOptions<ApplicationDbContext> _options;
+
         public IntegrationTestsBase()
         {
             var serviceProvider = new ServiceCollection()
@@ -30,9 +32,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             builder.UseSqlServer(configuration["DatabaseConnectionString"])
                     .UseInternalServiceProvider(serviceProvider);
 
+            _options = builder.Options;
+
             DbContext = new ApplicationDbContext(builder.Options);
             DbContext.Database.EnsureDeleted();
             DbContext.Database.Migrate();
+            SeedTestData();
 
             var services = new ServiceCollection();
             services.AddRepositories();
@@ -56,6 +61,43 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             await DbContext.Users.AddAsync(new IdentityUser { Id = Constants.DefaultUserId.ToAspNetUserIdString()!, UserName = "TestLogin" });
             await DbContext.SaveChangesAsync();
         }
+
+        /// <summary>
+        /// Fills the freshly migrated database from the shared
+        /// SkorpFiles.Memorizer.Api.DataAccess/Scripts/TestData.sql, which is copied next
+        /// to the test assembly at build time. The script is a single self-contained batch
+        /// (no GO separators), so it runs as one command.
+        /// </summary>
+        private void SeedTestData()
+        {
+            var scriptPath = Path.Combine(AppContext.BaseDirectory, "TestData.sql");
+            var script = File.ReadAllText(scriptPath);
+
+            // Run the script over the raw connection rather than through ExecuteSqlRaw, which
+            // would treat the literal { } in the question texts as composite-format placeholders.
+            var connection = DbContext.Database.GetDbConnection();
+            var wasClosed = connection.State != System.Data.ConnectionState.Open;
+            if (wasClosed)
+                connection.Open();
+            try
+            {
+                using var command = connection.CreateCommand();
+                command.CommandText = script;
+                command.CommandTimeout = 120;
+                command.ExecuteNonQuery();
+            }
+            finally
+            {
+                if (wasClosed)
+                    connection.Close();
+            }
+        }
+
+        /// <summary>
+        /// A separate context on the same database, for reading persisted state back without
+        /// the change tracker of the context the repository under test wrote through.
+        /// </summary>
+        protected ApplicationDbContext FreshContext() => new(_options);
 
         public void Dispose()
         {
