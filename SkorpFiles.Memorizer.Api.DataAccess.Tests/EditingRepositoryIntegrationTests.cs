@@ -201,16 +201,17 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
             var repository = CreateRepository();
 
-            // A large page so pagination cannot truncate the result.
             var result = await repository.GetQuestionsAsync(userId, new GetQuestionsRequest
             {
                 QuestionnaireId = questionnaireId,
                 PageSize = 1000
             });
 
+            // Exactly the non-removed questions, each once (the status join is filtered to the
+            // requesting user, so a question is not repeated per foreign status).
+            result.TotalCount.Should().Be(expectedLiveQuestionIds.Count);
             result.Items.Should().OnlyContain(q => q.QuestionnaireId == questionnaireId && !q.IsRemoved);
-            // Every non-removed question of the questionnaire is present.
-            result.Items.Select(q => q.Id!.Value).Distinct().Should().BeEquivalentTo(expectedLiveQuestionIds);
+            result.Items.Select(q => q.Id!.Value).Should().BeEquivalentTo(expectedLiveQuestionIds);
             // Alice has statuses on some questions of this questionnaire.
             result.Items.Should().Contain(q => q.MyStatus != null);
         }
