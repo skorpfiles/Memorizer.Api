@@ -29,8 +29,8 @@
       36 given typed answers     -> [memorizer].[jTrainingResultTypedAnswer]
          (past attempts and the answers typed in them; see section 9)
 
- The other "j" tables (jEventLog, jAuthenticationCache), sLabel and nnEntityLabel
- are intentionally left empty.
+ The other "j" tables (jEventLog, jAuthenticationCache) and the label tables
+ (rNormalizedLabel, nnQuestionLabel, nnQuestionnaireLabel) are intentionally left empty.
 
  Question types
  --------------
@@ -196,9 +196,11 @@ DELETE FROM memorizer.nnQuestionUser
 WHERE UserId IN (SELECT UserId FROM @TestUsers)
    OR QuestionId IN (SELECT QuestionId FROM @TestQuestions);
 
-DELETE FROM memorizer.nnEntityLabel
-WHERE QuestionId IN (SELECT QuestionId FROM @TestQuestions)
-   OR QuestionnaireId IN (SELECT QuestionnaireId FROM @TestQuestionnaires);
+DELETE FROM memorizer.nnQuestionLabel
+WHERE QuestionId IN (SELECT QuestionId FROM @TestQuestions);
+
+DELETE FROM memorizer.nnQuestionnaireLabel
+WHERE QuestionnaireId IN (SELECT QuestionnaireId FROM @TestQuestionnaires);
 
 DELETE FROM memorizer.nnTrainingQuestionnaire
 WHERE QuestionnaireId IN (SELECT QuestionnaireId FROM @TestQuestionnaires)
@@ -208,7 +210,6 @@ DELETE FROM memorizer.rTraining      WHERE OwnerId         IN (SELECT UserId FRO
 DELETE FROM memorizer.rTypedAnswer   WHERE QuestionId      IN (SELECT QuestionId FROM @TestQuestions);
 DELETE FROM memorizer.rQuestion      WHERE QuestionnaireId IN (SELECT QuestionnaireId FROM @TestQuestionnaires);
 DELETE FROM memorizer.rQuestionnaire WHERE QuestionnaireId IN (SELECT QuestionnaireId FROM @TestQuestionnaires);
-DELETE FROM memorizer.sLabel         WHERE OwnerId         IN (SELECT UserId FROM @TestUsers);
 DELETE FROM memorizer.rUserActivity  WHERE UserId          IN (SELECT UserId FROM @TestUsers);
 
 DELETE FROM dbo.AspNetUserTokens WHERE UserId IN (SELECT UserId FROM @TestUsers);

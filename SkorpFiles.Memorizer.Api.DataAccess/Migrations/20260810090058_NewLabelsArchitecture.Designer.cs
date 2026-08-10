@@ -12,7 +12,7 @@ using SkorpFiles.Memorizer.Api.DataAccess;
 namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260810081951_NewLabelsArchitecture")]
+    [Migration("20260810090058_NewLabelsArchitecture")]
     partial class NewLabelsArchitecture
     {
         /// <inheritdoc />
@@ -272,7 +272,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Property<string>("NormalizedLabelName")
                         .IsRequired()
                         .HasMaxLength(10000)
-                        .HasColumnType("nvarchar(10000)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("NormalizedLabelNameHash")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("varbinary(32)")
+                        .HasComputedColumnSql("HASHBYTES('SHA2_256', [NormalizedLabelName])", true);
 
                     b.Property<DateTime>("ObjectCreationTimeUtc")
                         .HasColumnType("datetime2")
@@ -280,7 +286,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
                     b.HasKey("NormalizedLabelId");
 
-                    b.HasIndex("NormalizedLabelName")
+                    b.HasIndex("NormalizedLabelNameHash")
                         .IsUnique();
 
                     b.ToTable("rNormalizedLabel", "memorizer");
@@ -471,13 +477,13 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Property<string>("QuestionnaireLabelName")
                         .IsRequired()
                         .HasMaxLength(10000)
-                        .HasColumnType("nvarchar(10000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("QuestionnaireLabelId");
 
                     b.HasIndex("NormalizedLabelId");
 
-                    b.HasIndex("QuestionnaireId", "NormalizedLabelId", "QuestionnaireLabelName")
+                    b.HasIndex("QuestionnaireId", "NormalizedLabelId")
                         .IsUnique();
 
                     b.ToTable("nnQuestionnaireLabel", "memorizer");

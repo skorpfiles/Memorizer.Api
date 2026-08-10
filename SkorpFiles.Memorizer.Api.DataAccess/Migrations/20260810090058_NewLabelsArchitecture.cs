@@ -47,7 +47,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                 columns: table => new
                 {
                     NormalizedLabelId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    NormalizedLabelName = table.Column<string>(type: "nvarchar(10000)", maxLength: 10000, nullable: false),
+                    NormalizedLabelName = table.Column<string>(type: "nvarchar(max)", maxLength: 10000, nullable: false),
+                    NormalizedLabelNameHash = table.Column<byte[]>(type: "varbinary(32)", nullable: false, computedColumnSql: "HASHBYTES('SHA2_256', [NormalizedLabelName])", stored: true),
                     ObjectCreationTime = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -63,7 +64,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     QuestionnaireLabelId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     QuestionnaireId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     NormalizedLabelId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    QuestionnaireLabelName = table.Column<string>(type: "nvarchar(10000)", maxLength: 10000, nullable: false),
+                    QuestionnaireLabelName = table.Column<string>(type: "nvarchar(max)", maxLength: 10000, nullable: false),
                     QuestionnaireLabelIsAlive = table.Column<bool>(type: "bit", nullable: false),
                     ObjectCreationTime = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -93,17 +94,17 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                 column: "NormalizedLabelId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_nnQuestionnaireLabel_QuestionnaireId_NormalizedLabelId_QuestionnaireLabelName",
+                name: "IX_nnQuestionnaireLabel_QuestionnaireId_NormalizedLabelId",
                 schema: "memorizer",
                 table: "nnQuestionnaireLabel",
-                columns: new[] { "QuestionnaireId", "NormalizedLabelId", "QuestionnaireLabelName" },
+                columns: new[] { "QuestionnaireId", "NormalizedLabelId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_rNormalizedLabel_NormalizedLabelName",
+                name: "IX_rNormalizedLabel_NormalizedLabelNameHash",
                 schema: "memorizer",
                 table: "rNormalizedLabel",
-                column: "NormalizedLabelName",
+                column: "NormalizedLabelNameHash",
                 unique: true);
 
             migrationBuilder.AddForeignKey(
