@@ -40,8 +40,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests.Infrastructure
             var services = new ServiceCollection();
             services.AddRepositories();
 
-            // LabelsService resolves an IDbContextFactory<ApplicationDbContext>, so the test
-            // service provider must register one just like the Web host does.
             services.AddDbContextFactory<ApplicationDbContext>(o =>
                 o.UseSqlServer(configuration["DatabaseConnectionString"]));
 
