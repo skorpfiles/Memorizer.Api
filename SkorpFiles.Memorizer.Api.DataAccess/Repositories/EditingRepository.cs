@@ -2,6 +2,7 @@
 using Azure.Core;
 using Microsoft.EntityFrameworkCore;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
+using SkorpFiles.Memorizer.Api.DataAccess.Interfaces;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
@@ -15,10 +16,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
     public class EditingRepository(
         ApplicationDbContext dbContext, 
         IMapper mapper,
-        LabelsService labelsService) : RepositoryBase(dbContext), IEditingRepository
+        ILabelsService labelsService) : RepositoryBase(dbContext), IEditingRepository
     {
         private readonly IMapper _mapper = mapper;
-        private readonly LabelsService _labelsService = labelsService;
+        private readonly ILabelsService _labelsService = labelsService;
 
         public async Task<Api.Models.PaginatedCollection<Api.Models.Questionnaire>> GetQuestionnairesAsync(Guid userId,
             GetQuestionnairesRequest request)

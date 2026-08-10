@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
+using SkorpFiles.Memorizer.Api.DataAccess.Interfaces;
 using SkorpFiles.Memorizer.Api.DataAccess.Repositories;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
@@ -13,7 +15,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
     [TestCategory(TestCategories.Integration)]
     public class EditingRepositoryIntegrationTests : IntegrationTestsBase
     {
-        private EditingRepository CreateRepository() => new(DbContext, Mapper);
+        private EditingRepository CreateRepository() => new EditingRepository(DbContext, Mapper, ServiceProvider.GetRequiredService<ILabelsService>());
 
         // ---------------------------------------------------------------- Questionnaires
 

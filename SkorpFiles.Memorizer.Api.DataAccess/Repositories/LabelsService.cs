@@ -1,15 +1,11 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SkorpFiles.Memorizer.Api.DataAccess.Models;
+using SkorpFiles.Memorizer.Api.DataAccess.Interfaces;
 
 namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 {
-    public class LabelsService
+    public class LabelsService: ILabelsService
     {
         private const int MaxAttempts = 100;
 
@@ -103,7 +99,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             };
         }
 
-        public static string NormalizeLabelName(string name)
+        private static string NormalizeLabelName(string name)
         {
             return name.Trim().ToUpperInvariant();
         }
