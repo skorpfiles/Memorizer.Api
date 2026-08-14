@@ -9,7 +9,7 @@
         public const int QuestionTrainingTimeSecondsMinValue = 1;
         public const int QuestionTrainingTimeSecondsMaxValue = 21600;
         public const int TypedAnswerTextMaxLength = 100000;
-        public const int LabelNameMaxLength = 10000;
+        public const int LabelNameMaxLength = 450;
 
         public const int MaxCountOfLabelsPerQuestion = 100;
         public const int MaxCountOfLabelsForQuestionsFilter = 100;

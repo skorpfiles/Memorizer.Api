@@ -12,7 +12,7 @@ using SkorpFiles.Memorizer.Api.DataAccess;
 namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260810081951_NewLabelsArchitecture")]
+    [Migration("20260814060308_NewLabelsArchitecture")]
     partial class NewLabelsArchitecture
     {
         /// <inheritdoc />
@@ -271,8 +271,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
                     b.Property<string>("NormalizedLabelName")
                         .IsRequired()
-                        .HasMaxLength(10000)
-                        .HasColumnType("nvarchar(10000)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("ObjectCreationTimeUtc")
                         .HasColumnType("datetime2")
@@ -356,8 +356,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
                     b.Property<string>("QuestionLabelName")
                         .IsRequired()
-                        .HasMaxLength(10000)
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("QuestionLabelId");
 
@@ -470,8 +470,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
                     b.Property<string>("QuestionnaireLabelName")
                         .IsRequired()
-                        .HasMaxLength(10000)
-                        .HasColumnType("nvarchar(10000)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("QuestionnaireLabelId");
 

@@ -268,8 +268,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
                     b.Property<string>("NormalizedLabelName")
                         .IsRequired()
-                        .HasMaxLength(10000)
-                        .HasColumnType("nvarchar(10000)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("ObjectCreationTimeUtc")
                         .HasColumnType("datetime2")
@@ -353,8 +353,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
                     b.Property<string>("QuestionLabelName")
                         .IsRequired()
-                        .HasMaxLength(10000)
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("QuestionLabelId");
 
@@ -467,8 +467,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
                     b.Property<string>("QuestionnaireLabelName")
                         .IsRequired()
-                        .HasMaxLength(10000)
-                        .HasColumnType("nvarchar(10000)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("QuestionnaireLabelId");
 
