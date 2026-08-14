@@ -7,8 +7,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
 {
     public class ApplicationDbContext : IdentityDbContext
     {
-        private const string NormalizedLabelNameHashColumn = "NormalizedLabelNameHash";
-
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -51,25 +49,16 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
             modelBuilder.Entity<NormalizedLabel>(builder =>
             {
                 builder.Property(x => x.NormalizedLabelName)
-                    .HasColumnType("nvarchar(max)")
                     .HasMaxLength(Restrictions.LabelNameMaxLength)
                     .IsRequired();
 
-                builder.Property<byte[]>(NormalizedLabelNameHashColumn)
-                    .HasColumnType("varbinary(32)")
-                    .HasComputedColumnSql(
-                        $"HASHBYTES('SHA2_256', [{nameof(NormalizedLabel.NormalizedLabelName)}])",
-                        stored: true)
-                    .IsRequired();
-
-                builder.HasIndex(NormalizedLabelNameHashColumn)
+                builder.HasIndex(x => x.NormalizedLabelName)
                     .IsUnique();
             });
 
             modelBuilder.Entity<QuestionLabel>(builder =>
             {
                 builder.Property(x => x.QuestionLabelName)
-                    .HasColumnType("nvarchar(max)")
                     .HasMaxLength(Restrictions.LabelNameMaxLength)
                     .IsRequired();
             });
@@ -77,13 +66,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
             modelBuilder.Entity<QuestionnaireLabel>(builder =>
             {
                 builder.Property(x => x.QuestionnaireLabelName)
-                    .HasColumnType("nvarchar(max)")
                     .HasMaxLength(Restrictions.LabelNameMaxLength)
                     .IsRequired();
             });
 
             modelBuilder.Entity<QuestionnaireLabel>()
-                .HasIndex(x => new { x.QuestionnaireId, x.NormalizedLabelId })
+                .HasIndex(x => new { x.QuestionnaireId, x.NormalizedLabelId, x.QuestionnaireLabelName })
                 .IsUnique();
         }
     }
