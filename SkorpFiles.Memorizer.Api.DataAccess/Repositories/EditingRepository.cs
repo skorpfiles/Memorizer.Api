@@ -293,6 +293,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 if (questionnaireResult.OwnerId != userId.ToAspNetUserIdString())
                     throw new AccessDeniedForUserException(Constants.ExceptionMessages.UserCannotChangeQuestionnaire);
 
+                // NormalizedLabelId values that lost a QuestionLabel row in this request; checked for
+                // orphaning (no remaining nnQuestionLabel row) once all changes have been saved.
+                var normalizedLabelIdsToCheckForOrphans = new HashSet<Guid>();
+
                 if (request.CreatedQuestions != null)
                 {
                     foreach (var question in request.CreatedQuestions)
@@ -339,6 +343,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
                         var questionFromDb = await (from questionQuery in DbContext.Questions
                                                         .Include(q => q.TypedAnswers)
+                                                        .Include(q => q.LabelsForQuestion)
                                                     where !questionQuery.ObjectIsRemoved &&
                                                     questionQuery.QuestionnaireId == questionnaireResult.QuestionnaireId &&
                                                     (question.Id == null || questionQuery.QuestionId == question.Id) &&
@@ -376,15 +381,17 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                         if (question.Labels != null)
                         {
                             var labelsAndIds = await _labelsService.EnsureLabelsAsync(question.Labels);
+                            var normalizedLabelIdsForQuestion = labelsAndIds.Values.ToList();
 
                             var dbQuestionLabelsToDelete =
                                 from questionLabel in DbContext.QuestionsLabels
                                 where questionLabel.QuestionId == questionFromDb.QuestionId &&
-                                    !labelsAndIds.Any(l => l.Value == questionLabel.NormalizedLabelId)
+                                    !normalizedLabelIdsForQuestion.Contains(questionLabel.NormalizedLabelId)
                                 select questionLabel;
 
                             await dbQuestionLabelsToDelete.ForEachAsync(l =>
                             {
+                                normalizedLabelIdsToCheckForOrphans.Add(l.NormalizedLabelId);
                                 DbContext.QuestionsLabels.Remove(l);
                             });
 
@@ -423,6 +430,17 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                         {
                             questionFromDb.ObjectIsRemoved = true;
                             questionFromDb.ObjectRemovalTimeUtc = DateTime.UtcNow;
+
+                            var dbQuestionLabelsOfDeletedQuestion =
+                                from questionLabel in DbContext.QuestionsLabels
+                                where questionLabel.QuestionId == questionFromDb.QuestionId
+                                select questionLabel;
+
+                            await dbQuestionLabelsOfDeletedQuestion.ForEachAsync(l =>
+                            {
+                                normalizedLabelIdsToCheckForOrphans.Add(l.NormalizedLabelId);
+                                DbContext.QuestionsLabels.Remove(l);
+                            });
                         }
                         else
                             throw new ObjectNotFoundException("One of the deleted questions doesn't exist.");
@@ -433,6 +451,28 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     questionnaireResult.QuestionnaireLastEditingTimeUtc = DateTime.UtcNow;
 
                 await DbContext.SaveChangesAsync();
+
+                if (normalizedLabelIdsToCheckForOrphans.Count > 0)
+                {
+                    var stillUsedLabelIds = await DbContext.QuestionsLabels
+                        .Where(l => normalizedLabelIdsToCheckForOrphans.Contains(l.NormalizedLabelId))
+                        .Select(l => l.NormalizedLabelId)
+                        .Distinct()
+                        .ToListAsync();
+
+                    var orphanedLabelIds = normalizedLabelIdsToCheckForOrphans.Except(stillUsedLabelIds).ToList();
+
+                    if (orphanedLabelIds.Count > 0)
+                    {
+                        var orphanedLabels = await DbContext.NormalizedLabels
+                            .Where(nl => orphanedLabelIds.Contains(nl.NormalizedLabelId))
+                            .ToListAsync();
+
+                        DbContext.NormalizedLabels.RemoveRange(orphanedLabels);
+
+                        await DbContext.SaveChangesAsync();
+                    }
+                }
             }
         }
 
