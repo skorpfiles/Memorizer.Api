@@ -128,15 +128,15 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
             return new Api.Models.PaginatedCollection<Api.Models.Questionnaire>(resultList, totalCount, request.PageNumber, request.PageSize);
         }
 
-        public async Task<Api.Models.Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime)
+        public async Task<Api.Models.Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime, bool includeLabelsList)
         {
-            var result = await GetFullQuestionnaireInfoAsync(userId, questionnaireId, null);
+            var result = await GetFullQuestionnaireInfoAsync(userId, includeLabelsList, questionnaireId, null);
             return result;
         }
 
-        public async Task<Api.Models.Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime)
+        public async Task<Api.Models.Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime, bool includeLabelsList)
         {
-            var result = await GetFullQuestionnaireInfoAsync(userId, null, questionnaireCode);
+            var result = await GetFullQuestionnaireInfoAsync(userId, includeLabelsList, null, questionnaireCode);
             return result;
         }
 
@@ -837,7 +837,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 throw new ObjectNotFoundException("Questionnaire with such ID or code is not found.");
         }
 
-        private async Task<Api.Models.Questionnaire> GetFullQuestionnaireInfoAsync(Guid userId, Guid? questionnaireId = null, int? questionnaireCode = null)
+        private async Task<Api.Models.Questionnaire> GetFullQuestionnaireInfoAsync(Guid userId, bool includeLabelsList, Guid? questionnaireId = null, int? questionnaireCode = null)
         {
             CheckIdAndCodeDefinitionRule(questionnaireId, questionnaireCode,
                 new ArgumentException(Constants.ExceptionMessages.IdOrCodeShouldNotBeNull),
@@ -869,6 +869,14 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                     Rechecked = groupResult.QuestionsRecheckCount
                 };
                 result.TotalTrainingTimeSeconds = groupResult.TotalTrainingTimeSeconds;
+
+                if (includeLabelsList)
+                {
+                    var labelsList = await (from questionLabel in DbContext.QuestionsLabels.Include(ql => ql.Question)
+                                            where questionLabel.Question!.QuestionnaireId == groupResult.Questionnaire.QuestionnaireId
+                                            select questionLabel.QuestionLabelName).Distinct().ToListAsync();
+                    result.LabelsForQuestionnaire = labelsList;
+                }
 
                 return result;
             }

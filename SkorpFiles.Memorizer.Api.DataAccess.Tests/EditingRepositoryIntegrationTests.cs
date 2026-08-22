@@ -77,7 +77,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
             var repository = CreateRepository();
 
-            var result = await repository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime: true);
+            var result = await repository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime: true, includeLabelsList: false);
 
             result.Should().NotBeNull();
             result!.Id.Should().Be(questionnaireId);
@@ -95,7 +95,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
             var repository = CreateRepository();
 
-            var result = await repository.GetQuestionnaireAsync(userId, expected.QuestionnaireCode, calculateTime: true);
+            var result = await repository.GetQuestionnaireAsync(userId, expected.QuestionnaireCode, calculateTime: true, includeLabelsList: false);
 
             result.Should().NotBeNull();
             result!.Id.Should().Be(expected.QuestionnaireId);
@@ -106,7 +106,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
         {
             var repository = CreateRepository();
 
-            var act = async () => await repository.GetQuestionnaireAsync(ScriptData.Alice, ScriptData.BobPrivateQuestionnaire, calculateTime: true);
+            var act = async () => await repository.GetQuestionnaireAsync(ScriptData.Alice, ScriptData.BobPrivateQuestionnaire, calculateTime: true, includeLabelsList: false);
 
             await act.Should().ThrowAsync<AccessDeniedForUserException>();
         }

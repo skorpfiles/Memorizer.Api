@@ -5,8 +5,8 @@ namespace SkorpFiles.Memorizer.Api.Models.Interfaces.BusinessLogic
     public interface IEditingLogic
     {
         Task<PaginatedCollection<Questionnaire>> GetQuestionnairesAsync(Guid userId, GetQuestionnairesRequest request);
-        Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime);
-        Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime);
+        Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime, bool includeLabelsList);
+        Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime, bool includeLabelsList);
         Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request);
         Task<Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request);
         Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId);

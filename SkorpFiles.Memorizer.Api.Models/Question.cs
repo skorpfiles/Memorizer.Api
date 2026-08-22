@@ -21,5 +21,6 @@ namespace SkorpFiles.Memorizer.Api.Models
         public int? CodeInQuestionnaire { get; set; }
         public UserQuestionStatus? MyStatus { get; set; }
         public Questionnaire? Questionnaire { get; set; }
+        public IEnumerable<string>? Labels { get; set; }
     }
 }

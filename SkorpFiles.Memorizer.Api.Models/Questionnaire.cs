@@ -17,5 +17,6 @@ namespace SkorpFiles.Memorizer.Api.Models
         public string? OwnerName { get; set; }
         public QuestionsCounts? CountsOfQuestions { get; set; }
         public long? TotalTrainingTimeSeconds { get; set; }
+        public IEnumerable<string>? LabelsForQuestionnaire { get; set; }
     }
 }
