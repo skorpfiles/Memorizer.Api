@@ -112,6 +112,65 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
         }
 
         [TestMethod]
+        public async Task GetQuestionnaireAsync_ById_WithIncludeLabelsList_ReturnsDistinctLabelsAcrossQuestions()
+        {
+            var userId = ScriptData.Alice;
+            // Questionnaire 2 "Spanish: everyday verbs" has "Conjugation" and "Grammar" labels, each
+            // on several questions (see TestData.sql section 10) - Distinct() should collapse the repeats.
+            var questionnaireId = ScriptData.AlicePublicQuestionnaire;
+
+            var repository = CreateRepository();
+
+            var result = await repository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime: true, includeLabelsList: true);
+
+            result.Should().NotBeNull();
+            result!.LabelsForQuestionnaire.Should().BeEquivalentTo(new[] { "Conjugation", "Grammar" });
+        }
+
+        [TestMethod]
+        public async Task GetQuestionnaireAsync_ByCode_WithIncludeLabelsList_ReturnsDistinctLabelsAcrossQuestions()
+        {
+            var userId = ScriptData.Alice;
+            var expected = await DbContext.Questionnaires.SingleAsync(q => q.QuestionnaireId == ScriptData.AlicePublicQuestionnaire);
+
+            var repository = CreateRepository();
+
+            var result = await repository.GetQuestionnaireAsync(userId, expected.QuestionnaireCode, calculateTime: true, includeLabelsList: true);
+
+            result.Should().NotBeNull();
+            result!.LabelsForQuestionnaire.Should().BeEquivalentTo(new[] { "Conjugation", "Grammar" });
+        }
+
+        [TestMethod]
+        public async Task GetQuestionnaireAsync_WithIncludeLabelsListFalse_DoesNotPopulateLabels()
+        {
+            var userId = ScriptData.Alice;
+            var questionnaireId = ScriptData.AlicePublicQuestionnaire;
+
+            var repository = CreateRepository();
+
+            var result = await repository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime: true, includeLabelsList: false);
+
+            result.Should().NotBeNull();
+            result!.LabelsForQuestionnaire.Should().BeNull();
+        }
+
+        [TestMethod]
+        public async Task GetQuestionnaireAsync_WithIncludeLabelsList_ForQuestionnaireWithoutLabels_ReturnsEmptyList()
+        {
+            var userId = ScriptData.Alice;
+            // Questionnaire 5 "English irregular verbs" carries no seeded labels (see TestData.sql section 10).
+            var questionnaireId = ScriptData.QuestionnaireId(5);
+
+            var repository = CreateRepository();
+
+            var result = await repository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime: true, includeLabelsList: true);
+
+            result.Should().NotBeNull();
+            result!.LabelsForQuestionnaire.Should().NotBeNull().And.BeEmpty();
+        }
+
+        [TestMethod]
         public async Task CreateQuestionnaireAsync_CreatesOwnedQuestionnaire()
         {
             var userId = ScriptData.Alice;
