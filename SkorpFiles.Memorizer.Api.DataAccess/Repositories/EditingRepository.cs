@@ -339,6 +339,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
 
                         var questionFromDb = await (from questionQuery in DbContext.Questions
                                                         .Include(q => q.TypedAnswers)
+                                                        .Include(q => q.LabelsForQuestion)
                                                     where !questionQuery.ObjectIsRemoved &&
                                                     questionQuery.QuestionnaireId == questionnaireResult.QuestionnaireId &&
                                                     (question.Id == null || questionQuery.QuestionId == question.Id) &&
@@ -376,11 +377,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                         if (question.Labels != null)
                         {
                             var labelsAndIds = await _labelsService.EnsureLabelsAsync(question.Labels);
+                            var normalizedLabelIdsForQuestion = labelsAndIds.Values.ToList();
 
                             var dbQuestionLabelsToDelete =
                                 from questionLabel in DbContext.QuestionsLabels
                                 where questionLabel.QuestionId == questionFromDb.QuestionId &&
-                                    !labelsAndIds.Any(l => l.Value == questionLabel.NormalizedLabelId)
+                                    !normalizedLabelIdsForQuestion.Contains(questionLabel.NormalizedLabelId)
                                 select questionLabel;
 
                             await dbQuestionLabelsToDelete.ForEachAsync(l =>
@@ -423,6 +425,16 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                         {
                             questionFromDb.ObjectIsRemoved = true;
                             questionFromDb.ObjectRemovalTimeUtc = DateTime.UtcNow;
+
+                            var dbQuestionLabelsOfDeletedQuestion =
+                                from questionLabel in DbContext.QuestionsLabels
+                                where questionLabel.QuestionId == questionFromDb.QuestionId
+                                select questionLabel;
+
+                            await dbQuestionLabelsOfDeletedQuestion.ForEachAsync(l =>
+                            {
+                                DbContext.QuestionsLabels.Remove(l);
+                            });
                         }
                         else
                             throw new ObjectNotFoundException("One of the deleted questions doesn't exist.");
