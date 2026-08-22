@@ -873,7 +873,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Repositories
                 if (includeLabelsList)
                 {
                     var labelsList = await (from questionLabel in DbContext.QuestionsLabels.Include(ql => ql.Question)
-                                            where questionLabel.Question!.QuestionnaireId == groupResult.Questionnaire.QuestionnaireId
+                                            where questionLabel.Question!.QuestionnaireId == groupResult.Questionnaire.QuestionnaireId &&
+                                                !questionLabel.Question!.ObjectIsRemoved
                                             select questionLabel.QuestionLabelName).Distinct().ToListAsync();
                     result.LabelsForQuestionnaire = labelsList;
                 }

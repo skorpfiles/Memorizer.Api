@@ -26,7 +26,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 {
                     opts.Condition(src => src.Owner != null);
                     opts.MapFrom(src => src.Owner!.UserName);
-                });
+                })
+                .ForMember(dest => dest.LabelsForQuestionnaire, opts => opts.Ignore());
             CreateMap<Question, SkorpFiles.Memorizer.Api.Models.Question>()
                 .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.QuestionId))
                 .ForMember(dest => dest.CodeInQuestionnaire, opts => opts.MapFrom(src => src.QuestionQuestionnaireCode))
