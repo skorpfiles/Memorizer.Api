@@ -306,7 +306,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
         }
 
         [TestMethod]
-        public async Task UpdateQuestionsAsync_ManagesQuestionLabelsAndNormalizedLabels_AcrossCreateUpdateAndDelete()
+        public async Task UpdateQuestionsAsync_ManagesQuestionLabels_AcrossCreateUpdateAndDelete()
         {
             var userId = ScriptData.Alice;
             // Questionnaire 2 "Spanish: everyday verbs" already has a shared "Grammar" and a shared
@@ -315,8 +315,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
             var repository = CreateRepository();
 
-            // Arrange: two questions to later be updated and deleted, each with a label that is
-            // brand new and used nowhere else, so it becomes orphaned once removed from its question.
+            // Arrange: two questions to later be updated and deleted, each with a label used nowhere
+            // else in the seed data.
             var setupRequest = new UpdateQuestionsRequest
             {
                 QuestionnaireId = questionnaireId,
@@ -422,12 +422,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             deletedQuestion.ObjectRemovalTimeUtc.Should().NotBeNull();
             (await db.QuestionsLabels.AnyAsync(l => l.QuestionId == questionToDeleteId)).Should().BeFalse();
 
-            // Orphaned normalized labels ("Legacy Label" lost its only reference on update, "Doomed
-            // Label" lost its only reference when its question was deleted) are removed...
-            (await db.NormalizedLabels.AnyAsync(nl => nl.NormalizedLabelName == "LEGACY LABEL")).Should().BeFalse();
-            (await db.NormalizedLabels.AnyAsync(nl => nl.NormalizedLabelName == "DOOMED LABEL")).Should().BeFalse();
+            // rNormalizedLabel is never cleaned up, even once a label's last nnQuestionLabel row is
+            // gone - "Legacy Label" and "Doomed Label" both still exist, unreferenced.
+            (await db.NormalizedLabels.AnyAsync(nl => nl.NormalizedLabelName == "LEGACY LABEL")).Should().BeTrue();
+            (await db.NormalizedLabels.AnyAsync(nl => nl.NormalizedLabelName == "DOOMED LABEL")).Should().BeTrue();
 
-            // ...while normalized labels still referenced elsewhere are left alone, with no duplicates.
+            // Normalized labels still referenced elsewhere are reused, not duplicated.
             (await db.NormalizedLabels.CountAsync(nl => nl.NormalizedLabelName == "GRAMMAR")).Should().Be(1);
             (await db.NormalizedLabels.CountAsync(nl => nl.NormalizedLabelName == "VOCABULARY")).Should().Be(1);
         }
