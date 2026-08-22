@@ -28,10 +28,11 @@
       34 training results        -> [memorizer].[jTrainingResult]
       36 given typed answers     -> [memorizer].[jTrainingResultTypedAnswer]
          (past attempts and the answers typed in them; see section 9)
-      17 normalized labels       -> [memorizer].[rNormalizedLabel]
-     170 question labels         -> [memorizer].[nnQuestionLabel]
-         (162 questions labelled, across 9 questionnaires; 8 of them carry 2 labels
-         each; see section 10)
+      18 normalized labels       -> [memorizer].[rNormalizedLabel]
+     171 question labels         -> [memorizer].[nnQuestionLabel]
+         (163 questions labelled, across 9 questionnaires; 8 of them carry 2 labels
+         each; one of them - questionnaire 2's removed question 50 - is itself
+         removed; see section 10)
 
  The "j" tables (jEventLog, jAuthenticationCache) and [nnQuestionnaireLabel] are
  intentionally left empty.
@@ -49,6 +50,9 @@
    * Questionnaires 1, 2, 4, 9, 13, 18, 23, 34 and 43 each carry more than one
      distinct label; the other 41 questionnaires have none.
    * A few questions (one per labelled questionnaire) carry two labels at once.
+   * Questionnaire 2's question 50 - itself removed - is labelled "Removed
+     Question Only", a label used nowhere else, so a query that lists a
+     questionnaire's labels can be checked for wrongly including it.
 
  Question types
  --------------
@@ -233,7 +237,7 @@ WHERE NormalizedLabelId IN (
     N'77000000-0000-0000-0000-000000000011', N'77000000-0000-0000-0000-000000000012',
     N'77000000-0000-0000-0000-000000000013', N'77000000-0000-0000-0000-000000000014',
     N'77000000-0000-0000-0000-000000000015', N'77000000-0000-0000-0000-000000000016',
-    N'77000000-0000-0000-0000-000000000017');
+    N'77000000-0000-0000-0000-000000000017', N'77000000-0000-0000-0000-000000000018');
 
 DELETE FROM memorizer.nnTrainingQuestionnaire
 WHERE QuestionnaireId IN (SELECT QuestionnaireId FROM @TestQuestionnaires)
@@ -7391,7 +7395,7 @@ VALUES
 /*==============================================================================
   10. Labels ([rNormalizedLabel], [nnQuestionLabel])
 
-  17 normalized labels, applied to 162 questions across 9 of the 50 questionnaires
+  18 normalized labels, applied to 163 questions across 9 of the 50 questionnaires
   (1, 2, 4, 9, 13, 18, 23, 34, 43); the other 41 questionnaires carry no labels.
   [nnQuestionnaireLabel] is left untouched by this script.
 
@@ -7405,6 +7409,11 @@ VALUES
   in questionnaire 18. Within any one questionnaire every row for a given label
   spells [QuestionLabelName] the same way. One question per labelled
   questionnaire (except 43) carries two labels at once.
+
+  Question 50 of questionnaire 2 - one of the questions removed by convention
+  (see "Conventions" above) - is labelled REMOVED ONLY / "Removed Question Only",
+  used nowhere else, so a query aggregating a questionnaire's labels can be
+  checked for wrongly pulling in labels of removed questions.
 ==============================================================================*/
 
 INSERT INTO memorizer.rNormalizedLabel
@@ -7426,7 +7435,8 @@ VALUES
     (N'77000000-0000-0000-0000-000000000014', N'COMPOSER', '2026-07-25T09:00:00'),
     (N'77000000-0000-0000-0000-000000000015', N'MUSICAL FORM', '2026-07-25T09:00:00'),
     (N'77000000-0000-0000-0000-000000000016', N'TECHNIQUE', '2026-07-25T09:00:00'),
-    (N'77000000-0000-0000-0000-000000000017', N'INGREDIENT', '2026-07-25T09:00:00');
+    (N'77000000-0000-0000-0000-000000000017', N'INGREDIENT', '2026-07-25T09:00:00'),
+    (N'77000000-0000-0000-0000-000000000018', N'REMOVED ONLY', '2026-07-25T09:00:00');
 
 -- 1. Spanish: food and drink - "Vocabulary" (shared with questionnaire 4, same spelling) + "Food & Drink" (own).
 --    Question 1 carries both.
@@ -7452,7 +7462,8 @@ VALUES
     (N'88000000-0000-0000-0000-000000000017', N'B0000000-0000-0000-0000-000000000029', N'77000000-0000-0000-0000-000000000003', N'Food & Drink', '2026-07-25T09:00:00');
 
 -- 2. Spanish: everyday verbs - "Conjugation" (own) + "Grammar" (shared with questionnaire 4, different capitalization there).
---    Question 76 carries both.
+--    Question 76 carries both. Question 100 (code 50, removed) carries "Removed Question Only",
+--    used nowhere else, so it can never legitimately show up as one of the questionnaire's labels.
 INSERT INTO memorizer.nnQuestionLabel
     (QuestionLabelId, QuestionId, NormalizedLabelId, QuestionLabelName, ObjectCreationTime)
 VALUES
@@ -7469,7 +7480,8 @@ VALUES
     (N'88000000-0000-0000-0000-000000000028', N'B0000000-0000-0000-0000-000000000081', N'77000000-0000-0000-0000-000000000002', N'Grammar', '2026-07-25T09:00:00'),
     (N'88000000-0000-0000-0000-000000000029', N'B0000000-0000-0000-0000-000000000082', N'77000000-0000-0000-0000-000000000002', N'Grammar', '2026-07-25T09:00:00'),
     (N'88000000-0000-0000-0000-000000000030', N'B0000000-0000-0000-0000-000000000084', N'77000000-0000-0000-0000-000000000002', N'Grammar', '2026-07-25T09:00:00'),
-    (N'88000000-0000-0000-0000-000000000031', N'B0000000-0000-0000-0000-000000000085', N'77000000-0000-0000-0000-000000000002', N'Grammar', '2026-07-25T09:00:00');
+    (N'88000000-0000-0000-0000-000000000031', N'B0000000-0000-0000-0000-000000000085', N'77000000-0000-0000-0000-000000000002', N'Grammar', '2026-07-25T09:00:00'),
+    (N'88000000-0000-0000-0000-000000000171', N'B0000000-0000-0000-0000-000000000100', N'77000000-0000-0000-0000-000000000018', N'Removed Question Only', '2026-07-25T09:00:00');
 
 -- 4. German: nouns and their articles - "Vocabulary" (shared with questionnaire 1, same spelling),
 --    "GRAMMAR" (shared with questionnaire 2, capitalized differently there) and "Compound Words" (own).

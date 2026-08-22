@@ -116,7 +116,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
         {
             var userId = ScriptData.Alice;
             // Questionnaire 2 "Spanish: everyday verbs" has "Conjugation" and "Grammar" labels, each
-            // on several questions (see TestData.sql section 10) - Distinct() should collapse the repeats.
+            // on several questions (see TestData.sql section 10) - Distinct() should collapse the
+            // repeats. Its removed question 50 is labelled "Removed Question Only", used nowhere
+            // else, so BeEquivalentTo (an exact-set match) also confirms that label is excluded.
             var questionnaireId = ScriptData.AlicePublicQuestionnaire;
 
             var repository = CreateRepository();
@@ -125,6 +127,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
             result.Should().NotBeNull();
             result!.LabelsForQuestionnaire.Should().BeEquivalentTo(new[] { "Conjugation", "Grammar" });
+            result.LabelsForQuestionnaire.Should().NotContain("Removed Question Only");
         }
 
         [TestMethod]
@@ -138,7 +141,10 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             var result = await repository.GetQuestionnaireAsync(userId, expected.QuestionnaireCode, calculateTime: true, includeLabelsList: true);
 
             result.Should().NotBeNull();
+            // Same expectations as the by-id overload, including exclusion of the removed
+            // question's "Removed Question Only" label.
             result!.LabelsForQuestionnaire.Should().BeEquivalentTo(new[] { "Conjugation", "Grammar" });
+            result.LabelsForQuestionnaire.Should().NotContain("Removed Question Only");
         }
 
         [TestMethod]
