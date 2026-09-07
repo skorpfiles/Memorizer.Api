@@ -11,8 +11,8 @@ namespace SkorpFiles.Memorizer.Api.Models.RequestModels
     {
         public Guid? QuestionnaireId { get; set; }
         public int? QuestionnaireCode { get; set; }
-        public IEnumerable<string>? LabelsNames { get; set; }
         public QuestionSortField SortField { get; set; } = QuestionSortField.AddedTime;
         public SortDirection SortDirection { get; set; } = SortDirection.Ascending;
+        public IEnumerable<string>? Labels { get; set; }
     }
 }

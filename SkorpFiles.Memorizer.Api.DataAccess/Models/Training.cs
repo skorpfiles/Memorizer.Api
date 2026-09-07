@@ -33,7 +33,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         [ForeignKey(nameof(OwnerId))]
         public ApplicationUser? Owner { get; set; }
 
-        public List<TrainingQuestionnaire>? QuestionnairesForTraining { get; set; }
+        public List<TrainingQuestionnaire> QuestionnairesForTraining { get; set; } = [];
 
     }
 }

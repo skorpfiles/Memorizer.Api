@@ -22,38 +22,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
                 .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.ObjectIsRemoved))
                 .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc))
-                .ForMember(dest => dest.Labels, opts => opts.MapFrom(src => src.LabelsForQuestionnaire))
                 .ForMember(dest => dest.OwnerName, opts =>
                 {
                     opts.Condition(src => src.Owner != null);
                     opts.MapFrom(src => src.Owner!.UserName);
-                });
-            CreateMap<EntityLabel, SkorpFiles.Memorizer.Api.Models.Label>()
-                .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.LabelId))
-                .ForMember(dest => dest.Name, opts => opts.MapFrom(src => src.Label!.LabelName))
-                .ForMember(dest => dest.StatusInQuestionnaire, opts => opts.MapFrom(src => new SkorpFiles.Memorizer.Api.Models.LabelInQuestionnaire
-                {
-                    Id = src.LabelId,
-                    Number = src.LabelNumber,
-                    ParentLabelId = src.ParentLabelId
-                }))
-                .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
-                .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.Label!.ObjectIsRemoved))
-                .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.Label!.ObjectRemovalTimeUtc));
-            CreateMap<Label, SkorpFiles.Memorizer.Api.Models.Label>()
-                .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.LabelId))
-                .ForMember(dest => dest.Name, opts => opts.MapFrom(src => src.LabelName))
-                .ForMember(dest => dest.Code, opts => opts.MapFrom(src => src.LabelCode))
-                .ForMember(dest => dest.CreationTimeUtc, opts => opts.MapFrom(src => src.ObjectCreationTimeUtc))
-                .ForMember(dest => dest.IsRemoved, opts => opts.MapFrom(src => src.ObjectIsRemoved))
-                .ForMember(dest => dest.RemovalTimeUtc, opts => opts.MapFrom(src => src.ObjectRemovalTimeUtc));
-            CreateMap<SkorpFiles.Memorizer.Api.Models.Label, Label>()
-                .ForMember(dest => dest.LabelId, opts => opts.MapFrom(src => src.Id))
-                .ForMember(dest => dest.LabelName, opts => opts.MapFrom(src => src.Name))
-                .ForMember(dest => dest.LabelCode, opts => opts.MapFrom(src => src.Code))
-                .ForMember(dest => dest.ObjectCreationTimeUtc, opts => opts.MapFrom(src => src.CreationTimeUtc))
-                .ForMember(dest => dest.ObjectIsRemoved, opts => opts.MapFrom(src => src.IsRemoved))
-                .ForMember(dest => dest.ObjectRemovalTimeUtc, opts => opts.MapFrom(src => src.RemovalTimeUtc));
+                })
+                .ForMember(dest => dest.LabelsForQuestionnaire, opts => opts.Ignore());
             CreateMap<Question, SkorpFiles.Memorizer.Api.Models.Question>()
                 .ForMember(dest => dest.Id, opts => opts.MapFrom(src => src.QuestionId))
                 .ForMember(dest => dest.CodeInQuestionnaire, opts => opts.MapFrom(src => src.QuestionQuestionnaireCode))
@@ -70,13 +44,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Mapping
                 .ForMember(dest => dest.UntypedAnswer, opts => opts.MapFrom(src => src.QuestionUntypedAnswer))
                 .IncludeAllDerived();
             CreateMap<Question, SkorpFiles.Memorizer.Api.Models.ExistingQuestion>()
-                .ForMember(dest => dest.Labels, opts => opts.MapFrom(src => src.LabelsForQuestion));
-            CreateMap<Question, SkorpFiles.Memorizer.Api.Models.QuestionToUpdate>()
-                .ForMember(dest => dest.LabelsIds, opts =>
-                {
-                    opts.Condition(src => src.LabelsForQuestion != null);
-                    opts.MapFrom(src => src.LabelsForQuestion!.Select(l => l.LabelId));
-                });
+                .ForMember(dest => dest.Labels, opts => opts.MapFrom(src => src.LabelsForQuestion.Where(lq => lq.QuestionLabelName != null).Select(lq => lq.QuestionLabelName)));
+            CreateMap<Question, SkorpFiles.Memorizer.Api.Models.QuestionToUpdate>();
             CreateMap<SkorpFiles.Memorizer.Api.Models.Question, Question>()
                 .ForMember(dest => dest.QuestionId, opts => opts.MapFrom(src => src.Id))
                 .ForMember(dest => dest.QuestionText, opts =>

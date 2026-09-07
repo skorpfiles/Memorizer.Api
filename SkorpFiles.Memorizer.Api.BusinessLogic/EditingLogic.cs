@@ -19,14 +19,14 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
             _editingRepository = editingRepository;
         }
 
-        public async Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime)
+        public async Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime, bool includeLabelsList)
         {
-            return await _editingRepository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime);
+            return await _editingRepository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime, includeLabelsList);
         }
 
-        public async Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime)
+        public async Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime, bool includeLabelsList)
         {
-            return await _editingRepository.GetQuestionnaireAsync(userId, questionnaireCode, calculateTime);
+            return await _editingRepository.GetQuestionnaireAsync(userId, questionnaireCode, calculateTime, includeLabelsList);
         }
 
         public async Task<PaginatedCollection<Questionnaire>> GetQuestionnairesAsync(Guid userId, GetQuestionnairesRequest request)
@@ -67,36 +67,6 @@ namespace SkorpFiles.Memorizer.Api.BusinessLogic
         public async Task UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusesRequest request)
         {
             await _editingRepository.UpdateUserQuestionStatusAsync(userId, request);
-        }
-
-        public async Task<PaginatedCollection<Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request)
-        {
-            return await _editingRepository.GetLabelsAsync(userId, request);
-        }
-
-        public async Task<Label> GetLabelAsync(Guid userId, Guid labelId)
-        {
-            return await _editingRepository.GetLabelAsync(userId, labelId);
-        }
-
-        public async Task<Label> GetLabelAsync(Guid userId, int labelCode)
-        {
-            return await _editingRepository.GetLabelAsync(userId, labelCode);
-        }
-
-        public async Task<Label> CreateLabelAsync(Guid userId, string labelName)
-        {
-            return await _editingRepository.CreateLabelAsync(userId, labelName);
-        }
-
-        public async Task DeleteLabelAsync(Guid userId, Guid labelId)
-        {
-            await _editingRepository.DeleteLabelAsync(userId, labelId);
-        }
-
-        public async Task DeleteLabelAsync(Guid userId, int labelCode)
-        {
-            await _editingRepository.DeleteLabelAsync(userId, labelCode);
         }
 
         public async Task<PaginatedCollection<Models.Training>> GetTrainingsForUserAsync(Guid userId, GetCollectionRequest request)

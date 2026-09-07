@@ -13,6 +13,5 @@ namespace SkorpFiles.Memorizer.Api.Models.RequestModels
         public int? Code { get; set; }
         public string? Name { get; set; }
         public Availability? Availability { get; set; }
-        public IEnumerable<LabelInQuestionnaire>? Labels { get; set; }
     }
 }

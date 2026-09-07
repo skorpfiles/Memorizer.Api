@@ -47,11 +47,11 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
         [Route("Questionnaire/{idOrCode}", Name = "GetQuestionnaire")]
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> GetQuestionnaireAsync(string idOrCode, [FromQuery]bool calculateTime)
+        public async Task<IActionResult> GetQuestionnaireAsync(string idOrCode, [FromQuery]bool calculateTime, [FromQuery]bool includeLabelsList)
         {
             return await SwitchIdOrCodeAndExecuteActionToBusinessLogicAsync(idOrCode,
-                async (id) => await _editingLogic.GetQuestionnaireAsync(await GetCurrentUserGuidAsync(), id, calculateTime),
-                async (code) => await _editingLogic.GetQuestionnaireAsync(await GetCurrentUserGuidAsync(), code, calculateTime),
+                async (id) => await _editingLogic.GetQuestionnaireAsync(await GetCurrentUserGuidAsync(), id, calculateTime, includeLabelsList),
+                async (code) => await _editingLogic.GetQuestionnaireAsync(await GetCurrentUserGuidAsync(), code, calculateTime, includeLabelsList),
                 (businessLogicResult) => Ok(_mapper.Map<Questionnaire>(businessLogicResult)));
         }
 
@@ -142,69 +142,6 @@ namespace SkorpFiles.Memorizer.Api.Web.Controllers
                     _mapper.Map<Api.Models.RequestModels.UpdateUserQuestionStatusesRequest>(request));
                 return Ok();
             });
-        }
-
-        [Route("Labels")]
-        [HttpGet]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> GetLabelsAsync(Web.Models.Requests.Repository.GetLabelsRequest request)
-        {
-            return await ExecuteActionToBusinessLogicAsync(async () =>
-            {
-                var result = await _editingLogic.GetLabelsAsync(await GetCurrentUserGuidAsync(),
-                    _mapper.Map<Api.Models.RequestModels.GetLabelsRequest>(request));
-                return Ok(_mapper.Map<GetLabelsResponse>(result));
-            });
-        }
-
-        [Route("Label/{idOrCode}", Name = "GetLabel")]
-        [HttpGet]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> GetLabelAsync(string idOrCode)
-        {
-            return await SwitchIdOrCodeAndExecuteActionToBusinessLogicAsync(idOrCode,
-                async (id) => await _editingLogic.GetLabelAsync(await GetCurrentUserGuidAsync(), id),
-                async (code) => await _editingLogic.GetLabelAsync(await GetCurrentUserGuidAsync(), code),
-                (businessLogicResult) => Ok(_mapper.Map<Label>(businessLogicResult)));
-        }
-
-        [Route("Label")]
-        [HttpPut]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> PutLabelAsync([FromQuery]string name)
-        {
-            return await ExecuteActionToBusinessLogicAsync(async () =>
-            {
-                var result = await _editingLogic.CreateLabelAsync(await GetCurrentUserGuidAsync(), name);
-                if (result != null)
-                    return CreatedAtRoute("GetLabel", new { idOrCode = result.Code.ToString() },
-                    new IdentifiersGroupResponse
-                    {
-                        Code = result.Code!.Value,
-                        Id = result.Id!.Value
-                    });
-                else
-                    throw new InternalErrorException("The database hasn't returned a result.");
-            });
-        }
-
-        [Route("Label/{idOrCode}")]
-        [HttpDelete]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> DeleteLabelAsync(string idOrCode)
-        {
-            return await SwitchIdOrCodeAndExecuteActionToBusinessLogicAsync(idOrCode,
-                async (id) =>
-                {
-                    await _editingLogic.DeleteLabelAsync(await GetCurrentUserGuidAsync(), id);
-                    return true;
-                },
-                async (code) =>
-                {
-                    await _editingLogic.DeleteLabelAsync(await GetCurrentUserGuidAsync(), code);
-                    return true;
-                },
-                (_) => Ok());
         }
 
         [Route("Trainings")]

@@ -17,12 +17,12 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         public string OwnerId { get; set; } = null!;
         [Column("QuestionnaireLastEditingTime")]
         public DateTime QuestionnaireLastEditingTimeUtc { get; set; }
-        public List<EntityLabel>? LabelsForQuestionnaire { get; set; }
-        public List<Question>? Questions { get; set; }
+        public List<Question> Questions { get; set; } = [];
 
         [ForeignKey(nameof(OwnerId))]
         public ApplicationUser? Owner { get; set; }
 
-        public List<TrainingQuestionnaire>? TrainingsForQuestionnaire { get; set; }
+        public List<TrainingQuestionnaire> TrainingsForQuestionnaire { get; set; } = [];
+        public List<QuestionnaireLabel> LabelsForQuestionnaire { get; set; } = [];
     }
 }

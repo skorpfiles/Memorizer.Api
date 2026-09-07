@@ -8,7 +8,7 @@ namespace SkorpFiles.Memorizer.Api.Models
 {
     public class QuestionToUpdate:Question
     {
-        public IEnumerable<Guid>? LabelsIds { get; set; }
+        public IEnumerable<string>? Labels { get; set; }
         public IEnumerable<string>? TypedAnswers { get; set; }
     }
 }

@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SkorpFiles.Memorizer.Api.DataAccess.Extensions;
+using SkorpFiles.Memorizer.Api.DataAccess.Interfaces;
 using SkorpFiles.Memorizer.Api.DataAccess.Repositories;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
@@ -13,7 +15,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
     [TestCategory(TestCategories.Integration)]
     public class EditingRepositoryIntegrationTests : IntegrationTestsBase
     {
-        private EditingRepository CreateRepository() => new(DbContext, Mapper);
+        private EditingRepository CreateRepository() => new EditingRepository(DbContext, Mapper, ServiceProvider.GetRequiredService<ILabelsService>());
 
         // ---------------------------------------------------------------- Questionnaires
 
@@ -75,7 +77,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
             var repository = CreateRepository();
 
-            var result = await repository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime: true);
+            var result = await repository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime: true, includeLabelsList: false);
 
             result.Should().NotBeNull();
             result!.Id.Should().Be(questionnaireId);
@@ -93,7 +95,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
 
             var repository = CreateRepository();
 
-            var result = await repository.GetQuestionnaireAsync(userId, expected.QuestionnaireCode, calculateTime: true);
+            var result = await repository.GetQuestionnaireAsync(userId, expected.QuestionnaireCode, calculateTime: true, includeLabelsList: false);
 
             result.Should().NotBeNull();
             result!.Id.Should().Be(expected.QuestionnaireId);
@@ -104,9 +106,74 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
         {
             var repository = CreateRepository();
 
-            var act = async () => await repository.GetQuestionnaireAsync(ScriptData.Alice, ScriptData.BobPrivateQuestionnaire, calculateTime: true);
+            var act = async () => await repository.GetQuestionnaireAsync(ScriptData.Alice, ScriptData.BobPrivateQuestionnaire, calculateTime: true, includeLabelsList: false);
 
             await act.Should().ThrowAsync<AccessDeniedForUserException>();
+        }
+
+        [TestMethod]
+        public async Task GetQuestionnaireAsync_ById_WithIncludeLabelsList_ReturnsDistinctLabelsAcrossQuestions()
+        {
+            var userId = ScriptData.Alice;
+            // Questionnaire 2 "Spanish: everyday verbs" has "Conjugation" and "Grammar" labels, each
+            // on several questions (see TestData.sql section 10) - Distinct() should collapse the
+            // repeats. Its removed question 50 is labelled "Removed Question Only", used nowhere
+            // else, so BeEquivalentTo (an exact-set match) also confirms that label is excluded.
+            var questionnaireId = ScriptData.AlicePublicQuestionnaire;
+
+            var repository = CreateRepository();
+
+            var result = await repository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime: true, includeLabelsList: true);
+
+            result.Should().NotBeNull();
+            result!.LabelsForQuestionnaire.Should().BeEquivalentTo(new[] { "Conjugation", "Grammar" });
+            result.LabelsForQuestionnaire.Should().NotContain("Removed Question Only");
+        }
+
+        [TestMethod]
+        public async Task GetQuestionnaireAsync_ByCode_WithIncludeLabelsList_ReturnsDistinctLabelsAcrossQuestions()
+        {
+            var userId = ScriptData.Alice;
+            var expected = await DbContext.Questionnaires.SingleAsync(q => q.QuestionnaireId == ScriptData.AlicePublicQuestionnaire);
+
+            var repository = CreateRepository();
+
+            var result = await repository.GetQuestionnaireAsync(userId, expected.QuestionnaireCode, calculateTime: true, includeLabelsList: true);
+
+            result.Should().NotBeNull();
+            // Same expectations as the by-id overload, including exclusion of the removed
+            // question's "Removed Question Only" label.
+            result!.LabelsForQuestionnaire.Should().BeEquivalentTo(new[] { "Conjugation", "Grammar" });
+            result.LabelsForQuestionnaire.Should().NotContain("Removed Question Only");
+        }
+
+        [TestMethod]
+        public async Task GetQuestionnaireAsync_WithIncludeLabelsListFalse_DoesNotPopulateLabels()
+        {
+            var userId = ScriptData.Alice;
+            var questionnaireId = ScriptData.AlicePublicQuestionnaire;
+
+            var repository = CreateRepository();
+
+            var result = await repository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime: true, includeLabelsList: false);
+
+            result.Should().NotBeNull();
+            result!.LabelsForQuestionnaire.Should().BeNull();
+        }
+
+        [TestMethod]
+        public async Task GetQuestionnaireAsync_WithIncludeLabelsList_ForQuestionnaireWithoutLabels_ReturnsEmptyList()
+        {
+            var userId = ScriptData.Alice;
+            // Questionnaire 5 "English irregular verbs" carries no seeded labels (see TestData.sql section 10).
+            var questionnaireId = ScriptData.QuestionnaireId(5);
+
+            var repository = CreateRepository();
+
+            var result = await repository.GetQuestionnaireAsync(userId, questionnaireId, calculateTime: true, includeLabelsList: true);
+
+            result.Should().NotBeNull();
+            result!.LabelsForQuestionnaire.Should().NotBeNull().And.BeEmpty();
         }
 
         [TestMethod]
@@ -273,6 +340,161 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             var deleted = await FreshContext().Questions.SingleAsync(q => q.QuestionId == questionId);
             deleted.ObjectIsRemoved.Should().BeTrue();
             deleted.ObjectRemovalTimeUtc.Should().NotBeNull();
+        }
+
+        [TestMethod]
+        public async Task GetQuestionsAsync_ReturnsCorrectLabelsForQuestions()
+        {
+            var userId = ScriptData.Alice;
+            // Questionnaire 2 "Spanish: everyday verbs" - see TestData.sql section 10 for its seeded labels.
+            var questionnaireId = ScriptData.AlicePublicQuestionnaire;
+
+            var repository = CreateRepository();
+
+            var result = await repository.GetQuestionsAsync(userId, new GetQuestionsRequest
+            {
+                QuestionnaireId = questionnaireId,
+                PageSize = 1000
+            });
+
+            // Question 26 carries both "Conjugation" and "Grammar".
+            var multiLabelQuestion = result.Items.Single(q => q.Id == ScriptData.QuestionId(2, 26));
+            multiLabelQuestion.Labels.Should().BeEquivalentTo(new[] { "Conjugation", "Grammar" });
+
+            // Question 21 carries only "Conjugation".
+            var singleLabelQuestion = result.Items.Single(q => q.Id == ScriptData.QuestionId(2, 21));
+            singleLabelQuestion.Labels.Should().BeEquivalentTo(new[] { "Conjugation" });
+
+            // Question 45 (a task, outside both seeded label groups) carries no labels.
+            var unlabelledQuestion = result.Items.Single(q => q.Id == ScriptData.QuestionId(2, 45));
+            unlabelledQuestion.Labels.Should().BeEmpty();
+        }
+
+        [TestMethod]
+        public async Task UpdateQuestionsAsync_ManagesQuestionLabels_AcrossCreateUpdateAndDelete()
+        {
+            var userId = ScriptData.Alice;
+            // Questionnaire 2 "Spanish: everyday verbs" already has a shared "Grammar" and a shared
+            // "Vocabulary" normalized label elsewhere in the seed data (see TestData.sql section 10).
+            var questionnaireId = ScriptData.AlicePublicQuestionnaire;
+
+            var repository = CreateRepository();
+
+            // Arrange: two questions to later be updated and deleted, each with a label used nowhere
+            // else in the seed data.
+            var setupRequest = new UpdateQuestionsRequest
+            {
+                QuestionnaireId = questionnaireId,
+                CreatedQuestions = new List<QuestionToUpdate>
+                {
+                    new()
+                    {
+                        Text = "Setup question - will later be updated",
+                        Type = QuestionType.Task,
+                        IsEnabled = true,
+                        EstimatedTrainingTimeSeconds = 30,
+                        Labels = new[] { "Legacy Label" }
+                    },
+                    new()
+                    {
+                        Text = "Setup question - will later be deleted",
+                        Type = QuestionType.Task,
+                        IsEnabled = true,
+                        EstimatedTrainingTimeSeconds = 30,
+                        Labels = new[] { "Doomed Label" }
+                    }
+                }
+            };
+
+            await repository.UpdateQuestionsAsync(userId, setupRequest);
+
+            var questionToUpdateId = await FreshContext().Questions
+                .Where(q => q.QuestionnaireId == questionnaireId && q.QuestionText == "Setup question - will later be updated")
+                .Select(q => q.QuestionId)
+                .SingleAsync();
+
+            var questionToDeleteId = await FreshContext().Questions
+                .Where(q => q.QuestionnaireId == questionnaireId && q.QuestionText == "Setup question - will later be deleted")
+                .Select(q => q.QuestionId)
+                .SingleAsync();
+
+            // Act: in a single request, create a question with a brand-new label and a label that
+            // already exists ("Grammar"), update the first setup question by dropping its only label
+            // and adding an already-existing shared one ("Vocabulary"), and delete the second setup
+            // question outright.
+            var mainRequest = new UpdateQuestionsRequest
+            {
+                QuestionnaireId = questionnaireId,
+                CreatedQuestions = new List<QuestionToUpdate>
+                {
+                    new()
+                    {
+                        Text = "Brand new question with mixed labels",
+                        Type = QuestionType.Task,
+                        IsEnabled = true,
+                        EstimatedTrainingTimeSeconds = 30,
+                        Labels = new[] { "Brand New Label", "Grammar" }
+                    }
+                },
+                UpdatedQuestions = new List<QuestionToUpdate>
+                {
+                    new()
+                    {
+                        Id = questionToUpdateId,
+                        Text = "Setup question - will later be updated",
+                        Type = QuestionType.Task,
+                        IsEnabled = true,
+                        EstimatedTrainingTimeSeconds = 30,
+                        Labels = new[] { "Vocabulary" }
+                    }
+                },
+                DeletedQuestions = new List<QuestionIdentifier>
+                {
+                    new() { Id = questionToDeleteId }
+                }
+            };
+
+            await repository.UpdateQuestionsAsync(userId, mainRequest);
+
+            var db = FreshContext();
+
+            var grammarNormalizedLabelId = await db.NormalizedLabels
+                .Where(nl => nl.NormalizedLabelName == "GRAMMAR")
+                .Select(nl => nl.NormalizedLabelId)
+                .SingleAsync();
+
+            // Created question: a new NormalizedLabel row for the brand-new label, and the existing
+            // "GRAMMAR" NormalizedLabel reused (not duplicated) for the pre-existing one.
+            var createdQuestion = await db.Questions.Include(q => q.LabelsForQuestion)
+                .SingleAsync(q => q.QuestionnaireId == questionnaireId && q.QuestionText == "Brand new question with mixed labels");
+            createdQuestion.LabelsForQuestion.Select(l => l.QuestionLabelName).Should().BeEquivalentTo(new[] { "Brand New Label", "Grammar" });
+            createdQuestion.LabelsForQuestion.Single(l => l.QuestionLabelName == "Grammar").NormalizedLabelId.Should().Be(grammarNormalizedLabelId);
+
+            var brandNewNormalizedLabel = await db.NormalizedLabels.SingleOrDefaultAsync(nl => nl.NormalizedLabelName == "BRAND NEW LABEL");
+            brandNewNormalizedLabel.Should().NotBeNull();
+            createdQuestion.LabelsForQuestion.Single(l => l.QuestionLabelName == "Brand New Label").NormalizedLabelId.Should().Be(brandNewNormalizedLabel!.NormalizedLabelId);
+
+            // Updated question: only the newly requested label is present - no leftover "Legacy Label"
+            // row, and no duplicate row for the added "Vocabulary" label.
+            var updatedQuestion = await db.Questions.Include(q => q.LabelsForQuestion)
+                .SingleAsync(q => q.QuestionId == questionToUpdateId);
+            updatedQuestion.LabelsForQuestion.Should().ContainSingle();
+            updatedQuestion.LabelsForQuestion.Single().QuestionLabelName.Should().Be("Vocabulary");
+
+            // Deleted question: soft-deleted, and its nnQuestionLabel row is gone.
+            var deletedQuestion = await db.Questions.SingleAsync(q => q.QuestionId == questionToDeleteId);
+            deletedQuestion.ObjectIsRemoved.Should().BeTrue();
+            deletedQuestion.ObjectRemovalTimeUtc.Should().NotBeNull();
+            (await db.QuestionsLabels.AnyAsync(l => l.QuestionId == questionToDeleteId)).Should().BeFalse();
+
+            // rNormalizedLabel is never cleaned up, even once a label's last nnQuestionLabel row is
+            // gone - "Legacy Label" and "Doomed Label" both still exist, unreferenced.
+            (await db.NormalizedLabels.AnyAsync(nl => nl.NormalizedLabelName == "LEGACY LABEL")).Should().BeTrue();
+            (await db.NormalizedLabels.AnyAsync(nl => nl.NormalizedLabelName == "DOOMED LABEL")).Should().BeTrue();
+
+            // Normalized labels still referenced elsewhere are reused, not duplicated.
+            (await db.NormalizedLabels.CountAsync(nl => nl.NormalizedLabelName == "GRAMMAR")).Should().Be(1);
+            (await db.NormalizedLabels.CountAsync(nl => nl.NormalizedLabelName == "VOCABULARY")).Should().Be(1);
         }
 
         [TestMethod]

@@ -5,8 +5,8 @@ namespace SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess
     public interface IEditingRepository
     {
         Task<PaginatedCollection<Questionnaire>> GetQuestionnairesAsync(Guid userId, GetQuestionnairesRequest request);
-        Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime);
-        Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime);
+        Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, Guid questionnaireId, bool calculateTime, bool includeLabelsList);
+        Task<Questionnaire?> GetQuestionnaireAsync(Guid userId, int questionnaireCode, bool calculateTime, bool includeLabelsList);
         Task<Questionnaire> CreateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request);
         Task<Questionnaire> UpdateQuestionnaireAsync(Guid userId, UpdateQuestionnaireRequest request);
         Task DeleteQuestionnaireAsync(Guid userId, Guid questionnaireId);
@@ -14,13 +14,6 @@ namespace SkorpFiles.Memorizer.Api.Models.Interfaces.DataAccess
         Task<PaginatedCollection<ExistingQuestion>> GetQuestionsAsync(Guid userId, GetQuestionsRequest request);
         Task UpdateQuestionsAsync(Guid userId, UpdateQuestionsRequest request);
         Task UpdateUserQuestionStatusAsync(Guid userId, UpdateUserQuestionStatusesRequest request);
-
-        Task<PaginatedCollection<Label>> GetLabelsAsync(Guid userId, GetLabelsRequest request);
-        Task<Label> GetLabelAsync(Guid userId, Guid labelId);
-        Task<Label> GetLabelAsync(Guid userId, int labelCode);
-        Task<Label> CreateLabelAsync(Guid userId, string labelName);
-        Task DeleteLabelAsync(Guid userId, Guid labelId);
-        Task DeleteLabelAsync(Guid userId, int labelCode);
 
         Task<PaginatedCollection<Training>> GetTrainingsForUserAsync(Guid userId, GetCollectionRequest request);
         Task<Training> GetTrainingAsync(Guid userId, Guid trainingId, bool calculateTime);

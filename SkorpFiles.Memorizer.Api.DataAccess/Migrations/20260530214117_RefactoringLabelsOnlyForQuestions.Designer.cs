@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SkorpFiles.Memorizer.Api.DataAccess;
 
@@ -11,9 +12,11 @@ using SkorpFiles.Memorizer.Api.DataAccess;
 namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260530214117_RefactoringLabelsOnlyForQuestions")]
+    partial class RefactoringLabelsOnlyForQuestions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -260,27 +263,42 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.ToTable("jEventLog", "memorizer");
                 });
 
-            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.NormalizedLabel", b =>
+            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.Label", b =>
                 {
-                    b.Property<Guid>("NormalizedLabelId")
+                    b.Property<Guid>("LabelId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("NormalizedLabelName")
+                    b.Property<int>("LabelCode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LabelCode"));
+
+                    b.Property<string>("LabelName")
                         .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ObjectCreationTimeUtc")
                         .HasColumnType("datetime2")
                         .HasColumnName("ObjectCreationTime");
 
-                    b.HasKey("NormalizedLabelId");
+                    b.Property<bool>("ObjectIsRemoved")
+                        .HasColumnType("bit");
 
-                    b.HasIndex("NormalizedLabelName")
-                        .IsUnique();
+                    b.Property<DateTime?>("ObjectRemovalTimeUtc")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ObjectRemovalTime");
 
-                    b.ToTable("rNormalizedLabel", "memorizer");
+                    b.Property<string>("OwnerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("LabelId");
+
+                    b.HasIndex("OwnerId");
+
+                    b.ToTable("sLabel", "memorizer");
                 });
 
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.Question", b =>
@@ -341,7 +359,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("NormalizedLabelId")
+                    b.Property<Guid>("LabelId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("ObjectCreationTimeUtc")
@@ -351,14 +369,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Property<Guid>("QuestionId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("QuestionLabelName")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("QuestionLabelId");
 
-                    b.HasIndex("NormalizedLabelId");
+                    b.HasIndex("LabelId");
 
                     b.HasIndex("QuestionId");
 
@@ -444,40 +457,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.HasIndex("OwnerId");
 
                     b.ToTable("rQuestionnaire", "memorizer");
-                });
-
-            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.QuestionnaireLabel", b =>
-                {
-                    b.Property<Guid>("QuestionnaireLabelId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("NormalizedLabelId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("ObjectCreationTimeUtc")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("ObjectCreationTime");
-
-                    b.Property<Guid>("QuestionnaireId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("QuestionnaireLabelIsAlive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("QuestionnaireLabelName")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("QuestionnaireLabelId");
-
-                    b.HasIndex("NormalizedLabelId");
-
-                    b.HasIndex("QuestionnaireId", "NormalizedLabelId", "QuestionnaireLabelName")
-                        .IsUnique();
-
-                    b.ToTable("nnQuestionnaireLabel", "memorizer");
                 });
 
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.Training", b =>
@@ -825,6 +804,17 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.Label", b =>
+                {
+                    b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.ApplicationUser", "Owner")
+                        .WithMany("LabelsThatUserOwns")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.Question", b =>
                 {
                     b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.Questionnaire", "Questionnaire")
@@ -838,9 +828,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.QuestionLabel", b =>
                 {
-                    b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.NormalizedLabel", "NormalizedLabel")
-                        .WithMany("QuestionsForNormalizedLabel")
-                        .HasForeignKey("NormalizedLabelId")
+                    b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.Label", "Label")
+                        .WithMany("QuestionsForLabel")
+                        .HasForeignKey("LabelId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -850,7 +840,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("NormalizedLabel");
+                    b.Navigation("Label");
 
                     b.Navigation("Question");
                 });
@@ -883,25 +873,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("Owner");
-                });
-
-            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.QuestionnaireLabel", b =>
-                {
-                    b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.NormalizedLabel", "NormalizedLabel")
-                        .WithMany("QuestionnairesForNormalizedLabel")
-                        .HasForeignKey("NormalizedLabelId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.Questionnaire", "Questionnaire")
-                        .WithMany("LabelsForQuestionnaire")
-                        .HasForeignKey("QuestionnaireId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("NormalizedLabel");
-
-                    b.Navigation("Questionnaire");
                 });
 
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.Training", b =>
@@ -984,11 +955,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Navigation("ApplicationUser");
                 });
 
-            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.NormalizedLabel", b =>
+            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.Label", b =>
                 {
-                    b.Navigation("QuestionnairesForNormalizedLabel");
-
-                    b.Navigation("QuestionsForNormalizedLabel");
+                    b.Navigation("QuestionsForLabel");
                 });
 
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.Question", b =>
@@ -1004,8 +973,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.Questionnaire", b =>
                 {
-                    b.Navigation("LabelsForQuestionnaire");
-
                     b.Navigation("Questions");
 
                     b.Navigation("TrainingsForQuestionnaire");
@@ -1023,6 +990,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("LabelsThatUserOwns");
+
                     b.Navigation("QuestionnairesThatUserOwns");
 
                     b.Navigation("QuestionsForUser");

@@ -16,7 +16,7 @@ namespace SkorpFiles.Memorizer.Api.Models
         public Guid OwnerId { get; set; }
         public string? OwnerName { get; set; }
         public QuestionsCounts? CountsOfQuestions { get; set; }
-        public List<Label>? Labels { get; set; }
         public long? TotalTrainingTimeSeconds { get; set; }
+        public IEnumerable<string>? LabelsForQuestionnaire { get; set; }
     }
 }
