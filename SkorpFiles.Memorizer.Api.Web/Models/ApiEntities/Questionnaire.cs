@@ -10,6 +10,6 @@
         public string? OwnerName { get; set; }
         public QuestionsCounts? CountsOfQuestions { get; set; }
         public long TotalTrainingTimeSeconds { get; set; }
-        public IEnumerable<string> LabelsInQuestionnaire { get; set; } = [];
+        public IEnumerable<string> LabelsForQuestionnaire { get; set; } = [];
     }
 }
