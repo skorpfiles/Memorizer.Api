@@ -1,7 +1,7 @@
 using FluentAssertions;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using SkorpFiles.Memorizer.Api.DataAccess.Interfaces;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using SkorpFiles.Memorizer.Api.DataAccess.Repositories;
 using SkorpFiles.Memorizer.Api.Models;
 using SkorpFiles.Memorizer.Api.Models.Enums;
@@ -13,13 +13,49 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
     [TestCategory(TestCategories.Integration)]
     public class LabelsServiceIntegrationTests : IntegrationTestsBase
     {
+        /// <summary>
+        /// Records every SaveChanges failure that is a real unique-constraint violation on the
+        /// underlying SQL Server unique index (error 2601/2627) - the exact condition
+        /// LabelsService.IsUniqueConstraintViolation checks for - so a test can prove that
+        /// condition was actually hit, not just that the overall operation happened to succeed.
+        /// </summary>
+        private sealed class UniqueConstraintViolationObserver : SaveChangesInterceptor
+        {
+            private int _violationCount;
+
+            public int ViolationCount => _violationCount;
+
+            public override Task SaveChangesFailedAsync(DbContextErrorEventData eventData, CancellationToken cancellationToken = default)
+            {
+                if (eventData.Exception is DbUpdateException { InnerException: SqlException { Number: 2601 or 2627 } })
+                    Interlocked.Increment(ref _violationCount);
+
+                return base.SaveChangesFailedAsync(eventData, cancellationToken);
+            }
+        }
+
+        private sealed class SingleOptionsDbContextFactory(DbContextOptions<ApplicationDbContext> options)
+            : IDbContextFactory<ApplicationDbContext>
+        {
+            public ApplicationDbContext CreateDbContext() => new(options);
+        }
+
         [TestMethod]
         public async Task EnsureLabelsAsync_TwoUsersConcurrentlyAddTheSameNewLabel_BothQuestionsShareOneNormalizedLabel()
         {
             const string labelName = "Concurrent Shared Label";
             const string normalizedLabelName = "CONCURRENT SHARED LABEL";
 
-            var labelsService = ServiceProvider.GetRequiredService<ILabelsService>();
+            // A LabelsService instrumented to observe every SaveChanges attempt it makes, so the
+            // assertions below can prove a real unique-constraint violation happened during the
+            // race - not just that the end result looks right, which could otherwise be true even
+            // if the two requests happened to run sequentially and never actually collided.
+            var violationObserver = new UniqueConstraintViolationObserver();
+            var interceptedOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseSqlServer(DbContext.Database.GetConnectionString())
+                .AddInterceptors(violationObserver)
+                .Options;
+            var labelsService = new LabelsService(new SingleOptionsDbContextFactory(interceptedOptions));
 
             // A separate DbContext per "request" - the way ASP.NET Core would give each request
             // its own scoped context - since a single DbContext cannot run two operations
@@ -70,6 +106,15 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Tests
             await Task.WhenAll(
                 aliceRepository.UpdateQuestionsAsync(ScriptData.Alice, aliceRequest),
                 bobRepository.UpdateQuestionsAsync(ScriptData.Bob, bobRequest));
+
+            // Proof that IsUniqueConstraintViolation's retry path, not just a lucky non-colliding
+            // schedule, is what made this succeed: the loser of the race really did get a
+            // DbUpdateException wrapping SQL Server error 2601/2627 from SaveChangesAsync, and
+            // Task.WhenAll above still completed without throwing - which is only possible if that
+            // exception was caught and retried rather than left to propagate.
+            violationObserver.ViolationCount.Should().BeGreaterThanOrEqualTo(1,
+                "one of the two concurrent EnsureLabelsAsync attempts should have collided on the " +
+                "unique index over NormalizedLabelName and been caught by IsUniqueConstraintViolation");
 
             var db = FreshContext();
 
