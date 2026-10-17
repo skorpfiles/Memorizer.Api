@@ -23,7 +23,8 @@
     1500 question statuses       -> [memorizer].[nnQuestionUser]
          (499 new, 587 with penalty points)
       12 trainings               -> [memorizer].[rTraining]
-         (6 by questions count, 6 by time, 2 removed)
+         (6 by questions count, 6 by time, 2 removed; 4 with
+         [TrainingShouldBeAllLabelsInQuestion] = 1, 8 with 0)
       36 training questionnaires -> [memorizer].[nnTrainingQuestionnaire]
       34 training results        -> [memorizer].[jTrainingResult]
       36 given typed answers     -> [memorizer].[jTrainingResultTypedAnswer]
@@ -33,6 +34,8 @@
          (163 questions labelled, across 9 questionnaires; 8 of them carry 2 labels
          each; one of them - questionnaire 2's removed question 50 - is itself
          removed; see section 10)
+      16 training labels         -> [memorizer].[nnTrainingLabel]
+         (8 trainings carry labels: 4 with the AND flag, 4 with the OR flag; see section 11)
 
  The "j" tables (jEventLog, jAuthenticationCache) and [nnQuestionnaireLabel] are
  intentionally left empty.
@@ -145,6 +148,7 @@
        B0000000-...  questions             F0000000-...  training questionnaires
        C0000000-...  typed answers         77000000-...  normalized labels
        D0000000-...  question statuses     88000000-...  question labels
+       99000000-...  training labels
        09000000-...  user activity records
  * [QuestionEstimatedTrainingTimeSeconds] follows the kind of question: seconds
    for a typed word, a minute or two for a spoken answer, minutes for a task.
@@ -224,6 +228,9 @@ WHERE QuestionId IN (SELECT QuestionId FROM @TestQuestions);
 
 DELETE FROM memorizer.nnQuestionnaireLabel
 WHERE QuestionnaireId IN (SELECT QuestionnaireId FROM @TestQuestionnaires);
+
+DELETE FROM memorizer.nnTrainingLabel
+WHERE TrainingId IN (SELECT TrainingId FROM memorizer.rTraining WHERE OwnerId IN (SELECT UserId FROM @TestUsers));
 
 -- Fixed label GUIDs (77000000-...), not tied to a test user or questionnaire,
 -- so they are removed by id rather than through @TestQuestions/@TestQuestionnaires.
@@ -7175,20 +7182,20 @@ VALUES
 INSERT INTO memorizer.rTraining
     (TrainingId, OwnerId, TrainingName, TrainingLastTime, TrainingLengthType,
      TrainingQuestionsCount, TrainingTimeMinutes, TrainingNewQuestionsFraction, TrainingPenaltyQuestionsFraction,
-     ObjectCreationTime, ObjectIsRemoved, ObjectRemovalTime)
+     TrainingShouldBeAllLabelsInQuestion, ObjectCreationTime, ObjectIsRemoved, ObjectRemovalTime)
 VALUES
-    (N'E0000000-0000-0000-0000-000000000001', N'11111111-1111-1111-1111-111111111111', N'alice''s training 1 (by time)', '2026-07-30T09:00:00', 1, 0, 89, 0.200, 0.100, '2026-04-23T09:00:00', 0, NULL),
-    (N'E0000000-0000-0000-0000-000000000002', N'22222222-2222-2222-2222-222222222222', N'bob''s training 2 (by questions count)', '2026-07-29T09:00:00', 0, 64, 0, 0.300, 0.150, '2026-04-24T09:00:00', 0, NULL),
-    (N'E0000000-0000-0000-0000-000000000003', N'33333333-3333-3333-3333-333333333333', N'carol''s training 3 (by time)', '2026-07-28T09:00:00', 1, 24, 29, 0.400, 0.200, '2026-04-25T09:00:00', 0, NULL),
-    (N'E0000000-0000-0000-0000-000000000004', N'44444444-4444-4444-4444-444444444444', N'dave''s training 4 (by questions count)', '2026-07-27T09:00:00', 0, 144, 0, 0.100, 0.250, '2026-04-26T09:00:00', 1, '2026-07-27T09:00:00'),
-    (N'E0000000-0000-0000-0000-000000000005', N'55555555-5555-5555-5555-555555555555', N'erin''s training 5 (by time)', '2026-07-26T09:00:00', 1, 0, 239, 0.200, 0.050, '2026-04-27T09:00:00', 0, NULL),
-    (N'E0000000-0000-0000-0000-000000000006', N'66666666-6666-6666-6666-666666666666', N'frank''s training 6 (by questions count)', '2026-07-25T09:00:00', 0, 32, 59, 0.300, 0.100, '2026-04-28T09:00:00', 0, NULL),
-    (N'E0000000-0000-0000-0000-000000000007', N'11111111-1111-1111-1111-111111111111', N'alice''s training 7 (by time)', '2026-07-24T09:00:00', 1, 0, 59, 0.400, 0.150, '2026-04-29T09:00:00', 0, NULL),
-    (N'E0000000-0000-0000-0000-000000000008', N'22222222-2222-2222-2222-222222222222', N'bob''s training 8 (by questions count)', '2026-07-23T09:00:00', 0, 192, 0, 0.100, 0.200, '2026-04-30T09:00:00', 0, NULL),
-    (N'E0000000-0000-0000-0000-000000000009', N'33333333-3333-3333-3333-333333333333', N'carol''s training 9 (by time)', '2026-07-22T09:00:00', 1, 48, 23, 0.200, 0.250, '2026-05-01T09:00:00', 1, '2026-07-22T09:00:00'),
-    (N'E0000000-0000-0000-0000-000000000010', N'44444444-4444-4444-4444-444444444444', N'dave''s training 10 (by questions count)', '2026-07-21T09:00:00', 0, 48, 0, 0.300, 0.050, '2026-05-02T09:00:00', 0, NULL),
-    (N'E0000000-0000-0000-0000-000000000011', N'55555555-5555-5555-5555-555555555555', N'erin''s training 11 (by time)', '2026-07-20T09:00:00', 1, 0, 119, 0.400, 0.100, '2026-05-03T09:00:00', 0, NULL),
-    (N'E0000000-0000-0000-0000-000000000012', N'66666666-6666-6666-6666-666666666666', N'frank''s training 12 (by questions count)', '2026-07-19T09:00:00', 0, 96, 39, 0.100, 0.150, '2026-05-04T09:00:00', 0, NULL);
+    (N'E0000000-0000-0000-0000-000000000001', N'11111111-1111-1111-1111-111111111111', N'alice''s training 1 (by time)', '2026-07-30T09:00:00', 1, 0, 89, 0.200, 0.100, 1, '2026-04-23T09:00:00', 0, NULL),
+    (N'E0000000-0000-0000-0000-000000000002', N'22222222-2222-2222-2222-222222222222', N'bob''s training 2 (by questions count)', '2026-07-29T09:00:00', 0, 64, 0, 0.300, 0.150, 0, '2026-04-24T09:00:00', 0, NULL),
+    (N'E0000000-0000-0000-0000-000000000003', N'33333333-3333-3333-3333-333333333333', N'carol''s training 3 (by time)', '2026-07-28T09:00:00', 1, 24, 29, 0.400, 0.200, 1, '2026-04-25T09:00:00', 0, NULL),
+    (N'E0000000-0000-0000-0000-000000000004', N'44444444-4444-4444-4444-444444444444', N'dave''s training 4 (by questions count)', '2026-07-27T09:00:00', 0, 144, 0, 0.100, 0.250, 0, '2026-04-26T09:00:00', 1, '2026-07-27T09:00:00'),
+    (N'E0000000-0000-0000-0000-000000000005', N'55555555-5555-5555-5555-555555555555', N'erin''s training 5 (by time)', '2026-07-26T09:00:00', 1, 0, 239, 0.200, 0.050, 0, '2026-04-27T09:00:00', 0, NULL),
+    (N'E0000000-0000-0000-0000-000000000006', N'66666666-6666-6666-6666-666666666666', N'frank''s training 6 (by questions count)', '2026-07-25T09:00:00', 0, 32, 59, 0.300, 0.100, 0, '2026-04-28T09:00:00', 0, NULL),
+    (N'E0000000-0000-0000-0000-000000000007', N'11111111-1111-1111-1111-111111111111', N'alice''s training 7 (by time)', '2026-07-24T09:00:00', 1, 0, 59, 0.400, 0.150, 0, '2026-04-29T09:00:00', 0, NULL),
+    (N'E0000000-0000-0000-0000-000000000008', N'22222222-2222-2222-2222-222222222222', N'bob''s training 8 (by questions count)', '2026-07-23T09:00:00', 0, 192, 0, 0.100, 0.200, 1, '2026-04-30T09:00:00', 0, NULL),
+    (N'E0000000-0000-0000-0000-000000000009', N'33333333-3333-3333-3333-333333333333', N'carol''s training 9 (by time)', '2026-07-22T09:00:00', 1, 48, 23, 0.200, 0.250, 0, '2026-05-01T09:00:00', 1, '2026-07-22T09:00:00'),
+    (N'E0000000-0000-0000-0000-000000000010', N'44444444-4444-4444-4444-444444444444', N'dave''s training 10 (by questions count)', '2026-07-21T09:00:00', 0, 48, 0, 0.300, 0.050, 0, '2026-05-02T09:00:00', 0, NULL),
+    (N'E0000000-0000-0000-0000-000000000011', N'55555555-5555-5555-5555-555555555555', N'erin''s training 11 (by time)', '2026-07-20T09:00:00', 1, 0, 119, 0.400, 0.100, 1, '2026-05-03T09:00:00', 0, NULL),
+    (N'E0000000-0000-0000-0000-000000000012', N'66666666-6666-6666-6666-666666666666', N'frank''s training 12 (by questions count)', '2026-07-19T09:00:00', 0, 96, 39, 0.100, 0.150, 0, '2026-05-04T09:00:00', 0, NULL);
 
 /*==============================================================================
   8. Questionnaires of the trainings
@@ -7662,5 +7669,47 @@ VALUES
     (N'88000000-0000-0000-0000-000000000168', N'B0000000-0000-0000-0000-000000002117', N'77000000-0000-0000-0000-000000000017', N'Ingredient', '2026-07-25T09:00:00'),
     (N'88000000-0000-0000-0000-000000000169', N'B0000000-0000-0000-0000-000000002118', N'77000000-0000-0000-0000-000000000017', N'Ingredient', '2026-07-25T09:00:00'),
     (N'88000000-0000-0000-0000-000000000170', N'B0000000-0000-0000-0000-000000002119', N'77000000-0000-0000-0000-000000000017', N'Ingredient', '2026-07-25T09:00:00');
+
+/*==============================================================================
+  11. Labels of the trainings ([nnTrainingLabel], [TrainingShouldBeAllLabelsInQuestion])
+
+  16 training labels on 8 of the 12 trainings; the other 4 (5, 6, 9, 12) select
+  questions regardless of labels. Each [NormalizedLabelId] is one of the labels of
+  section 10 and [TrainingLabelName] is its human-readable spelling for the
+  training setup form. Both values of [TrainingShouldBeAllLabelsInQuestion]
+  (set in section 7) are covered:
+
+    flag = 1 (AND: a question must carry ALL the labels)
+      training 1  - Composer + Musical Form  (questionnaire 34, question 1651 has both)
+      training 3  - Formula + Calculus       (questionnaire 23, question 9 has both)
+      training 8  - Ingredient               (questionnaire 43)
+      training 11 - Reference + Command      (questionnaire 9, question 401 has both)
+
+    flag = 0 (OR: a question may carry ANY of the labels)
+      training 2  - Vocabulary + Grammar + Astronomy Fact   [labels of questionnaires 4, 18]
+      training 4  - Technique + Ingredient                  [removed training]
+      training 7  - Formula + Command
+      training 10 - Astronomy Fact + Concept
+==============================================================================*/
+
+INSERT INTO memorizer.nnTrainingLabel
+    (TrainingLabelId, TrainingId, NormalizedLabelId, TrainingLabelName, ObjectCreationTime)
+VALUES
+    (N'99000000-0000-0000-0000-000000000001', N'E0000000-0000-0000-0000-000000000001', N'77000000-0000-0000-0000-000000000014', N'Composer', '2026-04-23T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000002', N'E0000000-0000-0000-0000-000000000001', N'77000000-0000-0000-0000-000000000015', N'Musical Form', '2026-04-23T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000003', N'E0000000-0000-0000-0000-000000000002', N'77000000-0000-0000-0000-000000000001', N'Vocabulary', '2026-04-24T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000004', N'E0000000-0000-0000-0000-000000000002', N'77000000-0000-0000-0000-000000000002', N'Grammar', '2026-04-24T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000005', N'E0000000-0000-0000-0000-000000000002', N'77000000-0000-0000-0000-000000000011', N'Astronomy Fact', '2026-04-24T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000006', N'E0000000-0000-0000-0000-000000000003', N'77000000-0000-0000-0000-000000000012', N'Formula', '2026-04-25T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000007', N'E0000000-0000-0000-0000-000000000003', N'77000000-0000-0000-0000-000000000013', N'Calculus', '2026-04-25T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000008', N'E0000000-0000-0000-0000-000000000004', N'77000000-0000-0000-0000-000000000016', N'Technique', '2026-04-26T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000009', N'E0000000-0000-0000-0000-000000000004', N'77000000-0000-0000-0000-000000000017', N'Ingredient', '2026-04-26T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000010', N'E0000000-0000-0000-0000-000000000007', N'77000000-0000-0000-0000-000000000012', N'Formula', '2026-04-29T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000011', N'E0000000-0000-0000-0000-000000000007', N'77000000-0000-0000-0000-000000000007', N'Command', '2026-04-29T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000012', N'E0000000-0000-0000-0000-000000000008', N'77000000-0000-0000-0000-000000000017', N'Ingredient', '2026-04-30T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000013', N'E0000000-0000-0000-0000-000000000010', N'77000000-0000-0000-0000-000000000011', N'Astronomy Fact', '2026-05-02T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000014', N'E0000000-0000-0000-0000-000000000010', N'77000000-0000-0000-0000-000000000010', N'Concept', '2026-05-02T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000015', N'E0000000-0000-0000-0000-000000000011', N'77000000-0000-0000-0000-000000000006', N'Reference', '2026-05-03T09:00:00'),
+    (N'99000000-0000-0000-0000-000000000016', N'E0000000-0000-0000-0000-000000000011', N'77000000-0000-0000-0000-000000000007', N'Command', '2026-05-03T09:00:00');
 
 COMMIT TRANSACTION;

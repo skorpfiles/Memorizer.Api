@@ -13,5 +13,6 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
 
         public List<QuestionLabel> QuestionsForNormalizedLabel { get; set; } = [];
         public List<QuestionnaireLabel> QuestionnairesForNormalizedLabel { get; set; } = [];
+        public List<TrainingLabel> TrainingsForNormalizedLabel { get; set; } = [];
     }
 }

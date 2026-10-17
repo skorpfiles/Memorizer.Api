@@ -521,6 +521,9 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Property<int>("TrainingQuestionsCount")
                         .HasColumnType("int");
 
+                    b.Property<bool>("TrainingShouldBeAllLabelsInQuestion")
+                        .HasColumnType("bit");
+
                     b.Property<int>("TrainingTimeMinutes")
                         .HasColumnType("int");
 
@@ -529,6 +532,37 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.HasIndex("OwnerId");
 
                     b.ToTable("rTraining", "memorizer");
+                });
+
+            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.TrainingLabel", b =>
+                {
+                    b.Property<Guid>("TrainingLabelId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("NormalizedLabelId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ObjectCreationTimeUtc")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("ObjectCreationTime");
+
+                    b.Property<Guid>("TrainingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TrainingLabelName")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("TrainingLabelId");
+
+                    b.HasIndex("NormalizedLabelId");
+
+                    b.HasIndex("TrainingId", "NormalizedLabelId")
+                        .IsUnique();
+
+                    b.ToTable("nnTrainingLabel", "memorizer");
                 });
 
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.TrainingQuestionnaire", b =>
@@ -915,6 +949,25 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.TrainingLabel", b =>
+                {
+                    b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.NormalizedLabel", "NormalizedLabel")
+                        .WithMany("TrainingsForNormalizedLabel")
+                        .HasForeignKey("NormalizedLabelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.Training", "Training")
+                        .WithMany("LabelsForTraining")
+                        .HasForeignKey("TrainingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("NormalizedLabel");
+
+                    b.Navigation("Training");
+                });
+
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.TrainingQuestionnaire", b =>
                 {
                     b.HasOne("SkorpFiles.Memorizer.Api.DataAccess.Models.Questionnaire", "Questionnaire")
@@ -989,6 +1042,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
                     b.Navigation("QuestionnairesForNormalizedLabel");
 
                     b.Navigation("QuestionsForNormalizedLabel");
+
+                    b.Navigation("TrainingsForNormalizedLabel");
                 });
 
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.Question", b =>
@@ -1013,6 +1068,8 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Migrations
 
             modelBuilder.Entity("SkorpFiles.Memorizer.Api.DataAccess.Models.Training", b =>
                 {
+                    b.Navigation("LabelsForTraining");
+
                     b.Navigation("QuestionnairesForTraining");
                 });
 
