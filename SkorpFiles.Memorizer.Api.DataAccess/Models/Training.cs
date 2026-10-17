@@ -30,10 +30,17 @@ namespace SkorpFiles.Memorizer.Api.DataAccess.Models
         [Column(TypeName = "decimal(4,3)")]
         public decimal TrainingPenaltyQuestionsFraction {  get; set; }
 
+        /// <summary>
+        /// If true, only questions containing ALL the training labels are selected (AND);
+        /// if false, questions containing ANY of the training labels are selected (OR).
+        /// </summary>
+        public bool TrainingShouldBeAllLabelsInQuestion { get; set; }
+
         [ForeignKey(nameof(OwnerId))]
         public ApplicationUser? Owner { get; set; }
 
         public List<TrainingQuestionnaire> QuestionnairesForTraining { get; set; } = [];
+        public List<TrainingLabel> LabelsForTraining { get; set; } = [];
 
     }
 }

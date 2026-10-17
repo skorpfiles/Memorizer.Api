@@ -24,6 +24,7 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
         public DbSet<TypedAnswer> TypedAnswers => Set<TypedAnswer>();
         public DbSet<Training> Trainings => Set<Training>();
         public DbSet<TrainingQuestionnaire> TrainingsQuestionnaires => Set<TrainingQuestionnaire>();
+        public DbSet<TrainingLabel> TrainingsLabels => Set<TrainingLabel>();
         public DbSet<TrainingResult> TrainingResults => Set<TrainingResult>();
         public DbSet<TrainingResultTypedAnswer> TrainingResultTypedAnswers => Set<TrainingResultTypedAnswer>();
         public DbSet<EventLog> EventLog => Set<EventLog>();
@@ -68,6 +69,16 @@ namespace SkorpFiles.Memorizer.Api.DataAccess
                 builder.Property(x => x.QuestionnaireLabelName)
                     .HasMaxLength(Restrictions.LabelNameMaxLength)
                     .IsRequired();
+            });
+
+            modelBuilder.Entity<TrainingLabel>(builder =>
+            {
+                builder.Property(x => x.TrainingLabelName)
+                    .HasMaxLength(Restrictions.LabelNameMaxLength)
+                    .IsRequired();
+
+                builder.HasIndex(x => new { x.TrainingId, x.NormalizedLabelId })
+                    .IsUnique();
             });
 
             modelBuilder.Entity<QuestionnaireLabel>()
